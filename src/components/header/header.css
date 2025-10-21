@@ -1,0 +1,68 @@
+header {
+  background-color: #fff;
+}
+
+.logo-container {
+  width: 100px;
+  height: 50px;
+}
+
+.header-content-left {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 30px;
+}
+.header-content-rigth {
+  padding-right: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 20px;
+}
+.profile {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #000;
+}
+.profile p {
+  margin-bottom: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000;
+  color: #fff;
+}
+.profile a {
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+.logout {
+  font-size: 20px;
+  color: #000;
+  cursor: pointer;
+}
+
+.logout a {
+  text-decoration: none;
+  color: #000;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.header-nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 10px;
+}
+.menu a {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
