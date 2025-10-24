@@ -7,3 +7,22 @@ body {
   background-color: #009640;
   padding-top: 15vh;
 }
+
+.main-title {
+  font-size: clamp(1.2rem, 2vw, 2rem);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.main-description {
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.select-step-btn-wrapper {
+  height: 50vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

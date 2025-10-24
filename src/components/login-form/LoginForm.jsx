@@ -9,7 +9,6 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(e.target.email.value, e.target.password.value);
   };
 
   return (

@@ -1,0 +1,42 @@
+.wrapper-form {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+.title-block {
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.wrapper-form label {
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+  margin-bottom: 0;
+}
+.wrapper-form input {
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+}
+.wrapper-form select {
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+}
+.wrapper-form input:focus {
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+}
+.wrapper-form input:active {
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+}
+
+.wrapper-form select:focus {
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+}
+.wrapper-form select:active {
+  font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+  font-weight: 500;
+}

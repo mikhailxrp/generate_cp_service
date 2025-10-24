@@ -1,0 +1,654 @@
+/* Базовые стили */
+.catalog-title {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.catalog-title-h3 {
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Контейнер с адаптивными отступами */
+.catalog-container {
+  padding: clamp(1rem, 2vw, 2rem);
+}
+
+/* Таблицы - базовые стили */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  scroll-behavior: smooth;
+  position: relative;
+  transition: box-shadow 0.3s ease;
+}
+
+.table-responsive:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.table {
+  min-width: 100%;
+  margin-bottom: 0;
+}
+
+.table thead th {
+  font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0.75rem 0.5rem;
+  background-color: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table tbody td {
+  font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+  font-weight: 400;
+  padding: 0.75rem 0.5rem;
+  vertical-align: middle;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table tbody td code {
+  font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+  font-weight: 600;
+  background-color: #f1f3f5;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.table tbody td a {
+  text-decoration: none;
+  font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+  font-weight: 600;
+  color: #0d6efd;
+  transition: color 0.2s;
+}
+
+.table tbody td a:hover {
+  color: #0a58ca;
+  text-decoration: underline;
+}
+
+/* Дополнительные стили для удобочитаемости */
+.table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+.text-muted {
+  text-align: center;
+  padding: 2rem;
+  font-style: italic;
+  color: #6c757d;
+}
+
+/* Скрытие колонок на маленьких экранах */
+@media (max-width: 767px) {
+  /* Мобильные 320px - 767px */
+  .table thead th:nth-child(n + 6),
+  .table tbody td:nth-child(n + 6) {
+    display: none;
+  }
+
+  .catalog-title {
+    text-align: center;
+  }
+
+  .catalog-title-h3 {
+    font-size: 1.1rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 0.5rem 0.3rem;
+    font-size: 0.75rem;
+    max-width: 150px;
+  }
+
+  .table tbody td code {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.3rem;
+  }
+
+  .table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+  }
+}
+
+/* Планшеты малые */
+@media (min-width: 768px) and (max-width: 991px) {
+  .table thead th:nth-child(n + 8),
+  .table tbody td:nth-child(n + 8) {
+    display: none;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Планшеты большие и десктоп малый */
+@media (min-width: 992px) and (max-width: 1399px) {
+  .table thead th,
+  .table tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Десктоп средний */
+@media (min-width: 1400px) and (max-width: 1919px) {
+  .table thead th,
+  .table tbody td {
+    padding: 0.75rem 0.6rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Десктоп большой и 4K */
+@media (min-width: 1920px) {
+  .catalog-title {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .catalog-title-h3 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 1rem 0.75rem;
+    font-size: 1rem;
+  }
+
+  .table tbody td code {
+    font-size: 0.95rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Горизонтальная прокрутка для очень маленьких экранов */
+@media (max-width: 576px) {
+  .table-responsive {
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .table {
+    font-size: 0.7rem;
+  }
+
+  .table thead th:nth-child(n + 5),
+  .table tbody td:nth-child(n + 5) {
+    display: none;
+  }
+
+  .catalog-container {
+    padding: 0.75rem;
+  }
+
+  .catalog-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .catalog-title-h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Улучшение читаемости на больших экранах */
+@media (min-width: 2560px) {
+  .catalog-container {
+    max-width: 2400px;
+    margin: 0 auto;
+  }
+
+  .catalog-title {
+    font-size: 3rem;
+  }
+
+  .catalog-title-h3 {
+    font-size: 2rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 1.25rem 1rem;
+    font-size: 1.1rem;
+  }
+}
+
+/* Темная тема для больших экранов (опционально) */
+@media (prefers-color-scheme: dark) and (min-width: 1400px) {
+  .table-responsive {
+    box-shadow: 0 2px 12px rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Индикатор прокрутки для мобильных */
+@media (max-width: 991px) {
+  .table-responsive::after {
+    content: "← Прокрутите →";
+    display: block;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #6c757d;
+    padding: 0.5rem;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      #f8f9fa 20%,
+      #f8f9fa 80%,
+      transparent
+    );
+    margin-top: -1px;
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}
+
+/* Улучшенная печать */
+@media print {
+  .catalog-container {
+    padding: 0;
+  }
+
+  .table-responsive {
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  .table thead th {
+    background-color: #e9ecef !important;
+    color: #000 !important;
+  }
+
+  .table tbody td a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+}
+
+/* Accessibility - высокая контрастность */
+@media (prefers-contrast: high) {
+  .table thead th {
+    background-color: #000;
+    color: #fff;
+    border: 2px solid #000;
+  }
+
+  .table tbody td {
+    border: 1px solid #000;
+  }
+
+  .table tbody td code {
+    background-color: #fff;
+    border: 1px solid #000;
+  }
+}
+
+/* Ландшафтная ориентация на мобильных */
+@media (max-width: 991px) and (orientation: landscape) {
+  .catalog-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .catalog-title-h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 0.4rem 0.3rem;
+    font-size: 0.75rem;
+  }
+
+  .catalog-container {
+    padding: 0.5rem;
+  }
+}
+
+/* Промежуточные брейкпоинты для лучшей адаптивности */
+@media (min-width: 576px) and (max-width: 767px) {
+  .table thead th:nth-child(n + 7),
+  .table tbody td:nth-child(n + 7) {
+    display: none;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Оптимизация для iPad и планшетов */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .catalog-container {
+    padding: 1rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.5rem;
+  }
+}
+
+/* Оптимизация для больших планшетов и ноутбуков */
+@media (min-width: 1025px) and (max-width: 1439px) {
+  .catalog-title {
+    font-size: 2rem;
+  }
+
+  .catalog-title-h3 {
+    font-size: 1.4rem;
+  }
+}
+
+/* 4K и выше - ограничение ширины контента */
+@media (min-width: 3840px) {
+  .catalog-container .container {
+    max-width: 3200px;
+  }
+
+  .catalog-title {
+    font-size: 3.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .catalog-title-h3 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 1.5rem 1.25rem;
+    font-size: 1.3rem;
+  }
+
+  .table tbody td code {
+    font-size: 1.2rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+
+/* Уменьшение анимаций для пользователей с prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .table-responsive:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .table tbody tr:hover {
+    background-color: transparent;
+  }
+}
+
+/* Улучшение фокуса для клавиатурной навигации */
+.table tbody td:focus,
+.table tbody td a:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Дополнительные утилиты */
+.table tbody td:empty::before {
+  content: "—";
+  color: #adb5bd;
+}
+
+/* Sticky header для больших таблиц */
+@media (min-width: 992px) {
+  .table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa;
+  }
+}
+
+/* Стили для модального окна */
+.modal.show {
+  display: block !important;
+}
+
+.info-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #0d6efd;
+}
+
+.section-title {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.info-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 120px;
+}
+
+.info-value {
+  color: #212529;
+  text-align: right;
+  word-break: break-word;
+}
+
+.characteristics-container {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.attributes-container {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.attribute-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #28a745;
+}
+
+.attribute-item strong {
+  color: #495057;
+  min-width: 150px;
+  margin-right: 1rem;
+}
+
+/* Адаптивность для модального окна */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .info-label {
+    min-width: auto;
+    font-size: 0.9rem;
+  }
+
+  .info-value {
+    text-align: left;
+    font-size: 0.9rem;
+  }
+
+  .attribute-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .attribute-item strong {
+    min-width: auto;
+    margin-right: 0;
+  }
+}
+
+/* Кликабельные строки таблицы */
+.table tbody tr {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.08) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table tbody tr:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для формы редактирования */
+.attributes-edit-container {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.attribute-edit-item {
+  margin-bottom: 0.5rem;
+  padding: 0.4rem;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.attribute-edit-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Фиксированный footer для модального окна редактирования */
+.modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  flex-shrink: 0;
+  border-top: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+/* Адаптивность для формы редактирования */
+@media (max-width: 768px) {
+  .attribute-edit-item .row {
+    margin: 0;
+  }
+
+  .attribute-edit-item .col-md-4,
+  .attribute-edit-item .col-md-7,
+  .attribute-edit-item .col-md-1 {
+    padding: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .modal-xl {
+    max-width: calc(100vw - 1rem);
+  }
+}

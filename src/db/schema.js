@@ -89,3 +89,26 @@ export const compat = mysqlTable(
     uniqPair: sql`UNIQUE KEY uniq_inverter_ess (${table.inverterSku}, ${table.essSku})`,
   })
 );
+
+/* ---------- MAIN_INFORMATION: основная информация ---------- */
+export const mainInformation = mysqlTable("main_information", {
+  id: int("id").autoincrement().primaryKey(),
+  clientName: varchar("client_name", { length: 255 }).notNull(),
+  clientAddress: varchar("client_address", { length: 255 }).notNull(),
+  clientType: varchar("client_type", { length: 255 }).notNull(),
+  clientClass: varchar("client_class", { length: 255 }).notNull(),
+  systemType: varchar("system_type", { length: 255 }).notNull(),
+  typeArea: varchar("type_area", { length: 255 }).notNull().default(""),
+  directionsCount: int("directions_count").notNull().default(1),
+  sesPower: decimal("ses_power", { precision: 12, scale: 2 }).notNull(),
+  combinedData: json("combined_data"),
+  totalAnnualGeneration: decimal("total_annual_generation", {
+    precision: 12,
+    scale: 3,
+  }),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+  step: int("step").notNull().default(1),
+});
