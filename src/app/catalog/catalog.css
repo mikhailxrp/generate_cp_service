@@ -126,6 +126,22 @@
   }
 }
 
+/* Адаптация кнопок для мобильных устройств (только до 767px) */
+@media (max-width: 767px) {
+  .d-flex.justify-content-between.align-items-center {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+
+  .d-flex.justify-content-between.align-items-center .btn {
+    width: 100%;
+    max-width: 280px;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
 /* Планшеты малые */
 @media (min-width: 768px) and (max-width: 991px) {
   .table thead th:nth-child(n + 8),
@@ -210,6 +226,123 @@
   .catalog-title-h3 {
     font-size: 1rem;
     margin-bottom: 0.75rem;
+  }
+}
+
+/* Специальная адаптация для экранов 320px и меньше */
+@media (max-width: 320px) {
+  .catalog-container {
+    padding: 0.5rem;
+  }
+
+  .catalog-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .catalog-title-h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 0.4rem 0.25rem;
+    font-size: 0.7rem;
+    max-width: 120px;
+  }
+
+  .table tbody td code {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.25rem;
+  }
+}
+
+/* Дополнительная адаптация кнопок для экранов 320px и меньше */
+@media (max-width: 320px) {
+  .d-flex.justify-content-between.align-items-center {
+    gap: 0.5rem;
+  }
+
+  .d-flex.justify-content-between.align-items-center .btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Дополнительная адаптация модального окна для 320px */
+  .modal-dialog {
+    margin: 0.1rem;
+    max-width: calc(100vw - 0.2rem);
+  }
+
+  .modal-lg {
+    max-width: calc(100vw - 0.2rem);
+  }
+
+  .modal-header {
+    padding: 0.5rem;
+  }
+
+  .modal-title {
+    font-size: 0.9rem;
+  }
+
+  .modal-body {
+    padding: 0.5rem;
+  }
+
+  .modal-footer {
+    padding: 0.5rem;
+  }
+
+  .modal-footer .btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Дополнительная адаптация для модального окна просмотра на 320px */
+  .modal-footer .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .d-flex.justify-content-between > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .modal-footer .d-flex.justify-content-between .btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  .section-title {
+    font-size: 0.9rem;
+  }
+
+  .info-label,
+  .info-value {
+    font-size: 0.8rem;
+  }
+
+  .attribute-item strong {
+    font-size: 0.8rem;
   }
 }
 
@@ -534,6 +667,123 @@
 @media (max-width: 768px) {
   .modal-dialog {
     margin: 0.5rem;
+  }
+
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .info-label {
+    min-width: auto;
+    font-size: 0.9rem;
+  }
+
+  .info-value {
+    text-align: left;
+    font-size: 0.9rem;
+  }
+
+  .attribute-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .attribute-item strong {
+    min-width: auto;
+    margin-right: 0;
+  }
+}
+
+/* Адаптивность модального окна для узких экранов */
+@media (max-width: 425px) {
+  .modal-dialog {
+    margin: 0.25rem;
+    max-width: calc(100vw - 0.5rem);
+  }
+
+  .modal-lg {
+    max-width: calc(100vw - 0.5rem);
+  }
+
+  .modal-header {
+    padding: 0.75rem;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .modal-body {
+    padding: 0.75rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* Адаптация кнопок в секции характеристик */
+  .d-flex.justify-content-between.align-items-center {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+
+  .d-flex.justify-content-between.align-items-center .btn {
+    width: 100%;
+    max-width: none;
+  }
+
+  /* Адаптация колонок в формах */
+  .row .col-md-4,
+  .row .col-md-6,
+  .row .col-md-7,
+  .row .col-md-1 {
+    padding: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .attribute-edit-item .row {
+    margin: 0;
+  }
+
+  .attribute-edit-item .col-md-4,
+  .attribute-edit-item .col-md-7,
+  .attribute-edit-item .col-md-1 {
+    padding: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Адаптивность модального окна просмотра оборудования для средних экранов */
+@media (max-width: 768px) {
+  .modal-footer .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .d-flex.justify-content-between > div {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .modal-footer .d-flex.justify-content-between .btn {
+    flex: 1;
+  }
+
+  /* Адаптация секций информации */
+  .info-section {
+    margin-bottom: 1rem;
   }
 
   .info-item {
