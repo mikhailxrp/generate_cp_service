@@ -11,3 +11,38 @@ export const titleByType = (type) =>
     ess: "ESS (накопители/системы)",
     mount: "Крепёж и BoS",
   }[type] || type);
+
+export const formatYears = (years) => {
+  if (!years) return "-";
+
+  const num = Math.floor(years);
+  const lastDigit = num % 10;
+  const lastTwoDigits = num % 100;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+    return `${num} лет`;
+  }
+
+  if (lastDigit === 1) {
+    return `${num} год`;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return `${num} года`;
+  }
+
+  return `${num} лет`;
+};
+
+export const getServiceTypeLabel = (serviceType) => {
+  const labels = {
+    installation: "Монтаж",
+    commissioning: "ПНР",
+    service: "Сервис",
+    consultation: "Консультация",
+    design: "Проектирование",
+    other: "Другое",
+  };
+
+  return labels[serviceType] || serviceType;
+};
