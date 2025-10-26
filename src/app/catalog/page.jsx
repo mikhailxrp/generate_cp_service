@@ -154,7 +154,7 @@ export default async function CatalogPage() {
           />
 
           {/* Блок 2: Пресеты */}
-          {/* <PresetsTable rows={presetsRows} /> */}
+          <PresetsTable rows={presetsRows} />
 
           {/* Блок 3: Совместимость */}
           <CompatTable rows={compatRows} />
