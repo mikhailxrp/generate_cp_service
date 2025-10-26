@@ -1,9 +1,10 @@
 import { getDb } from "@/db/index";
-import { priceItems, presets, compat } from "@/db/schema";
+import { priceItems, presets, compat, services } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { fmtMoney, safe, titleByType } from "@/lib/format";
 import Header from "@/components/header/Header";
 import CatalogWrapper from "@/components/CatalogWrapper";
+import ServicesTableClient from "@/components/ServicesTableClient";
 import "./catalog.css";
 
 export const dynamic = "force-dynamic"; // всегда свежие данные
@@ -132,6 +133,9 @@ export default async function CatalogPage() {
 
   // 3) Совместимость
   const compatRows = await db.select().from(compat).limit(200);
+
+  // 4) Услуги
+  const servicesRows = await db.select().from(services).limit(100);
   return (
     <>
       <Header />
@@ -154,6 +158,9 @@ export default async function CatalogPage() {
 
           {/* Блок 3: Совместимость */}
           <CompatTable rows={compatRows} />
+
+          {/* Блок 4: Услуги */}
+          <ServicesTableClient rows={servicesRows} />
         </div>
       </div>
     </>

@@ -128,3 +128,35 @@ export const mainInformation = mysqlTable("main_information", {
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
   step: int("step").notNull().default(1),
 });
+
+// SERVICES: платные работы/услуги (монтаж, ПНР, сервис и т.п.)
+export const services = mysqlTable(
+  "services",
+  {
+    id: int("id").autoincrement().primaryKey(),
+
+    // из XLSX
+    sku: varchar("sku", { length: 100 }).notNull().unique(),
+    title: varchar("title", { length: 255 }).notNull(),
+    category: varchar("category", { length: 50 }).notNull().default("service"),
+    serviceType: varchar("service_type", { length: 100 }).notNull(),
+    description: text("description"),
+
+    basePrice: decimal("base_price", { precision: 12, scale: 2 }).notNull(),
+    currency: varchar("currency", { length: 10 }).notNull().default("RUB"),
+
+    executionDays: int("execution_days"),
+    warrantyYears: int("warranty_years"),
+    comment: text("comment"),
+
+    // служебные поля по аналогии с price_items
+    isActive: int("is_active").notNull().default(1),
+    priority: int("priority").notNull().default(0),
+    priceUpdatedAt: timestamp("price_updated_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+  },
+  (table) => ({
+    idxType: sql`INDEX idx_service_type (${table.serviceType})`,
+    idxPriority: sql`INDEX idx_priority (${table.priority})`,
+  })
+);
