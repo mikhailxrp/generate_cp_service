@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { updateService } from "@/app/actions/updateService";
+import { showToast } from "@/lib/toast";
 
 export default function EditServiceModal({
   isOpen,
@@ -54,13 +55,13 @@ export default function EditServiceModal({
     try {
       const result = await updateService(service.id, formData);
       if (result.success) {
-        onSuccess?.();
+        onSuccess?.(result.data);
         onClose();
       } else {
-        alert("Ошибка при обновлении услуги: " + result.error);
+        showToast.error("Ошибка при обновлении услуги: " + result.error);
       }
     } catch (error) {
-      alert("Ошибка при обновлении услуги: " + error.message);
+      showToast.error("Ошибка при обновлении услуги: " + error.message);
     } finally {
       setIsSubmitting(false);
     }

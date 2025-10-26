@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { fmtMoney, safe, titleByType } from "@/lib/format";
 import EquipmentModal from "./EquipmentModal";
 import AddEquipmentModal from "./AddEquipmentModal";
+import { showToast } from "@/lib/toast";
 
 export default function PriceTableClient({
   typeCode,
@@ -104,7 +105,7 @@ export default function PriceTableClient({
       const result = await response.json();
 
       // Показываем уведомление об успехе
-      alert(result.message || "Оборудование успешно сохранено!");
+      showToast.success(result.message || "Оборудование успешно сохранено!");
 
       // Обновляем данные в таблице
       if (result.data && result.data.id) {
@@ -125,7 +126,7 @@ export default function PriceTableClient({
       }
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
-      alert(`Ошибка: ${error.message}`);
+      showToast.error(`Ошибка: ${error.message}`);
       throw error;
     }
   };
@@ -169,7 +170,7 @@ export default function PriceTableClient({
 
       // Показываем уведомление об успехе после обновления состояния
       setTimeout(() => {
-        alert(result.message || "Оборудование успешно создано!");
+        showToast.success(result.message || "Оборудование успешно создано!");
       }, 100);
 
       // Дополнительная проверка через большую задержку
@@ -178,7 +179,7 @@ export default function PriceTableClient({
       }, 200);
     } catch (error) {
       console.error("Ошибка при создании:", error);
-      alert(`Ошибка: ${error.message}`);
+      showToast.error(`Ошибка: ${error.message}`);
       throw error;
     }
   };
@@ -197,7 +198,7 @@ export default function PriceTableClient({
       const result = await response.json();
 
       // Показываем уведомление об успехе
-      alert(result.message || "Оборудование успешно удалено!");
+      showToast.success(result.message || "Оборудование успешно удалено!");
 
       // Удаляем оборудование из таблицы
       setRows((prevRows) => {
@@ -209,7 +210,7 @@ export default function PriceTableClient({
       forceTableUpdate();
     } catch (error) {
       console.error("Ошибка при удалении:", error);
-      alert(`Ошибка: ${error.message}`);
+      showToast.error(`Ошибка: ${error.message}`);
       throw error;
     }
   };

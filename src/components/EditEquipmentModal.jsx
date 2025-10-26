@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { showToast } from "@/lib/toast";
 
 export default function EditEquipmentModal({
   isOpen,
@@ -105,7 +106,7 @@ export default function EditEquipmentModal({
       }
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
-      alert("Ошибка при сохранении данных");
+      showToast.error("Ошибка при сохранении данных");
     } finally {
       setIsLoading(false);
     }

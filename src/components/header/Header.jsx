@@ -7,7 +7,13 @@ import "./header.css";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+
+  // Ensure component is mounted before using pathname to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Закрываем меню при изменении маршрута
   useEffect(() => {
@@ -58,22 +64,24 @@ export default function Header() {
             {/* Desktop Navigation */}
             <div className="header-nav-links desktop-menu">
               <Link
-                className={`btn btn-light ${pathname === "/" ? "active" : ""}`}
+                className={`btn btn-light ${
+                  mounted && pathname === "/" ? "active" : ""
+                }`}
                 href="/"
               >
                 Главная
               </Link>
               <Link
                 className={`btn btn-light ${
-                  pathname === "/prewiev" ? "active" : ""
+                  mounted && pathname === "/preview" ? "active" : ""
                 }`}
-                href="/prewiev"
+                href="/preview"
               >
                 Просмотр КП
               </Link>
               <Link
                 className={`btn btn-light ${
-                  pathname === "/catalog" ? "active" : ""
+                  mounted && pathname === "/catalog" ? "active" : ""
                 }`}
                 href="/catalog"
               >
@@ -81,7 +89,7 @@ export default function Header() {
               </Link>
               <Link
                 className={`btn btn-light ${
-                  pathname === "/settings" ? "active" : ""
+                  mounted && pathname === "/settings" ? "active" : ""
                 }`}
                 href="/settings"
               >
@@ -129,7 +137,7 @@ export default function Header() {
             <nav className="mobile-nav-links">
               <Link
                 className={`mobile-nav-link ${
-                  pathname === "/" ? "active" : ""
+                  mounted && pathname === "/" ? "active" : ""
                 }`}
                 href="/"
                 onClick={closeMenu}
@@ -139,9 +147,9 @@ export default function Header() {
               </Link>
               <Link
                 className={`mobile-nav-link ${
-                  pathname === "/prewiev" ? "active" : ""
+                  mounted && pathname === "/preview" ? "active" : ""
                 }`}
-                href="/prewiev"
+                href="/preview"
                 onClick={closeMenu}
               >
                 <i className="bi bi-eye"></i>
@@ -149,7 +157,7 @@ export default function Header() {
               </Link>
               <Link
                 className={`mobile-nav-link ${
-                  pathname === "/catalog" ? "active" : ""
+                  mounted && pathname === "/catalog" ? "active" : ""
                 }`}
                 href="/catalog"
                 onClick={closeMenu}
@@ -159,7 +167,7 @@ export default function Header() {
               </Link>
               <Link
                 className={`mobile-nav-link ${
-                  pathname === "/settings" ? "active" : ""
+                  mounted && pathname === "/settings" ? "active" : ""
                 }`}
                 href="/settings"
                 onClick={closeMenu}
