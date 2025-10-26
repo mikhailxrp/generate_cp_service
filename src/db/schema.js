@@ -106,6 +106,22 @@ export const mainInformation = mysqlTable("main_information", {
     precision: 12,
     scale: 3,
   }),
+
+  // Fields from InformationForm.jsx
+  essBattery: varchar("ess_battery", { length: 100 }),
+  networkPhazes: varchar("network_phazes", { length: 10 }),
+  connectedPowerKw: int("connected_power_kw"),
+  microgeneration: varchar("microgeneration", { length: 10 }),
+  monthlyConsumptionKwh: int("monthly_consumption_kwh"),
+  priceKwh: decimal("price_kwh", { precision: 10, scale: 1 }),
+  buildingHeight: varchar("building_height", { length: 50 }),
+  transportCosts: varchar("transport_costs", { length: 10 }),
+  dgUnit: varchar("dg_unit", { length: 10 }),
+  electricCar: varchar("electric_car", { length: 10 }),
+  projectNumber: varchar("project_number", { length: 100 }),
+  clientPains: json("client_pains"),
+  clientPainsLabels: json("client_pains_labels"),
+
   createdAt: timestamp("created_at")
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),

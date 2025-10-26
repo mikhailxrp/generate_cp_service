@@ -103,7 +103,7 @@ export default function GraphCard({ graphData, onTotalGenerationCalculated }) {
     labels,
     datasets: [
       {
-        label: "тыс. кВт*ч в месяц",
+        label: "",
         data: dataValues,
         backgroundColor: "#28a745",
         borderColor: "#28a745",
@@ -116,7 +116,7 @@ export default function GraphCard({ graphData, onTotalGenerationCalculated }) {
     responsive: true,
     plugins: {
       legend: {
-        position: "top",
+        display: false,
       },
       title: {
         display: true,
@@ -124,6 +124,9 @@ export default function GraphCard({ graphData, onTotalGenerationCalculated }) {
         font: {
           size: 16,
           weight: "bold",
+        },
+        padding: {
+          bottom: 20,
         },
       },
       tooltip: {
@@ -156,8 +159,13 @@ export default function GraphCard({ graphData, onTotalGenerationCalculated }) {
   return (
     <div className="card mt-3">
       <div className="card-body">
-        <Bar data={data} options={options} />
-        <p className="text-center mt-3 text-muted small">
+        <div>
+          <Bar data={data} options={options} />
+        </div>
+        <p
+          className="text-center text-muted small"
+          style={{ marginBottom: "0", marginTop: "10px" }}
+        >
           Выработка СЭС разная от месяца к месяцу и зависит от количество
           солнечных дней
         </p>
