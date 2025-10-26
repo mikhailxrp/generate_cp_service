@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import AddServiceModal from "./AddServiceModal";
+import EditServiceModal from "./EditServiceModal";
+import { formatYears, getServiceTypeLabel } from "@/lib/format";
 
 export default function ServicesTableClient({ rows }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState(null);
   const [services, setServices] = useState(rows);
 
   const handleAddService = () => {
@@ -16,6 +20,21 @@ export default function ServicesTableClient({ rows }) {
   };
 
   const handleServiceAdded = () => {
+    // Перезагружаем страницу для получения обновленных данных
+    window.location.reload();
+  };
+
+  const handleEditService = (service) => {
+    setEditingService(service);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setEditingService(null);
+  };
+
+  const handleServiceUpdated = () => {
     // Перезагружаем страницу для получения обновленных данных
     window.location.reload();
   };
@@ -42,6 +61,7 @@ export default function ServicesTableClient({ rows }) {
                 <th>Срок выполнения</th>
                 <th>Гарантия</th>
                 <th>Комментарий</th>
+                <th>Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -51,7 +71,7 @@ export default function ServicesTableClient({ rows }) {
                     <code>{r.sku}</code>
                   </td>
                   <td>{r.title || "-"}</td>
-                  <td>{r.serviceType || "-"}</td>
+                  <td>{getServiceTypeLabel(r.serviceType) || "-"}</td>
                   <td>{r.description || "-"}</td>
                   <td>
                     {r.basePrice
@@ -64,8 +84,17 @@ export default function ServicesTableClient({ rows }) {
                       : "-"}
                   </td>
                   <td>{r.executionDays ? `${r.executionDays} дн.` : "-"}</td>
-                  <td>{r.warrantyYears ? `${r.warrantyYears} лет` : "-"}</td>
+                  <td>{formatYears(r.warrantyYears)}</td>
                   <td>{r.comment || "-"}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => handleEditService(r)}
+                      title="Редактировать услугу"
+                    >
+                      <i className="bi bi-pencil"></i>
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -78,6 +107,13 @@ export default function ServicesTableClient({ rows }) {
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onSuccess={handleServiceAdded}
+      />
+
+      <EditServiceModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        onSuccess={handleServiceUpdated}
+        service={editingService}
       />
     </>
   );
