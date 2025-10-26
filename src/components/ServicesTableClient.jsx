@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AddServiceModal from "./AddServiceModal";
 import EditServiceModal from "./EditServiceModal";
 import { formatYears, getServiceTypeLabel } from "@/lib/format";
+import { showToast } from "@/lib/toast";
 
-export default function ServicesTableClient({ rows }) {
+export default function ServicesTableClient({ rows: initialRows }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
-  const [services, setServices] = useState(rows);
+  const [services, setServices] = useState(initialRows || []);
+
+  // Синхронизируем с initialRows при изменении
+  useEffect(() => {
+    if (initialRows) {
+      setServices(initialRows);
+    }
+  }, [initialRows]);
 
   const handleAddService = () => {
     setIsModalOpen(true);
@@ -19,9 +27,11 @@ export default function ServicesTableClient({ rows }) {
     setIsModalOpen(false);
   };
 
-  const handleServiceAdded = () => {
-    // Перезагружаем страницу для получения обновленных данных
-    window.location.reload();
+  const handleServiceAdded = (serviceData) => {
+    if (serviceData) {
+      setServices((prevServices) => [serviceData, ...prevServices]);
+      showToast.success("Услуга успешно добавлена!");
+    }
   };
 
   const handleEditService = (service) => {
@@ -34,9 +44,15 @@ export default function ServicesTableClient({ rows }) {
     setEditingService(null);
   };
 
-  const handleServiceUpdated = () => {
-    // Перезагружаем страницу для получения обновленных данных
-    window.location.reload();
+  const handleServiceUpdated = (serviceData) => {
+    if (serviceData) {
+      setServices((prevServices) =>
+        prevServices.map((service) =>
+          service.id === serviceData.id ? serviceData : service
+        )
+      );
+      showToast.success("Услуга успешно обновлена!");
+    }
   };
 
   return (

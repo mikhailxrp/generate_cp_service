@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { addService } from "@/app/actions/addService";
+import { showToast } from "@/lib/toast";
 
 export default function AddServiceModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -32,7 +33,7 @@ export default function AddServiceModal({ isOpen, onClose, onSuccess }) {
     try {
       const result = await addService(formData);
       if (result.success) {
-        onSuccess?.();
+        onSuccess?.(result.data);
         onClose();
         // Сброс формы
         setFormData({
@@ -47,10 +48,10 @@ export default function AddServiceModal({ isOpen, onClose, onSuccess }) {
           comment: "",
         });
       } else {
-        alert("Ошибка при добавлении услуги: " + result.error);
+        showToast.error("Ошибка при добавлении услуги: " + result.error);
       }
     } catch (error) {
-      alert("Ошибка при добавлении услуги: " + error.message);
+      showToast.error("Ошибка при добавлении услуги: " + error.message);
     } finally {
       setIsSubmitting(false);
     }

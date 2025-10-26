@@ -1,6 +1,7 @@
 import { Montserrat } from "next/font/google";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import BootstrapClient from "./BootstrapClient";
 

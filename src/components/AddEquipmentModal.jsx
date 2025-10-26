@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { showToast } from "@/lib/toast";
 
 export default function AddEquipmentModal({
   isOpen,
@@ -85,7 +86,7 @@ export default function AddEquipmentModal({
       // onClose будет вызван в родительском компоненте после успешного сохранения
     } catch (error) {
       console.error("Ошибка при создании оборудования:", error);
-      alert("Ошибка при создании оборудования");
+      showToast.error("Ошибка при создании оборудования");
     } finally {
       setIsLoading(false);
     }

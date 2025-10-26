@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { showToast } from "@/lib/toast";
 import { fmtMoney, safe } from "@/lib/format";
 import { saveBomAndServicesAction } from "@/app/actions/saveBomAndServices";
 
@@ -12,7 +11,7 @@ export default function CreateSesButton({ id }) {
 
   const handleCreateSes = async () => {
     if (!id) {
-      toast.error("ID не найден");
+      showToast.error("ID не найден");
       return;
     }
 
@@ -28,18 +27,18 @@ export default function CreateSesButton({ id }) {
       });
 
       if (response.ok) {
-        toast.success("Запрос успешно отправлен!");
+        showToast.success("Запрос успешно отправлен!");
         const data = await response.json();
         console.log("Полные данные ответа:", data);
         console.log("BOM данные:", data.bom);
         console.log("Services данные:", data.services);
         setResponseData(data);
       } else {
-        toast.error("Ошибка при отправке запроса");
+        showToast.error("Ошибка при отправке запроса");
       }
     } catch (error) {
       console.error("Ошибка:", error);
-      toast.error("Произошла ошибка при отправке запроса");
+      showToast.error("Произошла ошибка при отправке запроса");
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +64,7 @@ export default function CreateSesButton({ id }) {
 
   const handleGenerateKP = async () => {
     if (!responseData || !id) {
-      toast.error("Нет данных для генерации КП");
+      showToast.error("Нет данных для генерации КП");
       return;
     }
 
@@ -77,7 +76,7 @@ export default function CreateSesButton({ id }) {
       );
     } catch (error) {
       console.error("Ошибка при сохранении данных:", error);
-      toast.error("Ошибка при сохранении данных КП");
+      showToast.error("Ошибка при сохранении данных КП");
     }
   };
 
@@ -294,19 +293,6 @@ export default function CreateSesButton({ id }) {
           }
         }
       `}</style>
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
     </>
   );
 }

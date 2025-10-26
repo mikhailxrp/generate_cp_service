@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import EditEquipmentModal from "./EditEquipmentModal";
+import { showToast } from "@/lib/toast";
 
 export default function EquipmentModal({
   isOpen,
@@ -29,7 +30,7 @@ export default function EquipmentModal({
       onClose();
     } catch (error) {
       console.error("Ошибка при удалении:", error);
-      alert("Ошибка при удалении оборудования");
+      showToast.error("Ошибка при удалении оборудования");
     } finally {
       setIsDeleting(false);
     }
