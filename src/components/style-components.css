@@ -40,3 +40,57 @@
   font-size: clamp(0.8rem, 1.2vw, 0.9rem);
   font-weight: 500;
 }
+
+/* MultiSelect styles */
+.hover-bg-light:hover {
+  background-color: #f8f9fa !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.multiselect-dropdown {
+  transition: all 0.2s ease;
+}
+
+.multiselect-dropdown:hover {
+  border-color: #86b7fe;
+}
+
+.multiselect-option {
+  transition: background-color 0.15s ease;
+}
+
+.multiselect-option:hover {
+  background-color: #f8f9fa;
+}
+
+.multiselect-badge {
+  transition: all 0.2s ease;
+}
+
+.multiselect-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Validation styles */
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.invalid-feedback {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: #dc3545;
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}

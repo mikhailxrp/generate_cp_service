@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../style-components.css";
 import { updateMainInfoAction } from "@/app/actions/updateMainInfo";
 
@@ -17,6 +17,12 @@ export default function MainInformationForm({ step, id }) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+
+  // Начальная валидация при загрузке компонента
+  useEffect(() => {
+    validateForm();
+  }, [formData]);
 
   const getDirectionOptions = (typeArea) => {
     if (typeArea === "flat_east-west" || typeArea === "carpot_east-west") {
@@ -36,6 +42,41 @@ export default function MainInformationForm({ step, id }) {
     }
   };
 
+  const validateForm = () => {
+    const errors = {};
+
+    // Валидация всех полей
+    if (!formData.client_name.trim()) {
+      errors.client_name = "Название клиента обязательно для заполнения";
+    } else if (formData.client_name.trim().length < 2) {
+      errors.client_name =
+        "Название клиента должно содержать минимум 2 символа";
+    }
+
+    if (!formData.client_address.trim()) {
+      errors.client_address = "Адрес клиента обязателен для заполнения";
+    } else if (formData.client_address.trim().length < 5) {
+      errors.client_address = "Адрес должен содержать минимум 5 символов";
+    }
+
+    if (formData.client_type === "B2B" && !formData.client_class) {
+      errors.client_class = "Класс клиента обязателен для юридических лиц";
+    }
+
+    if (!formData.ses_power_kw.trim()) {
+      errors.ses_power_kw = "Мощность СЭС обязательна для заполнения";
+    } else if (!/^\d+(\.\d+)?$/.test(formData.ses_power_kw.trim())) {
+      errors.ses_power_kw = "Мощность должна быть числом (например: 5 или 5.5)";
+    } else if (parseFloat(formData.ses_power_kw) <= 0) {
+      errors.ses_power_kw = "Мощность должна быть больше 0";
+    } else if (parseFloat(formData.ses_power_kw) > 1000) {
+      errors.ses_power_kw = "Мощность не может превышать 1000 кВт";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -45,6 +86,10 @@ export default function MainInformationForm({ step, id }) {
       const availableOptions = getDirectionOptions(value);
       newFormData.directions_count = availableOptions[0].value;
       setFormData(newFormData);
+    } else if (name === "client_type") {
+      // При изменении типа клиента сбрасываем класс клиента
+      const newFormData = { ...formData, [name]: value, client_class: "" };
+      setFormData(newFormData);
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -52,6 +97,12 @@ export default function MainInformationForm({ step, id }) {
 
   const sendFormData = async (e) => {
     e.preventDefault();
+
+    // Валидация формы перед отправкой
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -69,6 +120,7 @@ export default function MainInformationForm({ step, id }) {
           directions_count: "1",
           ses_power_kw: "",
         });
+        setValidationErrors({});
       }
     } catch (err) {
       console.error("Ошибка при обновлении данных:", err);
@@ -83,35 +135,51 @@ export default function MainInformationForm({ step, id }) {
         <h2 className="title-block text-center">Блок основная информация</h2>
         <div className="mb-3">
           <label htmlFor="client-name" className="form-label">
-            Название клиента
+            Название клиента <span className="text-danger">*</span>
           </label>
           <input
             type="text"
-            className="form-control"
+            className={`form-control ${
+              validationErrors.client_name ? "is-invalid" : ""
+            }`}
             id="client-name"
             name="client_name"
             value={formData.client_name}
             onChange={handleChange}
+            required
           />
+          {validationErrors.client_name && (
+            <div className="invalid-feedback">
+              {validationErrors.client_name}
+            </div>
+          )}
         </div>
 
         <div className="mb-3">
           <label htmlFor="client-address" className="form-label">
-            Адрес клиента
+            Адрес клиента <span className="text-danger">*</span>
           </label>
           <input
             type="text"
-            className="form-control"
+            className={`form-control ${
+              validationErrors.client_address ? "is-invalid" : ""
+            }`}
             id="client-address"
             name="client_address"
             value={formData.client_address}
             onChange={handleChange}
+            required
           />
+          {validationErrors.client_address && (
+            <div className="invalid-feedback">
+              {validationErrors.client_address}
+            </div>
+          )}
         </div>
 
         <div className="mb-3">
           <label htmlFor="client-type" className="form-label">
-            Тип клиента
+            Тип клиента <span className="text-danger">*</span>
           </label>
           <select
             className="form-select"
@@ -119,6 +187,7 @@ export default function MainInformationForm({ step, id }) {
             name="client_type"
             value={formData.client_type}
             onChange={handleChange}
+            required
           >
             <option value="B2B">Юридическое лицо</option>
             <option value="B2C">Физическое лицо</option>
@@ -128,25 +197,34 @@ export default function MainInformationForm({ step, id }) {
         {formData.client_type === "B2B" && (
           <div className="mb-3">
             <label htmlFor="client-class" className="form-label">
-              Класс клиента
+              Класс клиента <span className="text-danger">*</span>
             </label>
             <select
-              className="form-select"
+              className={`form-select ${
+                validationErrors.client_class ? "is-invalid" : ""
+              }`}
               id="client-class"
               name="client_class"
               value={formData.client_class}
               onChange={handleChange}
+              required
             >
+              <option value="">Выберите класс клиента</option>
               <option value="simple">Простой</option>
               <option value="with-requests">С запросами</option>
               <option value="with-project">С проектом</option>
             </select>
+            {validationErrors.client_class && (
+              <div className="invalid-feedback">
+                {validationErrors.client_class}
+              </div>
+            )}
           </div>
         )}
 
         <div className="mb-3">
           <label htmlFor="system-type" className="form-label">
-            Тип системы
+            Тип системы <span className="text-danger">*</span>
           </label>
           <select
             className="form-select"
@@ -154,6 +232,7 @@ export default function MainInformationForm({ step, id }) {
             name="system_type"
             value={formData.system_type}
             onChange={handleChange}
+            required
           >
             <option value="network">Сетевая</option>
             <option value="hybrid">Гибридная</option>
@@ -163,7 +242,7 @@ export default function MainInformationForm({ step, id }) {
 
         <div className="mb-3">
           <label htmlFor="type-area" className="form-label">
-            Тип площадки
+            Тип площадки <span className="text-danger">*</span>
           </label>
           <select
             className="form-select"
@@ -171,6 +250,7 @@ export default function MainInformationForm({ step, id }) {
             name="type_area"
             value={formData.type_area}
             onChange={handleChange}
+            required
           >
             <option value="flat_south">Плоская(юг)</option>
             <option value="flat_east-west">Плоская(восток-запад)</option>
@@ -188,7 +268,7 @@ export default function MainInformationForm({ step, id }) {
 
         <div className="mb-3">
           <label htmlFor="directions-count" className="form-label">
-            Количество направлений
+            Количество направлений <span className="text-danger">*</span>
           </label>
           <select
             className="form-select"
@@ -196,6 +276,7 @@ export default function MainInformationForm({ step, id }) {
             name="directions_count"
             value={formData.directions_count}
             onChange={handleChange}
+            required
           >
             {getDirectionOptions(formData.type_area).map((option) => (
               <option key={option.value} value={option.value}>
@@ -207,30 +288,44 @@ export default function MainInformationForm({ step, id }) {
 
         <div className="mb-4">
           <label htmlFor="ses-power-kw" className="form-label">
-            Мощность СЭС
+            Мощность СЭС <span className="text-danger">*</span>
           </label>
           <input
             type="text"
-            className="form-control"
+            className={`form-control ${
+              validationErrors.ses_power_kw ? "is-invalid" : ""
+            }`}
             id="ses-power-kw"
             name="ses_power_kw"
             value={formData.ses_power_kw}
             onChange={handleChange}
+            placeholder="Например: 5 или 5.5"
+            required
           />
-          <div id="ses-power-kw" className="form-text">
+          <div id="ses-power-kw-help" className="form-text">
             кВт
           </div>
+          {validationErrors.ses_power_kw && (
+            <div className="invalid-feedback">
+              {validationErrors.ses_power_kw}
+            </div>
+          )}
         </div>
 
         <div className="mb-3 mt-4 btn-wrapper">
           <button
             className="btn btn-primary"
             onClick={sendFormData}
-            disabled={isSubmitting}
+            disabled={isSubmitting || Object.keys(validationErrors).length > 0}
           >
             {isSubmitting ? "Сохраняю..." : "Добавить блок"}
           </button>
           {error && <p className="text-danger mt-2 text-center">{error}</p>}
+          {Object.keys(validationErrors).length > 0 && (
+            <p className="text-warning mt-2 text-center">
+              Пожалуйста, исправьте ошибки в форме
+            </p>
+          )}
         </div>
       </div>
     </>
