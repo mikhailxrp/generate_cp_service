@@ -11,6 +11,7 @@ import GraphVisualForm from "@/components/block-forms/graphVisualForm";
 import GraphCardWrapper from "@/components/GraphCardWrapper";
 import InformationForm from "@/components/block-forms/InformationForm";
 import CardInformation from "@/components/CardInformation";
+import CreateSesButton from "@/components/CreateSesButton";
 
 export const metadata = {
   title: "САНХОРС | Генератор Коммерческих предложений",
@@ -34,8 +35,6 @@ export default async function Home({ searchParams }) {
       .limit(1);
     cpData = result[0] || null;
   }
-
-  console.log(cpData);
 
   return (
     <>
@@ -73,11 +72,7 @@ export default async function Home({ searchParams }) {
             )}
             {step === 3 && <InformationForm step={step} id={id ?? null} />}
             {step >= 4 && <CardInformation cpData={cpData} id={id} />}
-            {step >= 4 && (
-              <div className="btn-wrapper mt-4 text-center">
-                <button className="btn btn-primary">Собрать коплект СЭС</button>
-              </div>
-            )}
+            {step >= 4 && <CreateSesButton id={id} />}
           </div>
           <div className="col-lg-6 mt-lg-0 mt-4">
             {step >= 2 && <MainInfoCard cpData={cpData} />}

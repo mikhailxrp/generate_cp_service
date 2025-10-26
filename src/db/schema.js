@@ -122,6 +122,10 @@ export const mainInformation = mysqlTable("main_information", {
   clientPains: json("client_pains"),
   clientPainsLabels: json("client_pains_labels"),
 
+  // Данные таблиц из CreateSesButton
+  bomData: json("bom_data"), // данные таблицы "Оборудование" (Bill of Materials)
+  servicesData: json("services_data"), // данные таблицы "Услуги"
+
   createdAt: timestamp("created_at")
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
