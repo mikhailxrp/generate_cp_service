@@ -63,7 +63,10 @@ export async function addService(formData) {
 
     return {
       success: true,
-      data: result,
+      data: {
+        insertId: result.insertId,
+        affectedRows: result.affectedRows,
+      },
     };
   } catch (error) {
     console.error("Ошибка при добавлении услуги:", error);
