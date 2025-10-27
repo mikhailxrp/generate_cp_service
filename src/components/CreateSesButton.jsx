@@ -408,28 +408,6 @@ export default function CreateSesButton({ id, cpData }) {
                   </div>
                 )}
 
-                {/* Общая сумма */}
-                {((bomToDisplay && bomToDisplay.length > 0) ||
-                  (servicesToDisplay && servicesToDisplay.length > 0)) && (
-                  <div className="row justify-content-center">
-                    <div className="col-md-6">
-                      <div className="card border-primary">
-                        <div className="card-body text-center">
-                          <h5 className="card-title">
-                            Общая стоимость проекта
-                          </h5>
-                          <h3 className="text-primary">
-                            {fmtMoney(
-                              calculateTotal(bomToDisplay || []) +
-                                calculateTotal(servicesToDisplay || [])
-                            )}
-                          </h3>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Расчёт окупаемости */}
                 {paybackData && paybackData.totalCost > 0 && (
                   <div className="row justify-content-center mt-4">
@@ -557,6 +535,28 @@ export default function CreateSesButton({ id, cpData }) {
                   </div>
                 )}
 
+                {/* Общая сумма */}
+                {((bomToDisplay && bomToDisplay.length > 0) ||
+                  (servicesToDisplay && servicesToDisplay.length > 0)) && (
+                  <div className="row justify-content-center mt-3">
+                    <div className="col-md-6">
+                      <div className="card border-primary">
+                        <div className="card-body text-center">
+                          <h5 className="card-title">
+                            Общая стоимость проекта
+                          </h5>
+                          <h3 className="text-primary">
+                            {fmtMoney(
+                              calculateTotal(bomToDisplay || []) +
+                                calculateTotal(servicesToDisplay || [])
+                            )}
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Кнопка для генерации КП */}
                 {!hasCpData && (
                   <div className="text-center mt-4">
@@ -588,7 +588,7 @@ export default function CreateSesButton({ id, cpData }) {
                             servicesData || []
                           );
                           showToast.success("КП сгенерирован!");
-                          router.push("/preview");
+                          router.push(`/preview?id=${id}`);
                         } catch (error) {
                           console.error("Ошибка при сохранении данных:", error);
                           showToast.error("Ошибка при сохранении данных КП");

@@ -130,8 +130,8 @@ export default function MainInformationForm({ step, id }) {
         setHasAttemptedSubmit(false);
       }
     } catch (err) {
-      console.error("Ошибка при обновлении данных:", err);
-      setError("Не удалось сохранить данные. Попробуйте еще раз.");
+      // console.error("Ошибка при обновлении данных:", err);
+      // setError("Не удалось сохранить данные. Попробуйте еще раз.");
     } finally {
       setIsSubmitting(false);
     }
