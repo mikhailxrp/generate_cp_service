@@ -1,19 +1,189 @@
-/**
- * Расчёт окупаемости солнечной электростанции
- */
+import paybackTable from "./payback_table_from_excel.json";
 
 /**
- * Расчёт годовой экономии (базовый и с экспортом излишков).
+ * МОДУЛЬ ОКУПАЕМОСТИ
+ *
+ * Режимы работы:
+ * - TABLE_MODE: поиск по таблице paybackTable (по умолчанию)
+ * - CALC_MODE: расчёт экономии и деградации
+ */
+
+// ===== НАСТРОЙКИ =====
+const PAYBACK_MODE = "TABLE_MODE"; // "TABLE_MODE" или "CALC_MODE"
+
+// ===== ТАБЛИЧНЫЙ РЕЖИМ =====
+
+/**
+ * Поиск года окупаемости по таблице paybackTable
  * @param {Object} params - Параметры расчёта
- * @param {number} params.year_generation_kwh - Годовая генерация в кВт·ч
- * @param {number} params.tariff_rub_per_kwh - Тариф за кВт·ч в рублях
- * @param {number} [params.self_consumption_share=1] - Доля самопотребления (0-1)
- * @param {number} [params.annual_onm_rub=0] - Годовые расходы на обслуживание в рублях
- * @param {number} [params.export_price_rub_per_kwh=null] - Цена экспорта за кВт·ч
- * @param {Array<number>} [params.monthlyGenKwh=null] - Помесячная генерация [kWh x12]
- * @param {Array<number>} [params.monthlyLoadKwh=null] - Помесячная нагрузка [kWh x12]
+ * @param {number} params.total_cost_rub - Общая стоимость проекта (оборудование + услуги)
+ * @returns {number|null} Год окупаемости или null, если не найден
+ */
+function calcPaybackYearsTable({ total_cost_rub }) {
+  const totalCost = Number(total_cost_rub) || 0;
+
+  if (!Array.isArray(paybackTable) || paybackTable.length === 0) {
+    console.warn("paybackTable is empty or not an array");
+    return null;
+  }
+
+  if (totalCost <= 0) {
+    return null;
+  }
+
+  // Сортируем таблицу по cumulative для поиска
+  const sortedTable = [...paybackTable].sort(
+    (a, b) => a.cumulative - b.cumulative
+  );
+
+  // Находим ближайшее значение cumulative >= totalCost
+  let bestMatch = null;
+  let minDistance = Infinity;
+
+  for (const row of sortedTable) {
+    const cumulative = Number(row.cumulative) || 0;
+    const year = Number(row.year) || 0;
+
+    if (cumulative >= totalCost) {
+      const distance = cumulative - totalCost;
+
+      // Если это первое подходящее значение или оно ближе к искомому
+      if (bestMatch === null || distance < minDistance) {
+        bestMatch = { year, cumulative, distance };
+        minDistance = distance;
+      }
+      // Если расстояние одинаковое, выбираем большее cumulative (консервативный подход)
+      else if (distance === minDistance && cumulative > bestMatch.cumulative) {
+        bestMatch = { year, cumulative, distance };
+      }
+    }
+  }
+
+  return bestMatch ? bestMatch.year : null;
+}
+
+/**
+ * Расчёт окупаемости с детализацией по таблице
+ * @param {Object} params - Параметры расчёта
+ * @param {number} params.total_cost_rub - Общая стоимость СЭС в рублях
+ * @returns {Object} Результат расчёта с детализацией
+ */
+function calcPaybackWithDegradationTable({ total_cost_rub }) {
+  const totalCost = Number(total_cost_rub) || 0;
+
+  if (!Array.isArray(paybackTable) || paybackTable.length === 0) {
+    console.warn("paybackTable is empty or not an array");
+    return {
+      paybackYear: null,
+      totalCost,
+      finalCumulativeSavings: 0,
+      yearlyData: [],
+      netProfit: -totalCost,
+    };
+  }
+
+  if (totalCost <= 0) {
+    return {
+      paybackYear: null,
+      totalCost,
+      finalCumulativeSavings: 0,
+      yearlyData: [],
+      netProfit: -totalCost,
+    };
+  }
+
+  // Сортируем таблицу по году
+  const sortedTable = [...paybackTable].sort((a, b) => a.year - b.year);
+
+  let paybackYear = null;
+  const yearlyData = [];
+  let finalCumulativeSavings = 0;
+
+  for (let i = 0; i < sortedTable.length; i++) {
+    const row = sortedTable[i];
+    const year = Number(row.year) || 0;
+    const cumulative = Number(row.cumulative) || 0;
+
+    // Вычисляем annualSaving как разность между текущим и предыдущим cumulative
+    const prevCumulative =
+      i > 0 ? Number(sortedTable[i - 1].cumulative) || 0 : 0;
+    const annualSaving = cumulative - prevCumulative;
+
+    yearlyData.push({
+      year,
+      generation: 0, // Не используется в табличном подходе
+      annualSaving,
+      cumulativeSavings: cumulative,
+      remainingCost: Math.max(0, totalCost - cumulative),
+    });
+
+    // Проверяем окупаемость
+    if (paybackYear === null && cumulative >= totalCost) {
+      paybackYear = year;
+    }
+
+    finalCumulativeSavings = cumulative;
+  }
+
+  return {
+    paybackYear,
+    totalCost,
+    finalCumulativeSavings,
+    yearlyData,
+    netProfit: finalCumulativeSavings - totalCost,
+  };
+}
+
+// ===== ПУБЛИЧНЫЕ ФУНКЦИИ =====
+
+/**
+ * Расчёт годовой экономии (только для CALC_MODE)
+ * @param {Object} params - Параметры расчёта
  * @returns {number} Годовая экономия в рублях
  */
+export function calcAnnualSaving(params) {
+  if (PAYBACK_MODE === "TABLE_MODE") {
+    console.warn("calcAnnualSaving не используется в TABLE_MODE");
+    return 0;
+  }
+  // Здесь будет код для CALC_MODE
+  return 0;
+}
+
+/**
+ * Расчёт окупаемости
+ * @param {Object} params - Параметры расчёта
+ * @returns {number|null} Окупаемость в годах или null
+ */
+export function calcPaybackYears(params) {
+  if (PAYBACK_MODE === "TABLE_MODE") {
+    return calcPaybackYearsTable(params);
+  }
+  // Здесь будет код для CALC_MODE
+  return null;
+}
+
+/**
+ * Расчёт окупаемости с детализацией
+ * @param {Object} params - Параметры расчёта
+ * @returns {Object} Результат расчёта с детализацией
+ */
+export function calcPaybackWithDegradation(params) {
+  if (PAYBACK_MODE === "TABLE_MODE") {
+    return calcPaybackWithDegradationTable(params);
+  }
+  // Здесь будет код для CALC_MODE
+  return {
+    paybackYear: null,
+    totalCost: 0,
+    finalCumulativeSavings: 0,
+    yearlyData: [],
+    netProfit: 0,
+  };
+}
+
+// ===== ОРИГИНАЛЬНЫЙ КОД (ЗАКОММЕНТИРОВАН) =====
+/*
 export function calcAnnualSaving({
   year_generation_kwh,
   tariff_rub_per_kwh,
@@ -63,13 +233,6 @@ export function calcAnnualSaving({
   return Math.max(0, savingRub - (Number(annual_onm_rub) || 0));
 }
 
-/**
- * Итоговая окупаемость (лет). Возвращает null, если экономия ≈ 0.
- * @param {Object} params - Параметры расчёта
- * @param {number} params.total_cost_rub - Общая стоимость СЭС в рублях
- * @param {...Object} rest - Остальные параметры для calcAnnualSaving
- * @returns {number|null} Окупаемость в годах или null
- */
 export function calcPaybackYears({ total_cost_rub, ...rest }) {
   const annualSaving = calcAnnualSaving(rest);
   if (!annualSaving || annualSaving <= 0) return null;
@@ -78,19 +241,6 @@ export function calcPaybackYears({ total_cost_rub, ...rest }) {
   return Number.isFinite(years) ? Number(years.toFixed(2)) : null;
 }
 
-/**
- * Расчёт окупаемости с учётом деградации модулей
- * @param {Object} params - Параметры расчёта
- * @param {number} params.total_cost_rub - Общая стоимость СЭС в рублях
- * @param {number} params.year_generation_kwh - Годовая генерация в кВт·ч
- * @param {number} params.tariff_rub_per_kwh - Тариф за кВт·ч в рублях
- * @param {number} [params.degradation_percent=0.5] - Деградация модулей в % в год
- * @param {number} [params.self_consumption_share=1] - Доля самопотребления
- * @param {number} [params.annual_onm_rub=0] - Годовые расходы на обслуживание
- * @param {number} [params.export_price_rub_per_kwh=null] - Цена экспорта за кВт·ч
- * @param {number} [params.max_years=25] - Максимальный период расчёта
- * @returns {Object} Результат расчёта с детализацией по годам
- */
 export function calcPaybackWithDegradation({
   total_cost_rub,
   year_generation_kwh,
@@ -152,6 +302,7 @@ export function calcPaybackWithDegradation({
     netProfit: cumulativeSavings - totalCost,
   };
 }
+*/
 
 /**
  * Форматирование числа с разделителями тысяч
