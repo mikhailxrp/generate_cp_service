@@ -18,11 +18,14 @@ export default function MainInformationForm({ step, id }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // Начальная валидация при загрузке компонента
+  // Валидация только после попытки отправки
   useEffect(() => {
-    validateForm();
-  }, [formData]);
+    if (hasAttemptedSubmit) {
+      validateForm();
+    }
+  }, [formData, hasAttemptedSubmit]);
 
   const getDirectionOptions = (typeArea) => {
     if (typeArea === "flat_east-west" || typeArea === "carpot_east-west") {
@@ -98,6 +101,9 @@ export default function MainInformationForm({ step, id }) {
   const sendFormData = async (e) => {
     e.preventDefault();
 
+    // Отмечаем, что была попытка отправки
+    setHasAttemptedSubmit(true);
+
     // Валидация формы перед отправкой
     if (!validateForm()) {
       return;
@@ -121,6 +127,7 @@ export default function MainInformationForm({ step, id }) {
           ses_power_kw: "",
         });
         setValidationErrors({});
+        setHasAttemptedSubmit(false);
       }
     } catch (err) {
       console.error("Ошибка при обновлении данных:", err);
@@ -140,7 +147,9 @@ export default function MainInformationForm({ step, id }) {
           <input
             type="text"
             className={`form-control ${
-              validationErrors.client_name ? "is-invalid" : ""
+              hasAttemptedSubmit && validationErrors.client_name
+                ? "is-invalid"
+                : ""
             }`}
             id="client-name"
             name="client_name"
@@ -148,7 +157,7 @@ export default function MainInformationForm({ step, id }) {
             onChange={handleChange}
             required
           />
-          {validationErrors.client_name && (
+          {hasAttemptedSubmit && validationErrors.client_name && (
             <div className="invalid-feedback">
               {validationErrors.client_name}
             </div>
@@ -162,7 +171,9 @@ export default function MainInformationForm({ step, id }) {
           <input
             type="text"
             className={`form-control ${
-              validationErrors.client_address ? "is-invalid" : ""
+              hasAttemptedSubmit && validationErrors.client_address
+                ? "is-invalid"
+                : ""
             }`}
             id="client-address"
             name="client_address"
@@ -170,7 +181,7 @@ export default function MainInformationForm({ step, id }) {
             onChange={handleChange}
             required
           />
-          {validationErrors.client_address && (
+          {hasAttemptedSubmit && validationErrors.client_address && (
             <div className="invalid-feedback">
               {validationErrors.client_address}
             </div>
@@ -201,7 +212,9 @@ export default function MainInformationForm({ step, id }) {
             </label>
             <select
               className={`form-select ${
-                validationErrors.client_class ? "is-invalid" : ""
+                hasAttemptedSubmit && validationErrors.client_class
+                  ? "is-invalid"
+                  : ""
               }`}
               id="client-class"
               name="client_class"
@@ -214,7 +227,7 @@ export default function MainInformationForm({ step, id }) {
               <option value="with-requests">С запросами</option>
               <option value="with-project">С проектом</option>
             </select>
-            {validationErrors.client_class && (
+            {hasAttemptedSubmit && validationErrors.client_class && (
               <div className="invalid-feedback">
                 {validationErrors.client_class}
               </div>
@@ -293,7 +306,9 @@ export default function MainInformationForm({ step, id }) {
           <input
             type="text"
             className={`form-control ${
-              validationErrors.ses_power_kw ? "is-invalid" : ""
+              hasAttemptedSubmit && validationErrors.ses_power_kw
+                ? "is-invalid"
+                : ""
             }`}
             id="ses-power-kw"
             name="ses_power_kw"
@@ -305,7 +320,7 @@ export default function MainInformationForm({ step, id }) {
           <div id="ses-power-kw-help" className="form-text">
             кВт
           </div>
-          {validationErrors.ses_power_kw && (
+          {hasAttemptedSubmit && validationErrors.ses_power_kw && (
             <div className="invalid-feedback">
               {validationErrors.ses_power_kw}
             </div>
@@ -316,12 +331,15 @@ export default function MainInformationForm({ step, id }) {
           <button
             className="btn btn-primary"
             onClick={sendFormData}
-            disabled={isSubmitting || Object.keys(validationErrors).length > 0}
+            disabled={
+              isSubmitting ||
+              (hasAttemptedSubmit && Object.keys(validationErrors).length > 0)
+            }
           >
             {isSubmitting ? "Сохраняю..." : "Добавить блок"}
           </button>
           {error && <p className="text-danger mt-2 text-center">{error}</p>}
-          {Object.keys(validationErrors).length > 0 && (
+          {hasAttemptedSubmit && Object.keys(validationErrors).length > 0 && (
             <p className="text-warning mt-2 text-center">
               Пожалуйста, исправьте ошибки в форме
             </p>
