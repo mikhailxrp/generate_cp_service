@@ -1,4 +1,4 @@
-import paybackTable from "./payback_table_from_excel.json";
+import { paybackTable } from "./payback_table_from_excel.js";
 
 /**
  * МОДУЛЬ ОКУПАЕМОСТИ
