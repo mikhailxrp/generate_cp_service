@@ -434,7 +434,6 @@ export default function InformationForm({ step, id }) {
           </label>
           <input
             type="number"
-            step="0.1"
             className={`form-control ${
               touched.connected_power_kw && errors.connected_power_kw
                 ? "is-invalid"
