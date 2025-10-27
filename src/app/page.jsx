@@ -72,7 +72,7 @@ export default async function Home({ searchParams }) {
             )}
             {step === 3 && <InformationForm step={step} id={id ?? null} />}
             {step >= 4 && <CardInformation cpData={cpData} id={id} />}
-            {step >= 4 && <CreateSesButton id={id} />}
+            {step >= 4 && <CreateSesButton id={id} cpData={cpData} />}
           </div>
           <div className="col-lg-6 mt-lg-0 mt-4">
             {step >= 2 && <MainInfoCard cpData={cpData} />}

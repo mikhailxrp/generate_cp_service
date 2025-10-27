@@ -5,9 +5,26 @@ import { showToast } from "@/lib/toast";
 import { fmtMoney, safe } from "@/lib/format";
 import { saveBomAndServicesAction } from "@/app/actions/saveBomAndServices";
 
-export default function CreateSesButton({ id }) {
+export default function CreateSesButton({ id, cpData }) {
   const [isLoading, setIsLoading] = useState(false);
   const [responseData, setResponseData] = useState(null);
+
+  const { servicesData, bomData } = cpData;
+
+  // Проверяем, есть ли данные из cpData
+  const hasCpData =
+    (bomData && bomData.length > 0) ||
+    (servicesData && servicesData.length > 0);
+
+  // Отладочная информация
+  console.log("🔍 === DEBUG INFO ===");
+  console.log("cpData:", cpData);
+  console.log("bomData:", bomData, "length:", bomData?.length);
+  console.log("servicesData:", servicesData, "length:", servicesData?.length);
+  console.log("hasCpData:", hasCpData);
+  console.log("responseData:", responseData);
+  console.log("Should show button:", !responseData && !hasCpData);
+  console.log("🔍 ==================");
 
   const handleCreateSes = async () => {
     if (!id) {
@@ -82,7 +99,7 @@ export default function CreateSesButton({ id }) {
 
   return (
     <>
-      {!responseData && (
+      {!responseData && !hasCpData && (
         <div className="btn-wrapper mt-4 text-center">
           <button
             className="btn btn-primary"
@@ -94,131 +111,182 @@ export default function CreateSesButton({ id }) {
         </div>
       )}
 
-      {responseData && (
+      {(responseData || hasCpData) && (
         <div className="mt-4">
           <h3 className="mb-4 text-center">Комплект СЭС</h3>
 
-          {/* Таблица BOM (комплект СЭС) */}
-          {responseData.bom && responseData.bom.length > 0 && (
-            <div className="mb-5">
-              <h4 className="mb-3">Оборудование</h4>
-              <div className="table-responsive">
-                <table className="table table-sm table-striped align-middle">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Наименование</th>
-                      <th>Количество</th>
-                      <th>Цена за единицу</th>
-                      <th>Общая стоимость</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {responseData.bom.map((item, index) => (
-                      <tr key={index}>
-                        <td>{safe(item.name || item.title)}</td>
-                        <td>{safe(item.qty || item.quantity, 1)}</td>
-                        <td>
-                          {fmtMoney(
-                            item.unitPriceRub || item.price || item.basePrice
-                          )}
-                        </td>
-                        <td>
-                          {(() => {
-                            const price = parseFloat(
-                              item.unitPriceRub ||
-                                item.price ||
-                                item.basePrice ||
-                                0
-                            );
-                            const quantity = parseFloat(
-                              item.qty || item.quantity || 1
-                            );
-                            const total = price * quantity;
-                            return isNaN(total) ? "—" : fmtMoney(total);
-                          })()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="table-light">
-                    <tr>
-                      <th colSpan="3">Итого по оборудованию:</th>
-                      <th>{fmtMoney(calculateTotal(responseData.bom))}</th>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          )}
+          {/* Определяем, какие данные использовать */}
+          {(() => {
+            const bomToDisplay = hasCpData ? bomData : responseData?.bom;
+            const servicesToDisplay = hasCpData
+              ? servicesData
+              : responseData?.services;
 
-          {/* Таблица Services (услуги) */}
-          {responseData.services && responseData.services.length > 0 && (
-            <div className="mb-5">
-              <h4 className="mb-3">Услуги</h4>
-              <div className="table-responsive">
-                <table className="table table-sm table-striped align-middle">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Наименование</th>
-                      <th>Описание</th>
-                      <th>Количество</th>
-                      <th>Цена за единицу</th>
-                      <th>Общая стоимость</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {responseData.services.map((service, index) => (
-                      <tr key={index}>
-                        <td>{safe(service.name || service.title)}</td>
-                        <td>{safe(service.description)}</td>
-                        <td>{safe(service.quantity, 1)}</td>
-                        <td>{fmtMoney(service.price || service.basePrice)}</td>
-                        <td>
-                          {fmtMoney(
-                            (service.price || service.basePrice || 0) *
-                              (service.quantity || 1)
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="table-light">
-                    <tr>
-                      <th colSpan="4">Итого по услугам:</th>
-                      <th>{fmtMoney(calculateTotal(responseData.services))}</th>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Общая сумма */}
-          {responseData.bom && responseData.services && (
-            <div className="row justify-content-center">
-              <div className="col-md-6">
-                <div className="card border-primary">
-                  <div className="card-body text-center">
-                    <h5 className="card-title">Общая стоимость проекта</h5>
-                    <h3 className="text-primary">
-                      {fmtMoney(
-                        calculateTotal(responseData.bom || []) +
-                          calculateTotal(responseData.services || [])
-                      )}
-                    </h3>
+            return (
+              <>
+                {/* Таблица BOM (комплект СЭС) */}
+                {bomToDisplay && bomToDisplay.length > 0 && (
+                  <div className="mb-5">
+                    <h4 className="mb-3">Оборудование</h4>
+                    <div className="table-responsive">
+                      <table className="table table-sm table-striped align-middle">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Наименование</th>
+                            <th>Количество</th>
+                            <th>Цена за единицу</th>
+                            <th>Общая стоимость</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bomToDisplay.map((item, index) => (
+                            <tr key={index}>
+                              <td>{safe(item.name || item.title)}</td>
+                              <td>{safe(item.qty || item.quantity, 1)}</td>
+                              <td>
+                                {fmtMoney(
+                                  item.unitPriceRub ||
+                                    item.price ||
+                                    item.basePrice
+                                )}
+                              </td>
+                              <td>
+                                {(() => {
+                                  const price = parseFloat(
+                                    item.unitPriceRub ||
+                                      item.price ||
+                                      item.basePrice ||
+                                      0
+                                  );
+                                  const quantity = parseFloat(
+                                    item.qty || item.quantity || 1
+                                  );
+                                  const total = price * quantity;
+                                  return isNaN(total) ? "—" : fmtMoney(total);
+                                })()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot className="table-light">
+                          <tr>
+                            <th colSpan="3">Итого по оборудованию:</th>
+                            <th>{fmtMoney(calculateTotal(bomToDisplay))}</th>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* Кнопка для генерации КП */}
-          <div className="text-center mt-4">
-            <button className="btn btn-success" onClick={handleGenerateKP}>
-              <i className="bi bi-file-earmark-text me-2"></i>
-              Сгенерировать КП
-            </button>
-          </div>
+                {/* Таблица Services (услуги) */}
+                {servicesToDisplay && servicesToDisplay.length > 0 && (
+                  <div className="mb-5">
+                    <h4 className="mb-3">Услуги</h4>
+                    <div className="table-responsive">
+                      <table className="table table-sm table-striped align-middle">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Наименование</th>
+                            <th>Описание</th>
+                            <th>Количество</th>
+                            <th>Цена за единицу</th>
+                            <th>Общая стоимость</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {servicesToDisplay.map((service, index) => (
+                            <tr key={index}>
+                              <td>{safe(service.name || service.title)}</td>
+                              <td>{safe(service.description)}</td>
+                              <td>{safe(service.quantity, 1)}</td>
+                              <td>
+                                {fmtMoney(service.price || service.basePrice)}
+                              </td>
+                              <td>
+                                {fmtMoney(
+                                  (service.price || service.basePrice || 0) *
+                                    (service.quantity || 1)
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot className="table-light">
+                          <tr>
+                            <th colSpan="4">Итого по услугам:</th>
+                            <th>
+                              {fmtMoney(calculateTotal(servicesToDisplay))}
+                            </th>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Общая сумма */}
+                {((bomToDisplay && bomToDisplay.length > 0) ||
+                  (servicesToDisplay && servicesToDisplay.length > 0)) && (
+                  <div className="row justify-content-center">
+                    <div className="col-md-6">
+                      <div className="card border-primary">
+                        <div className="card-body text-center">
+                          <h5 className="card-title">
+                            Общая стоимость проекта
+                          </h5>
+                          <h3 className="text-primary">
+                            {fmtMoney(
+                              calculateTotal(bomToDisplay || []) +
+                                calculateTotal(servicesToDisplay || [])
+                            )}
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Кнопка для генерации КП */}
+                {!hasCpData && (
+                  <div className="text-center mt-4">
+                    <button
+                      className="btn btn-success"
+                      onClick={handleGenerateKP}
+                    >
+                      <i className="bi bi-file-earmark-text me-2"></i>
+                      Сгенерировать КП
+                    </button>
+                  </div>
+                )}
+
+                {/* Кнопка для генерации КП из cpData */}
+                {hasCpData && !responseData && (
+                  <div className="text-center mt-4">
+                    <button
+                      className="btn btn-success"
+                      onClick={async () => {
+                        try {
+                          await saveBomAndServicesAction(
+                            id,
+                            bomData || [],
+                            servicesData || []
+                          );
+                          showToast.success("КП сгенерирован!");
+                        } catch (error) {
+                          console.error("Ошибка при сохранении данных:", error);
+                          showToast.error("Ошибка при сохранении данных КП");
+                        }
+                      }}
+                    >
+                      <i className="bi bi-file-earmark-text me-2"></i>
+                      Сгенерировать КП
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 
