@@ -310,9 +310,9 @@ export default function CreateSesButton({ id, cpData }) {
                 {/* Таблица BOM (комплект СЭС) */}
                 {bomToDisplay && bomToDisplay.length > 0 && (
                   <div className="mb-5">
-                    <h4 className="mb-3">Оборудование</h4>
+                    <h6 className="mb-3">Оборудование</h6>
                     <div className="table-responsive">
-                      <table className="table table-sm table-striped align-middle">
+                      <table className="table table-sm table-striped align-middle small">
                         <thead className="table-light">
                           <tr>
                             <th>Наименование</th>
@@ -365,9 +365,9 @@ export default function CreateSesButton({ id, cpData }) {
                 {/* Таблица Services (услуги) */}
                 {servicesToDisplay && servicesToDisplay.length > 0 && (
                   <div className="mb-5">
-                    <h4 className="mb-3">Услуги</h4>
+                    <h6 className="mb-3">Услуги</h6>
                     <div className="table-responsive">
-                      <table className="table table-sm table-striped align-middle">
+                      <table className="table table-sm table-striped align-middle small">
                         <thead className="table-light">
                           <tr>
                             <th>Наименование</th>
@@ -408,44 +408,22 @@ export default function CreateSesButton({ id, cpData }) {
                   </div>
                 )}
 
-                {/* Общая сумма */}
-                {((bomToDisplay && bomToDisplay.length > 0) ||
-                  (servicesToDisplay && servicesToDisplay.length > 0)) && (
-                  <div className="row justify-content-center">
-                    <div className="col-md-6">
-                      <div className="card border-primary">
-                        <div className="card-body text-center">
-                          <h5 className="card-title">
-                            Общая стоимость проекта
-                          </h5>
-                          <h3 className="text-primary">
-                            {fmtMoney(
-                              calculateTotal(bomToDisplay || []) +
-                                calculateTotal(servicesToDisplay || [])
-                            )}
-                          </h3>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Расчёт окупаемости */}
                 {paybackData && paybackData.totalCost > 0 && (
                   <div className="row justify-content-center mt-4">
                     <div className="col-md-10">
                       <div className="card border-success">
                         <div className="card-header bg-success text-white">
-                          <h5 className="mb-0">
+                          <h6 className="mb-0">
                             <i className="bi bi-calculator me-2"></i>
                             Расчёт окупаемости
-                          </h5>
+                          </h6>
                         </div>
                         <div className="card-body">
                           <div className="row">
                             <div className="col-md-6">
-                              <h6>Основные параметры:</h6>
-                              <ul className="list-unstyled">
+                              <h6 className="fs-6">Основные параметры:</h6>
+                              <ul className="list-unstyled small">
                                 <li>
                                   <strong>Годовая генерация:</strong>{" "}
                                   {formatNumber(paybackData.annualGeneration)}{" "}
@@ -470,22 +448,22 @@ export default function CreateSesButton({ id, cpData }) {
                               </ul>
                             </div>
                             <div className="col-md-6">
-                              <h6>Результаты расчёта:</h6>
+                              <h6 className="fs-6">Результаты расчёта:</h6>
                               <div className="text-center">
                                 {paybackData.simple ? (
                                   <div>
-                                    <h4 className="text-success">
+                                    <h5 className="text-success">
                                       {formatNumber(paybackData.simple)} лет
-                                    </h4>
+                                    </h5>
                                     <small className="text-muted">
                                       Простая окупаемость
                                     </small>
                                   </div>
                                 ) : (
                                   <div>
-                                    <h4 className="text-warning">
+                                    <h5 className="text-warning">
                                       Не окупается
-                                    </h4>
+                                    </h5>
                                     <small className="text-muted">
                                       Экономия недостаточна
                                     </small>
@@ -498,24 +476,28 @@ export default function CreateSesButton({ id, cpData }) {
                           {paybackData.detailed &&
                             paybackData.detailed.paybackYear && (
                               <div className="mt-3">
-                                <h6>
+                                <h6 className="fs-6">
                                   Детальный расчёт с учётом деградации модулей:
                                 </h6>
                                 <div className="row text-center">
                                   <div className="col-md-3">
                                     <div className="border rounded p-2">
-                                      <strong>Окупаемость</strong>
+                                      <strong className="small">
+                                        Окупаемость
+                                      </strong>
                                       <br />
-                                      <span className="text-success fs-5">
+                                      <span className="text-success fs-6">
                                         {paybackData.detailed.paybackYear} лет
                                       </span>
                                     </div>
                                   </div>
                                   <div className="col-md-3">
                                     <div className="border rounded p-2">
-                                      <strong>Чистая прибыль за 25 лет</strong>
+                                      <strong className="small">
+                                        Чистая прибыль за 25 лет
+                                      </strong>
                                       <br />
-                                      <span className="text-success fs-5">
+                                      <span className="text-success fs-6">
                                         {formatMoney(
                                           paybackData.detailed.netProfit
                                         )}
@@ -524,9 +506,11 @@ export default function CreateSesButton({ id, cpData }) {
                                   </div>
                                   <div className="col-md-3">
                                     <div className="border rounded p-2">
-                                      <strong>Накопленная экономия</strong>
+                                      <strong className="small">
+                                        Накопленная экономия
+                                      </strong>
                                       <br />
-                                      <span className="text-info fs-5">
+                                      <span className="text-info fs-6">
                                         {formatMoney(
                                           paybackData.detailed
                                             .finalCumulativeSavings
@@ -536,9 +520,11 @@ export default function CreateSesButton({ id, cpData }) {
                                   </div>
                                   <div className="col-md-3">
                                     <div className="border rounded p-2">
-                                      <strong>ROI за 25 лет</strong>
+                                      <strong className="small">
+                                        ROI за 25 лет
+                                      </strong>
                                       <br />
-                                      <span className="text-primary fs-5">
+                                      <span className="text-primary fs-6">
                                         {formatNumber(
                                           (paybackData.detailed.netProfit /
                                             paybackData.totalCost) *
@@ -551,6 +537,28 @@ export default function CreateSesButton({ id, cpData }) {
                                 </div>
                               </div>
                             )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Общая сумма */}
+                {((bomToDisplay && bomToDisplay.length > 0) ||
+                  (servicesToDisplay && servicesToDisplay.length > 0)) && (
+                  <div className="row justify-content-center mt-3">
+                    <div className="col-md-6">
+                      <div className="card border-primary">
+                        <div className="card-body text-center">
+                          <h6 className="card-title">
+                            Общая стоимость проекта
+                          </h6>
+                          <h5 className="text-primary">
+                            {fmtMoney(
+                              calculateTotal(bomToDisplay || []) +
+                                calculateTotal(servicesToDisplay || [])
+                            )}
+                          </h5>
                         </div>
                       </div>
                     </div>
@@ -588,7 +596,7 @@ export default function CreateSesButton({ id, cpData }) {
                             servicesData || []
                           );
                           showToast.success("КП сгенерирован!");
-                          router.push("/preview");
+                          router.push(`/preview?id=${id}`);
                         } catch (error) {
                           console.error("Ошибка при сохранении данных:", error);
                           showToast.error("Ошибка при сохранении данных КП");

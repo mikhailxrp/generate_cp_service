@@ -89,10 +89,55 @@ export default function InformationForm({ step, id }) {
 
     requiredFields.forEach((field) => {
       const value = formData.get(field);
-      if (!validateField(field, value)) {
-        isValid = false;
+
+      // Validate each field directly without calling validateField
+      switch (field) {
+        case "network_phazes":
+          if (!value || value === "") {
+            newErrors[field] = "Выберите количество фаз сети";
+            isValid = false;
+          }
+          break;
+        case "connected_power_kw":
+          if (!value || value.trim() === "") {
+            newErrors[field] = "Введите подключенную мощность";
+            isValid = false;
+          } else if (isNaN(value) || parseFloat(value) <= 0) {
+            newErrors[field] = "Введите корректное числовое значение";
+            isValid = false;
+          }
+          break;
+        case "microgeneration":
+          if (!value || value === "") {
+            newErrors[field] = "Выберите вариант микрогенерации";
+            isValid = false;
+          }
+          break;
+        case "monthly_consumption_kwh":
+          if (!value || value.trim() === "") {
+            newErrors[field] = "Введите месячное потребление";
+            isValid = false;
+          } else if (isNaN(value) || parseFloat(value) <= 0) {
+            newErrors[field] = "Введите корректное числовое значение";
+            isValid = false;
+          }
+          break;
+        case "price_kwh":
+          if (!value || value.trim() === "") {
+            newErrors[field] = "Введите стоимость кВт⋅ч";
+            isValid = false;
+          } else if (isNaN(value) || parseFloat(value) <= 0) {
+            newErrors[field] = "Введите корректное числовое значение";
+            isValid = false;
+          }
+          break;
+        default:
+          break;
       }
     });
+
+    // Update errors state
+    setErrors(newErrors);
 
     // Mark all fields as touched
     const newTouched = {};
@@ -560,7 +605,7 @@ export default function InformationForm({ step, id }) {
             type="button"
             className="btn btn-primary"
             onClick={handleSubmit}
-            disabled={Object.keys(errors).length > 0 || isSubmitting}
+            disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
@@ -571,8 +616,6 @@ export default function InformationForm({ step, id }) {
                 ></span>
                 Сохранение...
               </>
-            ) : Object.keys(errors).length > 0 ? (
-              "Исправьте ошибки"
             ) : (
               "Собрать данные"
             )}
