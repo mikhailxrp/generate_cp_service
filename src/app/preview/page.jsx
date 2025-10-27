@@ -1,10 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Header from "@/components/header/Header";
 import CpBlockOne from "@/components/preview-components/CpBlockOne";
 
-export default function Prewiev() {
+function PreviewContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
 
@@ -21,5 +22,13 @@ export default function Prewiev() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function Prewiev() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PreviewContent />
+    </Suspense>
   );
 }
