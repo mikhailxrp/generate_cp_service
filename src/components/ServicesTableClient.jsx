@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AddServiceModal from "./AddServiceModal";
 import EditServiceModal from "./EditServiceModal";
 import { formatYears, getServiceTypeLabel } from "@/lib/format";
 import { showToast } from "@/lib/toast";
 
 export default function ServicesTableClient({ rows: initialRows }) {
+  const fileInputRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -21,6 +22,124 @@ export default function ServicesTableClient({ rows: initialRows }) {
 
   const handleAddService = () => {
     setIsModalOpen(true);
+  };
+
+  // --- Импорт CSV для услуг ---
+  const detectDelimiter = (text) => {
+    const candidates = [",", ";", "\t"]; // запятая, точка с запятой, таб
+    let best = ",";
+    let bestCount = -1;
+    const firstLines = text.split(/\r?\n/).slice(0, 5);
+    for (const d of candidates) {
+      const counts = firstLines.map(
+        (l) => (l.match(new RegExp(`\\${d}`, "g")) || []).length
+      );
+      const sum = counts.reduce((a, b) => a + b, 0);
+      if (sum > bestCount) {
+        bestCount = sum;
+        best = d;
+      }
+    }
+    return best;
+  };
+
+  const parseCsv = (text) => {
+    const delimiter = detectDelimiter(text);
+    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    if (!lines.length) return [];
+    const headers = lines[0].split(delimiter).map((h) => h.trim());
+    const out = [];
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(delimiter).map((p) => p.trim());
+      const obj = {};
+      headers.forEach((h, idx) => (obj[h] = parts[idx] ?? ""));
+      out.push(obj);
+    }
+    return out;
+  };
+
+  const toNumber = (val) => {
+    if (val === undefined || val === null) return undefined;
+    const s = String(val).replace(/\s/g, "").replace(",", ".");
+    const n = Number(s);
+    return Number.isFinite(n) ? n : undefined;
+  };
+
+  const handleImportClick = () => fileInputRef.current?.click();
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const records = parseCsv(text);
+      console.log(
+        "[services-import] file=",
+        file.name,
+        "records=",
+        records.length
+      );
+      if (!records.length) {
+        showToast.error("CSV пуст или не распознан");
+        return;
+      }
+      const created = [];
+      let errors = 0;
+      let lastError = null;
+      for (const r of records) {
+        const sku = (r.sku ?? "").trim();
+        const title = (r.title ?? "").trim();
+        const serviceType = (r.serviceType ?? r.service_type ?? "").trim();
+        const basePrice = toNumber(r.basePrice ?? r.base_price);
+        if (!sku || !title || !serviceType || !Number.isFinite(basePrice))
+          continue;
+        const payload = {
+          sku,
+          title,
+          serviceType,
+          description: (r.description ?? "").trim() || null,
+          basePrice,
+          currency: (r.currency ?? "RUB").trim(),
+          executionDays: toNumber(r.executionDays ?? r.execution_days),
+          warrantyYears: toNumber(r.warrantyYears ?? r.warranty_years),
+          comment: (r.comment ?? "").trim() || null,
+        };
+        try {
+          console.log("[services-import] POST /api/services payload=", payload);
+          const resp = await fetch("/api/services", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          console.log("[services-import] response status=", resp.status);
+          if (resp.ok) {
+            const data = await resp.json();
+            console.log("[services-import] response json=", data);
+            created.push({ id: data?.data?.id ?? Math.random(), ...payload });
+          } else {
+            const err = await resp.json().catch(() => ({}));
+            console.error("[services-import] server error=", err);
+            errors += 1;
+            lastError = err?.error || JSON.stringify(err);
+          }
+        } catch (err) {
+          console.error("Импорт услуг: ошибка", err);
+          errors += 1;
+          lastError = err?.message || String(err);
+        }
+      }
+      if (created.length > 0) {
+        setServices((prev) => [...created, ...prev]);
+        showToast.success(`Импортировано: ${created.length}`);
+      } else {
+        const msg = lastError
+          ? `Не удалось импортировать записи: ${lastError}`
+          : "Не удалось импортировать записи";
+        showToast.error(msg);
+      }
+    } finally {
+      e.target.value = "";
+    }
   };
 
   const handleModalClose = () => {
@@ -60,10 +179,23 @@ export default function ServicesTableClient({ rows: initialRows }) {
       <div className="mb-5">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h3 className="catalog-title-h3 mb-0">Услуги</h3>
-          <button className="btn btn-primary btn-sm" onClick={handleAddService}>
-            <i className="bi bi-plus-circle me-1"></i>
-            Добавить услугу
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={handleImportClick}
+              title="Импорт из CSV"
+            >
+              <i className="bi bi-upload me-1"></i>
+              Импорт из CSV
+            </button>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={handleAddService}
+            >
+              <i className="bi bi-plus-circle me-1"></i>
+              Добавить услугу
+            </button>
+          </div>
         </div>
         <div className="table-responsive">
           <table className="table table-sm table-striped align-middle">
@@ -130,6 +262,15 @@ export default function ServicesTableClient({ rows: initialRows }) {
         onClose={handleEditModalClose}
         onSuccess={handleServiceUpdated}
         service={editingService}
+      />
+
+      {/* hidden file input for CSV import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,text/csv"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
       />
     </>
   );
