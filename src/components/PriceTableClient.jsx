@@ -11,6 +11,7 @@ export default function PriceTableClient({
   rows: initialRows,
   onRowsUpdate,
 }) {
+  const fileInputRef = useRef(null);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -215,18 +216,230 @@ export default function PriceTableClient({
     }
   };
 
+  // --- Импорт из CSV ---
+  const detectDelimiter = (text) => {
+    const candidates = [",", ";", "\t"]; // запятая, точка с запятой, таб
+    let best = ",";
+    let bestCount = -1;
+    const firstLines = text.split(/\r?\n/).slice(0, 5);
+    for (const d of candidates) {
+      const counts = firstLines.map(
+        (l) => (l.match(new RegExp(`\\${d}`, "g")) || []).length
+      );
+      const sum = counts.reduce((a, b) => a + b, 0);
+      if (sum > bestCount) {
+        bestCount = sum;
+        best = d;
+      }
+    }
+    return best;
+  };
+
+  const parseCsv = (text) => {
+    const delimiter = detectDelimiter(text);
+    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    if (lines.length === 0) return [];
+    const headerRaw = lines[0];
+    const headers = headerRaw.split(delimiter).map((h) => h.trim());
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(delimiter).map((p) => p.trim());
+      const obj = {};
+      headers.forEach((h, idx) => {
+        obj[h] = parts[idx] ?? "";
+      });
+      rows.push(obj);
+    }
+    return rows;
+  };
+
+  const toNumber = (val) => {
+    if (val === undefined || val === null) return undefined;
+    const s = String(val).replace(/\s/g, "").replace(",", ".");
+    const n = Number(s);
+    return Number.isFinite(n) ? n : undefined;
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const records = parseCsv(text);
+      console.log(
+        "[price-import] file=",
+        file.name,
+        "records=",
+        records.length
+      );
+      if (!Array.isArray(records) || records.length === 0) {
+        showToast.error("CSV пуст или не распознан");
+        return;
+      }
+
+      // Показываем структуру первой записи для отладки
+      if (records.length > 0) {
+        console.log(
+          "[price-import] first record keys:",
+          Object.keys(records[0])
+        );
+        console.log("[price-import] first record sample:", records[0]);
+      }
+
+      // известные поля price_items (английские и русские)
+      const knownFields = new Set([
+        "sku",
+        "SKU",
+        "title",
+        "Наименование",
+        "priceRub",
+        "price_rub",
+        "Цена",
+        "Цена_базовая",
+        "currency",
+        "Валюта",
+        "stock",
+        "Наличие",
+        "warehouseRegion",
+        "warehouse_region",
+        "Регион_склада",
+        "leadDays",
+        "lead_days",
+        "Срок_поставки_дни",
+        "priority",
+        "Приоритет",
+        "specUrl",
+        "spec_url",
+        "Ссылка_на_спеку",
+        "comment",
+        "Комментарий",
+      ]);
+
+      const created = [];
+      let errors = 0;
+      let lastError = null;
+      for (const r of records) {
+        // Маппинг русских названий колонок на английские
+        const sku = (r.SKU ?? r.sku ?? "").trim();
+        const title = (r.Наименование ?? r.title ?? "").trim();
+        const priceRub = toNumber(
+          r.Цена_базовая ?? r.Цена ?? r.priceRub ?? r.price_rub
+        );
+        if (!sku || !title || !Number.isFinite(priceRub)) {
+          // пропускаем строки без обязательных полей
+          console.warn("[price-import] skip row due to required fields:", r);
+          continue;
+        }
+
+        const payload = {
+          typeCode,
+          sku,
+          title,
+          priceRub,
+          currency: (r.Валюта ?? r.currency ?? "RUB").trim(),
+          stock: toNumber(r.Наличие ?? r.stock),
+          warehouseRegion:
+            (
+              r.Регион_склада ??
+              r.warehouseRegion ??
+              r.warehouse_region ??
+              ""
+            ).trim() || null,
+          leadDays: toNumber(r.Срок_поставки_дни ?? r.leadDays ?? r.lead_days),
+          priority: toNumber(r.Приоритет ?? r.priority) ?? 0,
+          specUrl:
+            (r.Ссылка_на_спеку ?? r.specUrl ?? r.spec_url ?? "").trim() || null,
+          comment: (r.Комментарий ?? r.comment ?? "").trim() || null,
+          attrs: {},
+          isActive: 1,
+        };
+
+        // собрать остальные поля в attrs
+        Object.keys(r).forEach((k) => {
+          if (!knownFields.has(k)) {
+            payload.attrs[k] = r[k];
+          }
+        });
+
+        try {
+          console.log("[price-import] POST /api/equipment payload=", payload);
+          const resp = await fetch("/api/equipment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          console.log("[price-import] response status=", resp.status);
+          if (resp.ok) {
+            const data = await resp.json();
+            console.log("[price-import] response json=", data);
+            if (data?.data) created.push(data.data);
+          } else {
+            const err = await resp.json().catch(() => ({}));
+            console.error("[price-import] server error=", err);
+            errors += 1;
+            lastError = err?.error || JSON.stringify(err);
+          }
+        } catch (err) {
+          console.error("[price-import] exception=", err);
+          errors += 1;
+          lastError = err?.message || String(err);
+        }
+      }
+
+      if (created.length > 0) {
+        setRows((prev) => {
+          const skuToIndex = new Map(prev.map((row, idx) => [row.sku, idx]));
+          const next = [...prev];
+          for (const item of created) {
+            const idx = skuToIndex.get(item.sku);
+            if (idx !== undefined) {
+              next[idx] = item;
+            } else {
+              next.unshift(item);
+            }
+          }
+          return next;
+        });
+        showToast.success(`Импортировано: ${created.length}`);
+        forceComponentUpdate();
+      } else {
+        const msg = lastError
+          ? `Не удалось импортировать записи: ${lastError}`
+          : "Не удалось импортировать записи";
+        showToast.error(msg);
+      }
+    } finally {
+      // сбрасываем инпут, чтобы можно было выбрать тот же файл снова
+      e.target.value = "";
+    }
+  };
+
   return (
     <>
       <div className="mb-5">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h3 className="catalog-title-h3 mb-0">{titleByType(typeCode)}</h3>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <i className="bi bi-plus-circle me-1"></i>
-            Добавить оборудование
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={handleImportClick}
+              title="Импорт из CSV"
+            >
+              <i className="bi bi-upload me-1"></i>
+              Импорт из CSV
+            </button>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <i className="bi bi-plus-circle me-1"></i>
+              Добавить оборудование
+            </button>
+          </div>
         </div>
         <div className="table-responsive">
           <table
@@ -293,6 +506,15 @@ export default function PriceTableClient({
         onClose={() => setIsAddModalOpen(false)}
         typeCode={typeCode}
         onSave={handleCreateEquipment}
+      />
+
+      {/* hidden file input for CSV import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,text/csv"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
       />
     </>
   );

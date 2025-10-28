@@ -68,36 +68,104 @@ export async function POST(request) {
     const db = getDb();
 
     // Убираем поля, которые не должны передаваться
-    const { id, createdAt, updatedAt, priceUpdatedAt, ...cleanData } = body;
+    const { id, createdAt, updatedAt, priceUpdatedAt, ...raw } = body;
+
+    // Базовая валидация
+    const required = ["sku", "title", "priceRub", "typeCode"];
+    for (const k of required) {
+      if (
+        raw[k] === undefined ||
+        raw[k] === null ||
+        String(raw[k]).trim() === ""
+      ) {
+        return NextResponse.json(
+          { error: `Поле ${k} обязательно` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const cleanData = {
+      typeCode: String(raw.typeCode).trim(),
+      sku: String(raw.sku).trim(),
+      title: String(raw.title).trim(),
+      priceRub: Number(raw.priceRub),
+      currency: raw.currency ? String(raw.currency).trim() : "RUB",
+      stock: raw.stock != null ? Number(raw.stock) : null,
+      priority: raw.priority != null ? Number(raw.priority) : 0,
+      warehouseRegion: raw.warehouseRegion
+        ? String(raw.warehouseRegion).trim()
+        : null,
+      leadDays: raw.leadDays != null ? Number(raw.leadDays) : null,
+      specUrl: raw.specUrl ? String(raw.specUrl).trim() : null,
+      comment: raw.comment ? String(raw.comment).trim() : null,
+      attrs:
+        typeof raw.attrs === "object" && raw.attrs !== null ? raw.attrs : {},
+      isActive: 1,
+    };
+
+    if (!Number.isFinite(cleanData.priceRub)) {
+      return NextResponse.json(
+        { error: "priceRub должен быть числом" },
+        { status: 400 }
+      );
+    }
+
+    // UPSERT по SKU: если есть — обновим, иначе — создадим
+    const existing = await db
+      .select()
+      .from(priceItems)
+      .where(eq(priceItems.sku, cleanData.sku))
+      .limit(1);
+
+    if (existing.length > 0) {
+      console.log("[api/equipment] upsert update sku=", cleanData.sku);
+      await db
+        .update(priceItems)
+        .set({
+          ...cleanData,
+          updatedAt: new Date(),
+        })
+        .where(eq(priceItems.sku, cleanData.sku));
+
+      const updated = await db
+        .select()
+        .from(priceItems)
+        .where(eq(priceItems.sku, cleanData.sku))
+        .limit(1);
+      return NextResponse.json({
+        success: true,
+        data: updated[0],
+        message: "Оборудование обновлено",
+      });
+    }
 
     // Создаем новую запись
+    console.log(
+      "[api/equipment] insert sku=",
+      cleanData.sku,
+      "type=",
+      cleanData.typeCode
+    );
     const insertResult = await db.insert(priceItems).values(cleanData);
-
-    // Получаем ID созданной записи
     const insertId = insertResult.insertId;
 
     if (insertId) {
-      // Получаем созданную запись по ID
       const result = await db
         .select()
         .from(priceItems)
         .where(eq(priceItems.id, insertId))
         .limit(1);
-
       if (result.length > 0) {
         return NextResponse.json({
           success: true,
           data: result[0],
           message: "Оборудование успешно создано",
         });
-      } else {
-        console.error("Запись не найдена по ID:", insertId);
       }
-    } else {
-      console.error("InsertId не получен");
     }
 
-    // Альтернативный подход - получаем последнюю созданную запись по типу
+    // fallback: получить последнюю запись по типу
     const lastRecord = await db
       .select()
       .from(priceItems)
@@ -113,7 +181,6 @@ export async function POST(request) {
       });
     }
 
-    // Если и это не сработало, возвращаем ошибку
     return NextResponse.json(
       { error: "Оборудование создано, но не удалось получить данные" },
       { status: 500 }
