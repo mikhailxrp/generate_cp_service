@@ -66,12 +66,6 @@ export default function PresetsTableClient({ rows: initialRows }) {
     try {
       const text = await file.text();
       const records = parseCsv(text);
-      console.log(
-        "[presets-import] file=",
-        file.name,
-        "records=",
-        records.length
-      );
       if (!records.length) {
         showToast.error("CSV пуст или не распознан");
         return;
@@ -122,25 +116,20 @@ export default function PresetsTableClient({ rows: initialRows }) {
           notes,
         };
         try {
-          console.log("[presets-import] POST /api/presets payload=", payload);
           const resp = await fetch("/api/presets", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          console.log("[presets-import] response status=", resp.status);
           if (resp.ok) {
             const data = await resp.json();
-            console.log("[presets-import] response json=", data);
             created.push({ id: data?.data?.id ?? Math.random(), ...payload });
           } else {
             const err = await resp.json().catch(() => ({}));
-            console.error("[presets-import] server error=", err);
             errors += 1;
             lastError = err?.error || JSON.stringify(err);
           }
         } catch (err) {
-          console.error("[presets-import] exception=", err);
           errors += 1;
           lastError = err?.message || String(err);
         }

@@ -66,12 +66,6 @@ export default function CompatTableClient({ rows: initialRows }) {
     try {
       const text = await file.text();
       const records = parseCsv(text);
-      console.log(
-        "[compat-import] file=",
-        file.name,
-        "records=",
-        records.length
-      );
       if (!records.length) {
         showToast.error("CSV пуст или не распознан");
         return;
@@ -93,13 +87,6 @@ export default function CompatTableClient({ rows: initialRows }) {
         const comment = (r.comment ?? "").trim();
 
         try {
-          console.log("[compat-import] POST /api/compat payload=", {
-            inverterSku,
-            essSku,
-            isCompatible,
-            limits,
-            comment,
-          });
           const resp = await fetch("/api/compat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -111,10 +98,8 @@ export default function CompatTableClient({ rows: initialRows }) {
               comment,
             }),
           });
-          console.log("[compat-import] response status=", resp.status);
           if (resp.ok) {
             const data = await resp.json();
-            console.log("[compat-import] response json=", data);
             created.push({
               id: data?.data?.id ?? Math.random(),
               inverterSku,
@@ -125,12 +110,10 @@ export default function CompatTableClient({ rows: initialRows }) {
             });
           } else {
             const err = await resp.json().catch(() => ({}));
-            console.error("[compat-import] server error=", err);
             errors += 1;
             lastError = err?.error || JSON.stringify(err);
           }
         } catch (err) {
-          console.error("[compat-import] exception=", err);
           errors += 1;
           lastError = err?.message || String(err);
         }

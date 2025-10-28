@@ -270,24 +270,9 @@ export default function PriceTableClient({
     try {
       const text = await file.text();
       const records = parseCsv(text);
-      console.log(
-        "[price-import] file=",
-        file.name,
-        "records=",
-        records.length
-      );
       if (!Array.isArray(records) || records.length === 0) {
         showToast.error("CSV пуст или не распознан");
         return;
-      }
-
-      // Показываем структуру первой записи для отладки
-      if (records.length > 0) {
-        console.log(
-          "[price-import] first record keys:",
-          Object.keys(records[0])
-        );
-        console.log("[price-import] first record sample:", records[0]);
       }
 
       // известные поля price_items (английские и русские)
@@ -331,7 +316,6 @@ export default function PriceTableClient({
         );
         if (!sku || !title || !Number.isFinite(priceRub)) {
           // пропускаем строки без обязательных полей
-          console.warn("[price-import] skip row due to required fields:", r);
           continue;
         }
 
@@ -366,25 +350,20 @@ export default function PriceTableClient({
         });
 
         try {
-          console.log("[price-import] POST /api/equipment payload=", payload);
           const resp = await fetch("/api/equipment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          console.log("[price-import] response status=", resp.status);
           if (resp.ok) {
             const data = await resp.json();
-            console.log("[price-import] response json=", data);
             if (data?.data) created.push(data.data);
           } else {
             const err = await resp.json().catch(() => ({}));
-            console.error("[price-import] server error=", err);
             errors += 1;
             lastError = err?.error || JSON.stringify(err);
           }
         } catch (err) {
-          console.error("[price-import] exception=", err);
           errors += 1;
           lastError = err?.message || String(err);
         }
