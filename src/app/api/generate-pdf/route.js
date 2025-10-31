@@ -42,7 +42,7 @@ export async function GET(request) {
       browser = await playwright.chromium.launch({
         args: chromium.args,
         executablePath,
-        headless: chromium.headless,
+        headless: true,
       });
     } else {
       // Local: используем обычный playwright
