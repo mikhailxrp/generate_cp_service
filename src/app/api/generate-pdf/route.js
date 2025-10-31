@@ -1,8 +1,12 @@
-import { chromium } from "playwright";
 import { PDFDocument } from "pdf-lib";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+// Определяем окружение (production = Vercel, иначе локально)
+const isProduction =
+  process.env.VERCEL || process.env.NODE_ENV === "production";
 
 export async function GET(request) {
   let browser;
@@ -17,21 +21,41 @@ export async function GET(request) {
       });
     }
 
-    const host =
-      request.headers.get("x-forwarded-host") || request.headers.get("host");
-    const proto = request.headers.get("x-forwarded-proto") || "http";
-    const baseUrl = `${proto}://${host}`;
+    // Используем origin из текущего запроса для надёжного получения baseUrl
+    const baseUrl = new URL(request.url).origin;
     const targetUrl = `${baseUrl}/preview?id=${encodeURIComponent(id)}&print=1`;
 
-    browser = await chromium.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
-    });
+    console.log("Starting PDF generation for URL:", targetUrl);
+    console.log(
+      "Environment: ",
+      isProduction ? "Production (Vercel)" : "Local"
+    );
+
+    // Условный запуск Chromium в зависимости от окружения
+    if (isProduction) {
+      // Production: используем @sparticuz/chromium для Vercel
+      const chromium = (await import("@sparticuz/chromium")).default;
+      const playwright = (await import("playwright-core")).default;
+
+      const executablePath = await chromium.executablePath();
+      browser = await playwright.chromium.launch({
+        args: chromium.args,
+        executablePath,
+        headless: chromium.headless,
+      });
+    } else {
+      // Local: используем обычный playwright
+      const { chromium } = await import("playwright");
+      browser = await chromium.launch({
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+        ],
+      });
+    }
 
     const context = await browser.newContext({
       viewport: { width: 1300, height: 1000 },
@@ -84,6 +108,14 @@ export async function GET(request) {
     const pagesCount = await page.evaluate(() => {
       return document.querySelectorAll("#pdf-root > .pdf-page").length;
     });
+
+    console.log("Found pages count:", pagesCount);
+
+    if (!pagesCount || pagesCount < 1) {
+      throw new Error(
+        "No printable pages found. Check if preview page renders correctly with data."
+      );
+    }
 
     const pdfBuffers = [];
 
@@ -157,12 +189,19 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error("PDF generation error:", error);
+    console.error("Error stack:", error?.stack);
     try {
       if (browser) await browser.close();
     } catch {}
-    return new Response(JSON.stringify({ error: "Failed to generate PDF" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        error: "Failed to generate PDF",
+        message: String(error?.message || error),
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 }

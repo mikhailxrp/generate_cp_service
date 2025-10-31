@@ -10,6 +10,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^141.0.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "chart.js": "^4.5.1",
@@ -19,6 +20,7 @@
     "mysql2": "^3.15.3",
     "next": "15.5.6",
     "pdf-lib": "^1.17.1",
+    "playwright-core": "^1.56.1",
     "react": "19.1.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "19.1.0",

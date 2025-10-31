@@ -237,7 +237,7 @@ export default function CreateSesButton({ id, cpData }) {
         responseData.services || []
       );
       showToast.success("КП сгенерирован!");
-      router.push("/preview");
+      router.push(`/preview?id=${id}`);
     } catch (error) {
       console.error("Ошибка при сохранении данных:", error);
       showToast.error("Ошибка при сохранении данных КП");
