@@ -37,6 +37,9 @@ export async function GET(request) {
       const chromium = (await import("@sparticuz/chromium")).default;
       const playwright = (await import("playwright-core")).default;
 
+      // Отключаем графический режим для работы без brotli файлов
+      chromium.setGraphicsMode = false;
+      
       const executablePath = await chromium.executablePath();
       browser = await playwright.chromium.launch({
         args: chromium.args,
