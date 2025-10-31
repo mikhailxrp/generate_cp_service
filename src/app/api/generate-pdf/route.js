@@ -42,7 +42,7 @@ export async function GET(request) {
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
         executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
+        headless: true,
       });
       
       page = await browser.newPage();
