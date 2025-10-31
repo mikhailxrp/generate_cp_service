@@ -32,18 +32,22 @@ export async function GET(request) {
     );
 
     // Условный запуск Chromium в зависимости от окружения
+    let page;
     if (isProduction) {
-      // Production: используем @sparticuz/chromium для Vercel
+      // Production: используем @sparticuz/chromium + puppeteer для Vercel
       const chromium = (await import("@sparticuz/chromium")).default;
-      const playwright = (await import("playwright-core")).default;
+      const puppeteer = (await import("puppeteer-core")).default;
 
-      const executablePath = await chromium.executablePath();
-
-      browser = await playwright.chromium.launch({
+      browser = await puppeteer.launch({
         args: chromium.args,
-        executablePath,
-        headless: true,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
       });
+      
+      page = await browser.newPage();
+      await page.setViewport({ width: 1300, height: 1000, deviceScaleFactor: 2 });
+      await page.emulateMediaType("screen");
     } else {
       // Local: используем обычный playwright
       const { chromium } = await import("playwright");
@@ -56,16 +60,19 @@ export async function GET(request) {
           "--disable-gpu",
         ],
       });
+      
+      const context = await browser.newContext({
+        viewport: { width: 1300, height: 1000 },
+        deviceScaleFactor: 2,
+      });
+
+      page = await context.newPage();
+      await page.emulateMedia({ media: "screen" });
     }
-
-    const context = await browser.newContext({
-      viewport: { width: 1300, height: 1000 },
-      deviceScaleFactor: 2,
+    await page.goto(targetUrl, { 
+      waitUntil: isProduction ? "networkidle0" : "networkidle",
+      timeout: 120000 
     });
-
-    const page = await context.newPage();
-    await page.emulateMedia({ media: "screen" });
-    await page.goto(targetUrl, { waitUntil: "networkidle", timeout: 120000 });
 
     await page.evaluate(async () => {
       if (document.fonts && document.fonts.ready) {
@@ -177,7 +184,7 @@ export async function GET(request) {
     }
     const outBuffer = await merged.save();
 
-    await context.close();
+    await page.close();
     await browser.close();
 
     return new Response(outBuffer, {
