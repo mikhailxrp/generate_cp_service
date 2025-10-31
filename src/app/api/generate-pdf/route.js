@@ -38,13 +38,27 @@ export async function GET(request) {
       const chromium = (await import("@sparticuz/chromium")).default;
       const puppeteer = (await import("puppeteer-core")).default;
 
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
-        headless: true,
-      });
-      
+      try {
+        browser = await puppeteer.launch({
+          args: [
+            ...chromium.args,
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--single-process",
+            "--no-zygote",
+          ],
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath(),
+          headless: true,
+        });
+      } catch (e) {
+        // Fallback на Browserless, если доступен (не требует системных библиотек)
+        const wsEndpoint = process.env.BROWSERLESS_WS || process.env.BROWSERLESS_WSE;
+        if (!wsEndpoint) throw e;
+        browser = await puppeteer.connect({ browserWSEndpoint: wsEndpoint });
+      }
+
       page = await browser.newPage();
       await page.setViewport({ width: 1300, height: 1000, deviceScaleFactor: 2 });
       await page.emulateMediaType("screen");
