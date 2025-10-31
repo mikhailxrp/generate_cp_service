@@ -16,7 +16,7 @@ export default function InformationForm({ step, id }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  // Ыункция валидации полей формы
+  // Функция валидации полей формы
   const validateField = (name, value) => {
     const newErrors = { ...errors };
 
