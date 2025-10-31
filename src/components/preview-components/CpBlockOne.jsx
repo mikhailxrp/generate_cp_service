@@ -1,43 +1,70 @@
 "use client";
+import "./preview-components.css";
 
-export default function CpBlockOne() {
+export default function CpBlockOne({
+  clientName,
+  clientType,
+  sesPower,
+  systemType,
+}) {
   return (
-    <div className="cp-block-one">
-      {/* Decorative white curved background shape */}
-      <div className="decorative-bg-shape"></div>
-
+    <div className="cp-block-one preview-block-container">
       {/* Main hero card */}
       <div className="hero-card">
         {/* Background image container */}
         <div className="hero-image-container">
           <img
-            src="/api/placeholder/800/400"
+            src="/image/herro-solar-panel.jpg"
             alt="Solar panel installation"
-            className="hero-image"
+            className="preview-image-hero"
           />
         </div>
 
         {/* Content area with gradient overlay */}
         <div className="content-area">
           <div className="content-container">
-            <h1 className="main-title">Технико-коммерческое предложение</h1>
-            <h2 className="section-title">Солнечная энергетическая система</h2>
-            <p className="description">
+            <h1 className="preview-title-main">
+              Технико-коммерческое предложение
+            </h1>
+            <h3
+              className="preview-title-section"
+              style={{ marginBottom: "15px" }}
+            >
+              {systemType === "network"
+                ? "Сетевая"
+                : systemType === "hybrid"
+                ? "Гибридная"
+                : "Автономная"}{" "}
+              <span className="preview-badge">
+                СЭС {Math.round(sesPower)} кВт
+              </span>{" "}
+              {clientType === "B2B"
+                ? `для компнаии ${clientName}`
+                : `для ${clientName}`}
+            </h3>
+            {/* <h4 className="preview-title-section">
+              
+            </h4> */}
+            <p className="preview-text-description">
               Профессиональное решение для вашего объекта с учетом всех
               технических требований и экономической эффективности проекта.
             </p>
             <div className="features-list">
               <div className="feature-item">
-                <span className="feature-icon">✓</span>
-                <span>Индивидуальный расчет</span>
+                <span className="feature-icon preview-accent-green">✓</span>
+                <span className="preview-text-feature">
+                  Индивидуальный расчет
+                </span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">✓</span>
-                <span>Гарантия качества</span>
+                <span className="feature-icon preview-accent-green">✓</span>
+                <span className="preview-text-feature">Гарантия качества</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">✓</span>
-                <span>Полное сопровождение</span>
+                <span className="feature-icon preview-accent-green">✓</span>
+                <span className="preview-text-feature">
+                  Полное сопровождение
+                </span>
               </div>
             </div>
           </div>
@@ -48,14 +75,6 @@ export default function CpBlockOne() {
       </div>
 
       <style jsx>{`
-        .cp-block-one {
-          position: relative;
-          width: 100%;
-          max-width: 1440px;
-          margin: 0 auto;
-          padding: 32px;
-        }
-
         .decorative-bg-shape {
           position: absolute;
           top: -50px;
@@ -91,13 +110,6 @@ export default function CpBlockOne() {
           overflow: hidden;
         }
 
-        .hero-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center;
-        }
-
         .content-area {
           position: relative;
           flex: 0 0 50%;
@@ -115,38 +127,6 @@ export default function CpBlockOne() {
           max-width: 100%;
         }
 
-        .main-title {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            "Helvetica Neue", Arial, sans-serif;
-          font-size: 36px;
-          font-weight: 700;
-          line-height: 1.2;
-          color: #2b2b2b;
-          letter-spacing: -0.5px;
-          margin: 0 0 16px 0;
-        }
-
-        .section-title {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            "Helvetica Neue", Arial, sans-serif;
-          font-size: 28px;
-          font-weight: 700;
-          line-height: 1.3;
-          color: #2b2b2b;
-          letter-spacing: -0.3px;
-          margin: 0 0 16px 0;
-        }
-
-        .description {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            "Helvetica Neue", Arial, sans-serif;
-          font-size: 16px;
-          font-weight: 400;
-          line-height: 1.6;
-          color: #2b2b2b;
-          margin: 0 0 24px 0;
-        }
-
         .features-list {
           display: flex;
           flex-direction: column;
@@ -157,11 +137,6 @@ export default function CpBlockOne() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            "Helvetica Neue", Arial, sans-serif;
-          font-size: 16px;
-          font-weight: 400;
-          color: #2b2b2b;
         }
 
         .feature-icon {
@@ -170,8 +145,6 @@ export default function CpBlockOne() {
           justify-content: center;
           width: 20px;
           height: 20px;
-          background: #009639;
-          color: #ffffff;
           border-radius: 50%;
           font-size: 12px;
           font-weight: 600;
@@ -190,10 +163,6 @@ export default function CpBlockOne() {
 
         /* Responsive design */
         @media (max-width: 1023px) {
-          .cp-block-one {
-            padding: 16px;
-          }
-
           .hero-card {
             flex-direction: column;
             min-height: auto;
@@ -208,14 +177,6 @@ export default function CpBlockOne() {
             padding: 24px;
           }
 
-          .main-title {
-            font-size: 28px;
-          }
-
-          .section-title {
-            font-size: 24px;
-          }
-
           .accent-bar {
             right: 0;
             top: auto;
@@ -223,24 +184,6 @@ export default function CpBlockOne() {
             width: 100%;
             height: 6px;
             border-radius: 8px 8px 0 0;
-          }
-        }
-
-        @media (max-width: 767px) {
-          .main-title {
-            font-size: 24px;
-          }
-
-          .section-title {
-            font-size: 20px;
-          }
-
-          .description {
-            font-size: 14px;
-          }
-
-          .feature-item {
-            font-size: 14px;
           }
         }
       `}</style>
