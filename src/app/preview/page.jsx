@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import Header from "@/components/header/Header";
 import CpBlockOne from "@/components/preview-components/CpBlockOne";
@@ -152,10 +153,10 @@ function PreviewContent() {
           style={{ flex: 1, display: "flex", alignItems: "center" }}
         >
           <div className="row justify-content-center w-100">
-            <div className="col-lg-10">
-              <div className="alert alert-warning" role="alert">
-                Данные не найдены для ID: {id}
-              </div>
+            <div className="col-lg-10 text-center">
+              <Link href="/" className="btn btn-primary btn-lg">
+                Создать КП
+              </Link>
             </div>
           </div>
         </div>
