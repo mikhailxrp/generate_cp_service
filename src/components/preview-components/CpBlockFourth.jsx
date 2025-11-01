@@ -2,6 +2,12 @@
 
 import "./preview-components.css";
 import GraphCardWrapper from "@/components/GraphCardWrapper";
+import {
+  calcPaybackYears,
+  calcPaybackWithDegradation,
+  formatNumber,
+  formatMoney as formatMoneyPayback,
+} from "@/lib/payback";
 export default function CpBlockFourth({
   bomData = [],
   servicesData = [],
@@ -196,14 +202,21 @@ export default function CpBlockFourth({
                                     annualGenerationKwh / annualConsumptionKwh
                                   )
                                 : 1;
-                            const annualSavingsRub =
-                              annualGenerationKwh *
-                              tariff *
-                              selfConsumptionShare;
+
+                            // Используем те же функции расчета, что и в CreateSesButton.jsx
+                            const paybackData = {
+                              total_cost_rub: grandTotal,
+                              year_generation_kwh: annualGenerationKwh,
+                              tariff_rub_per_kwh: tariff,
+                              self_consumption_share: selfConsumptionShare,
+                              annual_onm_rub: 0,
+                              export_price_rub_per_kwh: null,
+                            };
+
                             const simplePaybackYears =
-                              annualSavingsRub > 0
-                                ? grandTotal / annualSavingsRub
-                                : null;
+                              calcPaybackYears(paybackData);
+                            const detailedPayback =
+                              calcPaybackWithDegradation(paybackData);
 
                             const getYearWord = (value) => {
                               if (value === null || value === undefined)
@@ -242,38 +255,28 @@ export default function CpBlockFourth({
                                         >
                                           <li>
                                             <strong>Годовая генерация:</strong>{" "}
-                                            {annualGenerationKwh.toLocaleString(
-                                              "ru-RU"
-                                            )}{" "}
+                                            {formatNumber(annualGenerationKwh)}{" "}
                                             кВт·ч
                                           </li>
                                           <li>
                                             <strong>
                                               Годовое потребление:
                                             </strong>{" "}
-                                            {annualConsumptionKwh.toLocaleString(
-                                              "ru-RU"
-                                            )}{" "}
+                                            {formatNumber(annualConsumptionKwh)}{" "}
                                             кВт·ч
                                           </li>
                                           <li>
                                             <strong>
                                               Доля самопотребления:
                                             </strong>{" "}
-                                            {(
+                                            {formatNumber(
                                               selfConsumptionShare * 100
-                                            ).toLocaleString("ru-RU", {
-                                              maximumFractionDigits: 0,
-                                            })}
+                                            )}
                                             %
                                           </li>
                                           <li>
                                             <strong>Тариф:</strong>{" "}
-                                            {tariff.toLocaleString("ru-RU", {
-                                              style: "currency",
-                                              currency: "RUB",
-                                              maximumFractionDigits: 2,
-                                            })}
+                                            {formatMoneyPayback(tariff)}
                                             /кВт·ч
                                           </li>
                                         </ul>
@@ -286,10 +289,7 @@ export default function CpBlockFourth({
                                               className="preview-price-total mt-2"
                                               style={{ lineHeight: 1 }}
                                             >
-                                              {simplePaybackYears.toLocaleString(
-                                                "ru-RU",
-                                                { maximumFractionDigits: 1 }
-                                              )}
+                                              {formatNumber(simplePaybackYears)}
                                             </div>
                                             <div
                                               className="preview-text-description"
