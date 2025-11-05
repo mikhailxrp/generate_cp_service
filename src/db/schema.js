@@ -22,6 +22,7 @@ export const users = mysqlTable("users", {
   whatsapp: varchar("whatsapp", { length: 190 }).notNull(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   role: varchar("role", { length: 20 }).notNull().default("manager"),
+  avatarUrl: varchar("avatar_url", { length: 500 }),
   createdAt: timestamp("created_at")
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),

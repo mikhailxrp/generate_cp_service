@@ -10,7 +10,7 @@ import CpBlockThird from "@/components/preview-components/CpBlockThird";
 import CpBlockFourth from "@/components/preview-components/CpBlockFourth";
 import CpBlockFifth from "@/components/preview-components/CpBlockFifth";
 import CpBlockSixth from "@/components/preview-components/CpBlockSixth";
-import CpBlockSeventh from "@/components/preview-components/CpBlockSeventh";
+import CpBlockSeventhWrapper from "@/components/preview-components/CpBlockSeventhWrapper";
 import Footer from "@/components/footer/Footer";
 import knowledgeBase from "@/know_base/db.json" assert { type: "json" };
 
@@ -115,6 +115,14 @@ function PreviewContent() {
       paybackData,
     });
   }, [cpData]);
+
+  // Добавляем маркер для Playwright когда данные загружены
+  useEffect(() => {
+    if (!loading && cpData && printMode) {
+      document.body.setAttribute("data-preview-ready", "true");
+      console.log("Preview ready for PDF generation");
+    }
+  }, [loading, cpData, printMode]);
 
   if (loading) {
     return (
@@ -227,7 +235,7 @@ function PreviewContent() {
                 <CpBlockSixth />
               </div>
               <div className="pdf-page">
-                <CpBlockSeventh />
+                <CpBlockSeventhWrapper />
               </div>
             </div>
           )
@@ -281,7 +289,7 @@ function PreviewContent() {
                         <CpBlockSixth />
                       </div>
                       <div>
-                        <CpBlockSeventh />
+                        <CpBlockSeventhWrapper />
                       </div>
                     </div>
 
@@ -299,8 +307,16 @@ function PreviewContent() {
                                     id
                                   )}`
                                 );
-                                if (!res.ok)
-                                  throw new Error(`HTTP ${res.status}`);
+                                if (!res.ok) {
+                                  // Попытаемся прочитать ошибку из ответа
+                                  const errorData = await res
+                                    .json()
+                                    .catch(() => null);
+                                  console.error("Server error:", errorData);
+                                  throw new Error(
+                                    errorData?.message || `HTTP ${res.status}`
+                                  );
+                                }
                                 const blob = await res.blob();
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement("a");
@@ -315,7 +331,7 @@ function PreviewContent() {
                               } catch (e) {
                                 console.error("Ошибка при генерации PDF:", e);
                                 alert(
-                                  "Не удалось сформировать PDF. Проверьте логи."
+                                  `Не удалось сформировать PDF: ${e.message}\nПроверьте консоль браузера и логи сервера.`
                                 );
                               } finally {
                                 setDownloading(false);

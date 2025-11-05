@@ -1,14 +1,47 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import "./login-form.css";
 import Logo from "../Logo";
+import { loginAction } from "@/app/actions/login";
+import { showToast } from "@/lib/toast";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.target);
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    if (!email || !password) {
+      showToast.error("Заполните все поля");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const result = await loginAction(email, password);
+
+      if (result.success) {
+        showToast.success("Вход выполнен успешно");
+        router.push("/");
+        router.refresh();
+      } else {
+        showToast.error(result.error || "Ошибка входа");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      showToast.error("Произошла ошибка при входе");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -76,7 +109,9 @@ export default function LoginForm() {
         </div>
 
         <div className="form-btn-wrapper">
-          <button className="btn btn-primary btn-form">Войти</button>
+          <button className="btn btn-primary btn-form" disabled={isLoading}>
+            {isLoading ? "Вход..." : "Войти"}
+          </button>
         </div>
       </form>
     </>
