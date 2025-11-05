@@ -21,8 +21,9 @@ export async function GET(request) {
       });
     }
 
-    // Получаем текущую сессию для передачи userId
+    // Получаем текущую сессию для передачи userId и cookies
     const { getSession } = await import("@/lib/auth");
+    const { cookies } = await import("next/headers");
     const session = await getSession();
 
     if (!session || !session.userId) {
@@ -31,6 +32,10 @@ export async function GET(request) {
         headers: { "Content-Type": "application/json" },
       });
     }
+
+    // Получаем токен авторизации для передачи в Playwright
+    const cookieStore = await cookies();
+    const authToken = cookieStore.get("auth-token");
 
     // Используем origin из текущего запроса для надёжного получения baseUrl
     const baseUrl = new URL(request.url).origin;
@@ -73,6 +78,12 @@ export async function GET(request) {
     const context = await browser.newContext({
       viewport: { width: 1300, height: 1000 },
       deviceScaleFactor: 2,
+      // Передаем cookies для авторизации
+      extraHTTPHeaders: authToken
+        ? {
+            Cookie: `auth-token=${authToken.value}`,
+          }
+        : {},
     });
 
     const page = await context.newPage();
