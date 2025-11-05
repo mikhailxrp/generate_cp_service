@@ -5,8 +5,10 @@ import AddPresetModal from "./AddPresetModal";
 import EditPresetModal from "./EditPresetModal";
 import { deletePreset } from "@/app/actions/deletePreset";
 import { showToast } from "@/lib/toast";
+import { useUser } from "@/hooks/useUser";
 
 export default function PresetsTableClient({ rows: initialRows }) {
+  const { user } = useUser();
   const fileInputRef = useRef(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -204,23 +206,25 @@ export default function PresetsTableClient({ rows: initialRows }) {
       <div className="mb-5">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h3 className="catalog-title-h3 mb-0">Пресеты</h3>
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-outline-secondary btn-sm"
-              onClick={handleImportClick}
-              title="Импорт из CSV"
-            >
-              <i className="bi bi-upload me-1"></i>
-              Импорт из CSV
-            </button>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={handleAddPreset}
-            >
-              <i className="bi bi-plus-circle me-1"></i>
-              Добавить пресет
-            </button>
-          </div>
+          {user?.role === "admin" && (
+            <div className="d-flex gap-2">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={handleImportClick}
+                title="Импорт из CSV"
+              >
+                <i className="bi bi-upload me-1"></i>
+                Импорт из CSV
+              </button>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleAddPreset}
+              >
+                <i className="bi bi-plus-circle me-1"></i>
+                Добавить пресет
+              </button>
+            </div>
+          )}
         </div>
         <div className="table-responsive">
           <table className="table table-sm table-striped align-middle">

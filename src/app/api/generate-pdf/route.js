@@ -43,12 +43,6 @@ export async function GET(request) {
       id
     )}&print=1&userId=${session.userId}`;
 
-    console.log("Starting PDF generation for URL:", targetUrl);
-    console.log(
-      "Environment: ",
-      isProduction ? "Production (Vercel)" : "Local"
-    );
-
     // Условный запуск Chromium в зависимости от окружения
     if (isProduction) {
       // Production: используем @sparticuz/chromium для Vercel
@@ -90,40 +84,11 @@ export async function GET(request) {
     await page.emulateMedia({ media: "screen" });
     await page.goto(targetUrl, { waitUntil: "networkidle", timeout: 120000 });
 
-    // Проверим URL и статус страницы
-    const currentUrl = page.url();
-    console.log("Current page URL:", currentUrl);
-
-    // Сделаем скриншот для отладки
-    await page.screenshot({ path: "debug-screenshot.png", fullPage: true });
-    console.log("Screenshot saved to debug-screenshot.png");
-
-    // Проверим что на странице
-    const pageContent = await page.evaluate(() => {
-      return {
-        title: document.title,
-        bodyText: document.body.innerText.substring(0, 500),
-        hasRoot: !!document.querySelector("#pdf-root"),
-        hasPrintMode: new URLSearchParams(window.location.search).get("print"),
-        bodyAttrs: Array.from(document.body.attributes)
-          .map((a) => `${a.name}="${a.value}"`)
-          .join(", "),
-      };
-    });
-    console.log("Page content check:", JSON.stringify(pageContent, null, 2));
-
     // Ждем пока React загрузит данные и установит маркер готовности
-    console.log("Waiting for preview data to load...");
-    try {
-      await page.waitForFunction(
-        () => document.body.getAttribute("data-preview-ready") === "true",
-        { timeout: 30000 }
-      );
-      console.log("Preview data loaded successfully");
-    } catch (e) {
-      console.error("Timeout waiting for preview data:", e.message);
-      // Не прерываем, попробуем все равно найти страницы
-    }
+    await page.waitForFunction(
+      () => document.body.getAttribute("data-preview-ready") === "true",
+      { timeout: 30000 }
+    );
 
     // Дополнительная пауза для рендера
     await page.waitForTimeout(2000);
@@ -168,38 +133,10 @@ export async function GET(request) {
 
     // Найти все страницы для PDF
     const pagesCount = await page.evaluate(() => {
-      const pages = document.querySelectorAll("#pdf-root > .pdf-page");
-      console.log("Pages found:", pages.length);
-      pages.forEach((p, i) => {
-        console.log(`Page ${i}:`, p.className, p.children.length);
-      });
-      return pages.length;
+      return document.querySelectorAll("#pdf-root > .pdf-page").length;
     });
 
-    console.log("Found pages count:", pagesCount);
-
     if (!pagesCount || pagesCount < 1) {
-      // Дебаг: выведем HTML структуру
-      const debugInfo = await page.evaluate(() => {
-        const root = document.querySelector("#pdf-root");
-        if (!root) return { error: "pdf-root not found" };
-
-        const allDivs = root.querySelectorAll("div");
-        return {
-          rootExists: true,
-          rootChildren: root.children.length,
-          rootHTML: root.innerHTML.substring(0, 1000),
-          allDivsCount: allDivs.length,
-          pdfPageElements: Array.from(root.querySelectorAll(".pdf-page")).map(
-            (el) => ({
-              className: el.className,
-              childrenCount: el.children.length,
-            })
-          ),
-        };
-      });
-      console.log("Debug info:", JSON.stringify(debugInfo, null, 2));
-
       throw new Error(
         "No printable pages found. Check if preview page renders correctly with data."
       );

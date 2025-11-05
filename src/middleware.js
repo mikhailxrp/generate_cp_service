@@ -5,19 +5,11 @@ const TOKEN_NAME = "auth-token";
 export function middleware(req) {
   const { pathname, searchParams } = req.nextUrl;
 
-  console.log("Middleware check:", {
-    pathname,
-    print: searchParams.get("print"),
-    userId: searchParams.get("userId"),
-    fullUrl: req.url,
-  });
-
   // Разрешённые пути (не требуют авторизации)
   const publicPaths = ["/login", "/api/user/public"];
 
   // Разрешить /preview в режиме печати (для Playwright)
   if (pathname === "/preview" && searchParams.get("print") === "1") {
-    console.log("✅ Middleware: allowing /preview in print mode");
     return NextResponse.next();
   }
 

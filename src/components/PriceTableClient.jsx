@@ -5,12 +5,14 @@ import { fmtMoney, safe, titleByType } from "@/lib/format";
 import EquipmentModal from "./EquipmentModal";
 import AddEquipmentModal from "./AddEquipmentModal";
 import { showToast } from "@/lib/toast";
+import { useUser } from "@/hooks/useUser";
 
 export default function PriceTableClient({
   typeCode,
   rows: initialRows,
   onRowsUpdate,
 }) {
+  const { user } = useUser();
   const fileInputRef = useRef(null);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -402,23 +404,25 @@ export default function PriceTableClient({
       <div className="mb-5">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h3 className="catalog-title-h3 mb-0">{titleByType(typeCode)}</h3>
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-outline-secondary btn-sm"
-              onClick={handleImportClick}
-              title="Импорт из CSV"
-            >
-              <i className="bi bi-upload me-1"></i>
-              Импорт из CSV
-            </button>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              <i className="bi bi-plus-circle me-1"></i>
-              Добавить оборудование
-            </button>
-          </div>
+          {user?.role === "admin" && (
+            <div className="d-flex gap-2">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={handleImportClick}
+                title="Импорт из CSV"
+              >
+                <i className="bi bi-upload me-1"></i>
+                Импорт из CSV
+              </button>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => setIsAddModalOpen(true)}
+              >
+                <i className="bi bi-plus-circle me-1"></i>
+                Добавить оборудование
+              </button>
+            </div>
+          )}
         </div>
         <div className="table-responsive">
           <table
