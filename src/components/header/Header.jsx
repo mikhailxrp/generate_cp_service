@@ -1,14 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "../Logo";
+import { logoutAction } from "@/app/actions/logout";
+import { useUser } from "@/hooks/useUser";
 import "./header.css";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, getInitials } = useUser();
 
   // Ensure component is mounted before using pathname to avoid hydration mismatch
   useEffect(() => {
@@ -50,6 +54,15 @@ export default function Header() {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutAction();
+    } catch (error) {
+      console.error("Logout error:", error);
+      router.push("/login");
+    }
   };
 
   return (
@@ -101,13 +114,21 @@ export default function Header() {
           <div className="header-content-right">
             <div className="profile">
               <Link href="/profile" aria-label="Профиль">
-                M
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={`${user.name} ${user.surname}`}
+                    className="profile-avatar-img"
+                  />
+                ) : (
+                  getInitials
+                )}
               </Link>
             </div>
             <div className="logout">
-              <Link href="/" aria-label="Выход">
+              <button onClick={handleLogout} aria-label="Выход">
                 <i className="bi bi-box-arrow-right"></i>
-              </Link>
+              </button>
             </div>
 
             {/* Hamburger Button */}
@@ -129,8 +150,18 @@ export default function Header() {
           <div className="mobile-menu-content">
             <div className="mobile-menu-header">
               <div className="mobile-user-info">
-                <div className="profile-avatar">M</div>
-                <span className="user-email">user@example.com</span>
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={`${user.name} ${user.surname}`}
+                    className="profile-avatar profile-avatar-img"
+                  />
+                ) : (
+                  <div className="profile-avatar">{getInitials}</div>
+                )}
+                <span className="user-email">
+                  {user?.email || "Загрузка..."}
+                </span>
               </div>
             </div>
 
@@ -186,14 +217,16 @@ export default function Header() {
                 <i className="bi bi-person-circle"></i>
                 <span>Профиль</span>
               </Link>
-              <Link
+              <button
                 className="mobile-nav-link logout-link"
-                href="/"
-                onClick={closeMenu}
+                onClick={() => {
+                  closeMenu();
+                  handleLogout();
+                }}
               >
                 <i className="bi bi-box-arrow-right"></i>
                 <span>Выход</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
