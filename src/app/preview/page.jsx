@@ -52,8 +52,6 @@ function PreviewContent() {
     fetchCpData();
   }, [id]);
 
-  console.log("CP Data:", cpData);
-
   useEffect(() => {
     if (!cpData) return;
 
@@ -120,7 +118,6 @@ function PreviewContent() {
   useEffect(() => {
     if (!loading && cpData && printMode) {
       document.body.setAttribute("data-preview-ready", "true");
-      console.log("Preview ready for PDF generation");
     }
   }, [loading, cpData, printMode]);
 

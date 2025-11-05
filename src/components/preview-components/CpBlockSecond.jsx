@@ -10,7 +10,6 @@ export default function CpBlockTwo({ pains = [], kbPains = [] }) {
       })
     : [];
 
-  console.log("kbPains", kbPains);
   return (
     <div className="cp-block-two preview-block-container mb-4 mt-4">
       <div className="content-container preview-content-card">

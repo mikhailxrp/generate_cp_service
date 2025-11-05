@@ -6,7 +6,6 @@ export default function CpBlockThird({
   clientType = "",
   systemType = "",
 }) {
-  console.log("sesType", sesType);
   return (
     <div className="cp-block-two preview-block-container mb-4">
       <div className="content-container preview-content-card">
