@@ -100,14 +100,16 @@ export default function Header() {
               >
                 Каталог
               </Link>
-              <Link
-                className={`btn btn-light ${
-                  mounted && pathname === "/settings" ? "active" : ""
-                }`}
-                href="/settings"
-              >
-                Настройки
-              </Link>
+              {user?.role === "admin" && (
+                <Link
+                  className={`btn btn-light ${
+                    mounted && pathname === "/settings" ? "active" : ""
+                  }`}
+                  href="/settings"
+                >
+                  Настройки
+                </Link>
+              )}
             </div>
           </div>
 
@@ -196,16 +198,18 @@ export default function Header() {
                 <i className="bi bi-grid"></i>
                 <span>Каталог</span>
               </Link>
-              <Link
-                className={`mobile-nav-link ${
-                  mounted && pathname === "/settings" ? "active" : ""
-                }`}
-                href="/settings"
-                onClick={closeMenu}
-              >
-                <i className="bi bi-gear"></i>
-                <span>Настройки</span>
-              </Link>
+              {user?.role === "admin" && (
+                <Link
+                  className={`mobile-nav-link ${
+                    mounted && pathname === "/settings" ? "active" : ""
+                  }`}
+                  href="/settings"
+                  onClick={closeMenu}
+                >
+                  <i className="bi bi-gear"></i>
+                  <span>Настройки</span>
+                </Link>
+              )}
             </nav>
 
             <div className="mobile-menu-footer">
