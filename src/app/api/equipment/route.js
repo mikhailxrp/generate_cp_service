@@ -199,11 +199,19 @@ export async function POST(request) {
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const idStr = searchParams.get("id");
 
-    if (!id) {
+    if (!idStr) {
       return NextResponse.json(
         { error: "ID оборудования обязателен" },
+        { status: 400 }
+      );
+    }
+
+    const id = parseInt(idStr, 10);
+    if (!Number.isFinite(id)) {
+      return NextResponse.json(
+        { error: "Некорректный ID оборудования" },
         { status: 400 }
       );
     }
@@ -233,8 +241,17 @@ export async function DELETE(request) {
     });
   } catch (error) {
     console.error("Ошибка при удалении оборудования:", error);
+
+    // Проверка на ошибку подключения к БД
+    if (error.code === "ENOTFOUND" || error.errno === -3008) {
+      return NextResponse.json(
+        { error: "Ошибка подключения к базе данных" },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Внутренняя ошибка сервера" },
+      { error: `Внутренняя ошибка сервера: ${error.message}` },
       { status: 500 }
     );
   }

@@ -10,6 +10,18 @@ export const titleByType = (type) =>
     inverter: "Инверторы",
     ess: "ESS (накопители/системы)",
     mount: "Крепёж и BoS",
+    batt: "Батареи",
+    cable: "Кабели",
+    connector: "Коннекторы",
+    pow_off: "Выключатели",
+    fuse: "Предохранители",
+    uzip: "Узип",
+    el_panel: "Распред. Щиты",
+    lotki: "Лотки",
+    krep: "Крепеж",
+    cpo_cs: "Лотки CPO90/CS90",
+    smartmeter: "Счётчики",
+    trans: "Трансформаторы",
   }[type] || type);
 
 export const formatYears = (years) => {
