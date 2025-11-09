@@ -257,6 +257,18 @@ export default function PriceTableClient({
 
   const toNumber = (val) => {
     if (val === undefined || val === null) return undefined;
+    // Проверка на текстовые значения типа "нет", "н/д", "-", "—"
+    const str = String(val).trim().toLowerCase();
+    if (
+      str === "" ||
+      str === "нет" ||
+      str === "н/д" ||
+      str === "-" ||
+      str === "—" ||
+      str === "n/a"
+    ) {
+      return undefined;
+    }
     const s = String(val).replace(/\s/g, "").replace(",", ".");
     const n = Number(s);
     return Number.isFinite(n) ? n : undefined;
@@ -272,6 +284,7 @@ export default function PriceTableClient({
     try {
       const text = await file.text();
       const records = parseCsv(text);
+
       if (!Array.isArray(records) || records.length === 0) {
         showToast.error("CSV пуст или не распознан");
         return;
@@ -306,19 +319,51 @@ export default function PriceTableClient({
         "Комментарий",
       ]);
 
+      // Дедупликация по SKU перед импортом (оставляем последнюю запись)
+      const uniqueRecords = new Map();
+      for (const r of records) {
+        const sku = (r.SKU ?? r.sku ?? "").trim();
+        if (sku) {
+          uniqueRecords.set(sku, r);
+        }
+      }
+
       const created = [];
       let errors = 0;
+      let skipped = 0;
       let lastError = null;
-      for (const r of records) {
+      for (const r of Array.from(uniqueRecords.values())) {
         // Маппинг русских названий колонок на английские
         const sku = (r.SKU ?? r.sku ?? "").trim();
         const title = (r.Наименование ?? r.title ?? "").trim();
-        const priceRub = toNumber(
-          r.Цена_базовая ?? r.Цена ?? r.priceRub ?? r.price_rub
-        );
-        if (!sku || !title || !Number.isFinite(priceRub)) {
-          // пропускаем строки без обязательных полей
+
+        // Для кабелей цена берется из поля "Цена_за_1м" или "Цена_за 1м"
+        let priceRub;
+        if (typeCode === "cable") {
+          priceRub = toNumber(
+            r.Цена_за_1м ??
+              r["Цена_за 1м"] ??
+              r.Цена_за_метр ??
+              r.Цена_базовая ??
+              r.Цена ??
+              r.priceRub ??
+              r.price_rub
+          );
+        } else {
+          priceRub = toNumber(
+            r.Цена_базовая ?? r.Цена ?? r.priceRub ?? r.price_rub
+          );
+        }
+
+        // Если нет SKU или title - пропускаем
+        if (!sku || !title) {
+          skipped++;
           continue;
+        }
+
+        // Если нет цены - ставим 0 (можно будет потом отредактировать)
+        if (!Number.isFinite(priceRub)) {
+          priceRub = 0;
         }
 
         const payload = {
@@ -372,6 +417,15 @@ export default function PriceTableClient({
       }
 
       if (created.length > 0) {
+        // Очистка дубликатов в БД после импорта
+        try {
+          await fetch("/api/equipment/cleanup-duplicates", {
+            method: "DELETE",
+          });
+        } catch (err) {
+          // Игнорируем ошибки очистки дубликатов
+        }
+
         setRows((prev) => {
           const skuToIndex = new Map(prev.map((row, idx) => [row.sku, idx]));
           const next = [...prev];
@@ -385,17 +439,43 @@ export default function PriceTableClient({
           }
           return next;
         });
-        showToast.success(`Импортировано: ${created.length}`);
+        const msg =
+          errors > 0
+            ? `Импортировано: ${created.length} (ошибок: ${errors})`
+            : `Импортировано: ${created.length}`;
+        showToast.success(msg);
         forceComponentUpdate();
       } else {
         const msg = lastError
           ? `Не удалось импортировать записи: ${lastError}`
-          : "Не удалось импортировать записи";
+          : `Не удалось импортировать записи. Пропущено строк: ${skipped}`;
         showToast.error(msg);
       }
     } finally {
       // сбрасываем инпут, чтобы можно было выбрать тот же файл снова
       e.target.value = "";
+    }
+  };
+
+  // Ручная очистка дубликатов
+  const handleCleanupDuplicates = async () => {
+    if (!confirm("Удалить дубликаты из базы данных?")) return;
+
+    try {
+      const resp = await fetch("/api/equipment/cleanup-duplicates", {
+        method: "DELETE",
+      });
+      const data = await resp.json();
+
+      if (resp.ok) {
+        showToast.success(`Удалено дубликатов: ${data.deletedCount}`);
+        // Перезагрузить данные
+        forceComponentUpdate();
+      } else {
+        showToast.error(data.error || "Ошибка при очистке");
+      }
+    } catch (err) {
+      showToast.error(`Ошибка: ${err.message}`);
     }
   };
 
@@ -413,6 +493,14 @@ export default function PriceTableClient({
               >
                 <i className="bi bi-upload me-1"></i>
                 Импорт из CSV
+              </button>
+              <button
+                className="btn btn-outline-danger btn-sm"
+                onClick={handleCleanupDuplicates}
+                title="Удалить дубликаты"
+              >
+                <i className="bi bi-trash me-1"></i>
+                Очистить дубликаты
               </button>
               <button
                 className="btn btn-primary btn-sm"
@@ -433,7 +521,19 @@ export default function PriceTableClient({
               <tr>
                 <th>SKU</th>
                 <th>Наименование</th>
-                <th>Цена</th>
+                <th>
+                  {typeCode === "cable"
+                    ? "Цена за 1м"
+                    : typeCode === "connector"
+                    ? "Цена за 1шт"
+                    : typeCode === "lotki"
+                    ? "Цена за 1м.п"
+                    : typeCode === "krep"
+                    ? "Цена за 1шт"
+                    : typeCode === "cpo_cs"
+                    ? "Цена за 1 компл"
+                    : "Цена"}
+                </th>
                 <th>Валюта</th>
                 <th>Наличие</th>
                 <th>Склад</th>
@@ -443,33 +543,53 @@ export default function PriceTableClient({
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((r) => (
-                <tr key={r.id} onClick={() => handleRowClick(r)}>
-                  <td>
-                    <code>{r.sku || "—"}</code>
-                  </td>
-                  <td>{r.title || "—"}</td>
-                  <td>{fmtMoney(r.priceRub)}</td>
-                  <td>{safe(r.currency, "RUB")}</td>
-                  <td>{safe(r.stock)}</td>
-                  <td>{safe(r.warehouseRegion)}</td>
-                  <td>{safe(r.leadDays)}</td>
-                  <td>{safe(r.priority, 0)}</td>
-                  <td>
-                    {r.specUrl ? (
-                      <a
-                        href={r.specUrl}
-                        target="_blank"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        PDF
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {filteredRows.map((r) => {
+                // Для кабелей берем цену из attrs["Цена_за 1м"]
+                // Для коннекторов берем цену из attrs["Цена_за 1шт"]
+                // Для лотков берем цену из attrs["Цена_за 1м.п"]
+                // Для крепежа берем цену из attrs["Цена_за 1шт"]
+                // Для лотков CPO90/CS90 берем цену из attrs["Цена_за 1 компл"]
+                let price = r.priceRub;
+                if (typeCode === "cable") {
+                  price = r.attrs?.["Цена_за 1м"] || r.priceRub;
+                } else if (typeCode === "connector") {
+                  price = r.attrs?.["Цена_за 1шт"] || r.priceRub;
+                } else if (typeCode === "lotki") {
+                  price = r.attrs?.["Цена_за 1м.п"] || r.priceRub;
+                } else if (typeCode === "krep") {
+                  price = r.attrs?.["Цена_за 1шт"] || r.priceRub;
+                } else if (typeCode === "cpo_cs") {
+                  price = r.attrs?.["Цена_за 1 компл"] || r.priceRub;
+                }
+
+                return (
+                  <tr key={r.id} onClick={() => handleRowClick(r)}>
+                    <td>
+                      <code>{r.sku || "—"}</code>
+                    </td>
+                    <td>{r.title || "—"}</td>
+                    <td>{fmtMoney(price)}</td>
+                    <td>{safe(r.currency, "RUB")}</td>
+                    <td>{safe(r.stock)}</td>
+                    <td>{safe(r.warehouseRegion)}</td>
+                    <td>{safe(r.leadDays)}</td>
+                    <td>{safe(r.priority, 0)}</td>
+                    <td>
+                      {r.specUrl ? (
+                        <a
+                          href={r.specUrl}
+                          target="_blank"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          PDF
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -3,10 +3,7 @@ import { priceItems, presets, compat, services } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { fmtMoney, safe, titleByType } from "@/lib/format";
 import Header from "@/components/header/Header";
-import CatalogWrapper from "@/components/CatalogWrapper";
-import ServicesTableClient from "@/components/ServicesTableClient";
-import PresetsTableClient from "@/components/PresetsTableClient";
-import CompatTableClient from "@/components/CompatTableClient";
+import CatalogTabs from "@/components/CatalogTabs";
 import "./catalog.css";
 
 export const dynamic = "force-dynamic"; // всегда свежие данные
@@ -29,11 +26,40 @@ async function fetchPriceByType(typeCode, limit = 50) {
 export default async function CatalogPage() {
   const db = getDb();
   // оборудование по типам (по 50 строк на тип для начала)
-  const [panels, inverters, ess, mounts] = await Promise.all([
+  const [
+    panels,
+    inverters,
+    ess,
+    mounts,
+    batteries,
+    cables,
+    connectors,
+    switches,
+    fuses,
+    uzips,
+    elpanels,
+    lotki,
+    krep,
+    cpo_cs,
+    smartmeters,
+    transformers,
+  ] = await Promise.all([
     fetchPriceByType("panel", 50),
     fetchPriceByType("inverter", 50),
     fetchPriceByType("ess", 50),
     fetchPriceByType("mount", 50),
+    fetchPriceByType("batt", 50),
+    fetchPriceByType("cable", 50),
+    fetchPriceByType("connector", 50),
+    fetchPriceByType("pow_off", 50),
+    fetchPriceByType("fuse", 50),
+    fetchPriceByType("uzip", 50),
+    fetchPriceByType("el_panel", 50),
+    fetchPriceByType("lotki", 50),
+    fetchPriceByType("krep", 50),
+    fetchPriceByType("cpo_cs", 50),
+    fetchPriceByType("smartmeter", 50),
+    fetchPriceByType("trans", 50),
   ]);
 
   // 2) Пресеты
@@ -49,26 +75,29 @@ export default async function CatalogPage() {
       <Header />
       <div className="container-fluid catalog-container mt-3">
         <div className="container">
-          <h1 className="catalog-title">Каталог</h1>
-
-          {/* Блок 1: Оборудование по типам */}
-          <CatalogWrapper
-            initialData={{
+          <CatalogTabs
+            equipmentData={{
               panels,
               inverters,
               ess,
               mounts,
+              batteries,
+              cables,
+              connectors,
+              switches,
+              fuses,
+              uzips,
+              elpanels,
+              lotki,
+              krep,
+              cpo_cs,
+              smartmeters,
+              transformers,
             }}
+            presetsRows={presetsRows}
+            compatRows={compatRows}
+            servicesRows={servicesRows}
           />
-
-          {/* Блок 2: Пресеты */}
-          <PresetsTableClient rows={presetsRows} />
-
-          {/* Блок 3: Совместимость */}
-          <CompatTableClient rows={compatRows} />
-
-          {/* Блок 4: Услуги */}
-          <ServicesTableClient rows={servicesRows} />
         </div>
       </div>
     </>
