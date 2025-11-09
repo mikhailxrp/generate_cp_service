@@ -173,6 +173,30 @@ function EquipmentSelectionModal({ onClose, onSelect }) {
     { id: "trans", label: "Трансформаторы" },
   ];
 
+  // Функция для получения цены в зависимости от типа оборудования
+  const getPriceByType = (item, typeCode) => {
+    // Для кабелей берем цену из attrs["Цена_за 1м"]
+    // Для коннекторов берем цену из attrs["Цена_за 1шт"]
+    // Для лотков берем цену из attrs["Цена_за 1м.п"]
+    // Для крепежа берем цену из attrs["Цена_за 1шт"]
+    // Для лотков CPO90/CS90 берем цену из attrs["Цена_за 1 компл"]
+    let price = item.priceRub;
+
+    if (typeCode === "cable") {
+      price = item.attrs?.["Цена_за 1м"] || item.priceRub;
+    } else if (typeCode === "connector") {
+      price = item.attrs?.["Цена_за 1шт"] || item.priceRub;
+    } else if (typeCode === "lotki") {
+      price = item.attrs?.["Цена_за 1м.п"] || item.priceRub;
+    } else if (typeCode === "krep") {
+      price = item.attrs?.["Цена_за 1шт"] || item.priceRub;
+    } else if (typeCode === "cpo_cs") {
+      price = item.attrs?.["Цена_за 1 компл"] || item.priceRub;
+    }
+
+    return price;
+  };
+
   // Загрузка оборудования при изменении категории
   React.useEffect(() => {
     const fetchEquipment = async () => {
@@ -288,7 +312,9 @@ function EquipmentSelectionModal({ onClose, onSelect }) {
                           <td>
                             <small className="text-muted">{item.sku}</small>
                           </td>
-                          <td>{fmtMoney(item.priceRub)}</td>
+                          <td>
+                            {fmtMoney(getPriceByType(item, selectedCategory))}
+                          </td>
                           <td>
                             <button
                               className="btn btn-sm btn-success"
@@ -368,16 +394,41 @@ export default function CreateSesButton({ id, cpData }) {
     showToast.success("Позиция удалена");
   };
 
+  // Функция для получения цены в зависимости от типа оборудования
+  const getPriceByType = (item, typeCode) => {
+    // Для кабелей берем цену из attrs["Цена_за 1м"]
+    // Для коннекторов берем цену из attrs["Цена_за 1шт"]
+    // Для лотков берем цену из attrs["Цена_за 1м.п"]
+    // Для крепежа берем цену из attrs["Цена_за 1шт"]
+    // Для лотков CPO90/CS90 берем цену из attrs["Цена_за 1 компл"]
+    let price = item.priceRub;
+
+    if (typeCode === "cable") {
+      price = item.attrs?.["Цена_за 1м"] || item.priceRub;
+    } else if (typeCode === "connector") {
+      price = item.attrs?.["Цена_за 1шт"] || item.priceRub;
+    } else if (typeCode === "lotki") {
+      price = item.attrs?.["Цена_за 1м.п"] || item.priceRub;
+    } else if (typeCode === "krep") {
+      price = item.attrs?.["Цена_за 1шт"] || item.priceRub;
+    } else if (typeCode === "cpo_cs") {
+      price = item.attrs?.["Цена_за 1 компл"] || item.priceRub;
+    }
+
+    return price;
+  };
+
   // Функция добавления оборудования в BOM
   const handleAddEquipment = (equipment) => {
+    const correctPrice = getPriceByType(equipment, equipment.typeCode);
     const newItem = {
       name: equipment.title,
       title: equipment.title,
       qty: 1,
       quantity: 1,
-      unitPriceRub: parseFloat(equipment.priceRub),
-      price: parseFloat(equipment.priceRub),
-      basePrice: parseFloat(equipment.priceRub),
+      unitPriceRub: parseFloat(correctPrice),
+      price: parseFloat(correctPrice),
+      basePrice: parseFloat(correctPrice),
       sku: equipment.sku,
       typeCode: equipment.typeCode,
     };
