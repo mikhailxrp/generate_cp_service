@@ -1,75 +1,147 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌞 Генератор Коммерческих Предложений САНХОРС
 
-## Getting Started
+Веб-приложение для автоматизации создания коммерческих предложений по солнечным электростанциям.
 
-First, run the development server:
+## 🚀 Быстрый старт
 
 ```bash
+# Установка зависимостей
+npm install
+
+# Запуск в режиме разработки
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Сборка для production
+npm run build
+
+# Запуск production сервера
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Технологии
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- **Next.js 15.5** - React фреймворк
+- **Drizzle ORM** - работа с базой данных MySQL
+- **Bootstrap 5.3** - UI компоненты
+- **Chart.js** - визуализация графиков
+- **Cloudinary** - хранение изображений
+- **Jose** - JWT аутентификация
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📁 Структура проекта
 
-## Learn More
+```
+├── src/
+│   ├── app/              # Next.js App Router страницы
+│   │   ├── actions/      # Server Actions
+│   │   ├── api/          # API routes
+│   │   └── ...
+│   ├── components/       # React компоненты
+│   ├── db/              # Схема БД и подключение
+│   ├── lib/             # Утилиты
+│   └── hooks/           # React hooks
+├── scripts/             # Скрипты импорта данных
+├── public/              # Статические файлы
+├── docs/                # Документация
+└── drizzle/             # Миграции БД
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 📋 Основные команды
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Разработка
+```bash
+npm run dev          # Запуск dev сервера
+npm run dev:turbo    # Запуск с Turbopack
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### База данных
+```bash
+npx drizzle-kit generate   # Генерация миграций
+npx drizzle-kit migrate    # Применение миграций
+npx drizzle-kit studio     # UI для просмотра БД
+```
 
-## Deploy on Vercel
+### Пользователи
+```bash
+npm run create-user        # Создание нового пользователя
+node scripts/update-user-role.js  # Обновление роли
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Импорт данных
+```bash
+node scripts/importModulesFromCsv.js      # Импорт солнечных модулей
+node scripts/importInvertersFromCsv.js    # Импорт инверторов
+node scripts/importEssFromCsv.js          # Импорт систем хранения
+# ... другие импорт-скрипты в директории scripts/
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔐 Переменные окружения
+
+Создайте файл `.env` в корне проекта:
+
+```env
+# База данных
+DB_HOST=localhost
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_NAME=your_database
+
+# JWT секрет
+JWT_SECRET=your-secret-key
+
+# Cloudinary (для загрузки аватаров)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# SSH туннель (опционально)
+USE_SSH_TUNNEL=false
+SSH_HOST=your_ssh_host
+SSH_USER=your_ssh_user
+SSH_PRIVATE_KEY_PATH=/path/to/key
+```
+
+## 📚 Документация
+
+Подробная документация находится в папке `docs/`:
+
+- [Настройка авторизации](docs/AUTH_SETUP.md)
+- [Загрузка аватаров](docs/AVATAR_UPLOAD_TEST.md)
+- [Cloudinary setup](docs/CLOUDINARY_SETUP.md)
+- [Импорт из CSV](docs/CSV_IMPORT_QUICKSTART.md)
+- [Профиль пользователя](docs/PROFILE_FEATURES.md)
+- [Лог разработки](docs/DEVELOPMENT_LOG.md)
+- [Отчёт об очистке проекта](docs/CLEANUP_REPORT.md)
+
+### Документация по импорту
+- [CSV категории](docs/scripts/CSV_CATEGORIES_REFERENCE.md)
+- [CSV шпаргалка](docs/scripts/CSV_CHEATSHEET.md)
+- [Архитектура импорта](docs/scripts/CSV_IMPORT_ARCHITECTURE.md)
+- [Команды импорта](docs/scripts/CSV_IMPORT_COMMANDS.md)
+
+## 🔑 Основные функции
+
+- ✅ Генерация КП для солнечных электростанций
+- ✅ Каталог оборудования (панели, инверторы, ESS, монтаж)
+- ✅ Расчёт окупаемости и генерации
+- ✅ Интеграция с PVGIS API для данных солнечной радиации
+- ✅ Управление пресетами и совместимостью
+- ✅ Система пользователей с ролями
+- ✅ Экспорт в Excel и PDF (в разработке)
+
+## 👥 Роли пользователей
+
+- **admin** - полный доступ ко всем функциям
+- **manager** - создание КП, работа с каталогом
+- **viewer** - просмотр КП
+
+## 🤝 Поддержка
+
+При возникновении проблем:
+1. Проверьте `.env` файл
+2. Убедитесь, что БД доступна
+3. Проверьте логи в консоли
+4. См. документацию в `docs/`
 
 ---
 
-## 📋 CSV Price Import System
-
-Проект включает полноценную систему импорта прайса из CSV-файлов в базу данных.
-
-### 🚀 Быстрый старт
-
-```bash
-# Импорт инверторов
-node scripts/importInvertersFromCsv.js
-
-# Импорт солнечных модулей
-node scripts/importModulesFromCsv.js
-
-# Проверка результата
-node scripts/check-categories.js
-```
-
-### 📚 Документация
-
-**Начни здесь:** **[CSV_IMPORT_SYSTEM_SUMMARY.md](./CSV_IMPORT_SYSTEM_SUMMARY.md)** — обзор системы
-
-**Полная документация:**
-- **[scripts/CSV_IMPORT_INDEX.md](./scripts/CSV_IMPORT_INDEX.md)** — главный индекс всей документации
-- **[scripts/CSV_IMPORT_QUICK_START.md](./scripts/CSV_IMPORT_QUICK_START.md)** — быстрый старт за 2 минуты
-- **[scripts/CSV_IMPORT_GUIDE.md](./scripts/CSV_IMPORT_GUIDE.md)** — подробное руководство
-- **[scripts/CSV_CATEGORIES_REFERENCE.md](./scripts/CSV_CATEGORIES_REFERENCE.md)** — справочник категорий
-- **[scripts/CSV_CHEATSHEET.md](./scripts/CSV_CHEATSHEET.md)** — шпаргалка
-
-### ✅ Готовые импортеры
-
-15 готовых CSV-импортеров для всех основных категорий прайса:
-- Инверторы, солнечные модули, ESS, батареи, крепёж/BOS
-- Кабели, коннекторы, предохранители, лотки, эл. панели
-- Трансформаторы, УЗИПы, счётчики, CPO90, PowOff
-
-**Все команды:** [scripts/CSV_IMPORT_COMMANDS.md](./scripts/CSV_IMPORT_COMMANDS.md)
+**© 2024 САНХОРС** | Генератор КП v0.1.0
