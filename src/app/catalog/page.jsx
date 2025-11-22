@@ -70,6 +70,21 @@ export default async function CatalogPage() {
 
   // 4) Услуги
   const servicesRows = await db.select().from(services).limit(100);
+
+  // 5) Дополнительные услуги (из price_items с type_code='sunhors')
+  const additionalServices = await db
+    .select()
+    .from(priceItems)
+    .where(eq(priceItems.typeCode, "sunhors"))
+    .limit(100);
+
+  // 6) ПО (из price_items с type_code='demo')
+  const softwareItems = await db
+    .select()
+    .from(priceItems)
+    .where(eq(priceItems.typeCode, "demo"))
+    .limit(100);
+
   return (
     <>
       <Header />
@@ -97,6 +112,8 @@ export default async function CatalogPage() {
             presetsRows={presetsRows}
             compatRows={compatRows}
             servicesRows={servicesRows}
+            additionalServicesRows={additionalServices}
+            softwareRows={softwareItems}
           />
         </div>
       </div>

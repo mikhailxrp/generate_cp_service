@@ -59,20 +59,20 @@ export default function EquipmentModal({
     return value ? "Да" : "Нет";
   };
 
-  // Форматируем наличие: 1 -> "Да", 0 -> "Нет", остальное -> как есть
+  // Форматируем наличие: 1 -> "ДА", 0 -> "НЕТ", остальное -> как есть
   const formatStock = (stock) => {
     if (stock === null || stock === undefined) return "—";
-    if (stock === 1 || stock === "1") return "Да";
-    if (stock === 0 || stock === "0") return "Нет";
+    if (stock === 1 || stock === "1") return "ДА";
+    if (stock === 0 || stock === "0") return "НЕТ";
     return String(stock);
   };
 
-  // Форматируем приоритет: 1 -> "высокий", 2 -> "средний", 3 -> "низкий"
+  // Форматируем приоритет: 1 -> "НИЗКИЙ", 2 -> "СРЕДНИЙ", 3 -> "ВЫСОКИЙ"
   const formatPriority = (priority) => {
     if (priority === null || priority === undefined) return "—";
-    if (priority === 1 || priority === "1") return "высокий";
-    if (priority === 2 || priority === "2") return "средний";
-    if (priority === 3 || priority === "3") return "низкий";
+    if (priority === 1 || priority === "1") return "НИЗКИЙ";
+    if (priority === 2 || priority === "2") return "СРЕДНИЙ";
+    if (priority === 3 || priority === "3") return "ВЫСОКИЙ";
     return String(priority);
   };
 

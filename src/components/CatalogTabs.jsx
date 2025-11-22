@@ -5,12 +5,16 @@ import EquipmentTabs from "./EquipmentTabs";
 import PresetsTableClient from "./PresetsTableClient";
 import CompatTableClient from "./CompatTableClient";
 import ServicesTableClient from "./ServicesTableClient";
+import AdditionalServicesTableClient from "./AdditionalServicesTableClient";
+import SoftwareTableClient from "./SoftwareTableClient";
 
 export default function CatalogTabs({
   equipmentData,
   presetsRows,
   compatRows,
   servicesRows,
+  additionalServicesRows,
+  softwareRows,
 }) {
   const [activeTab, setActiveTab] = useState("equipment");
 
@@ -19,6 +23,8 @@ export default function CatalogTabs({
     { id: "presets", label: "Пресеты" },
     { id: "compatibility", label: "Совместимость" },
     { id: "services", label: "Услуги" },
+    { id: "additional-services", label: "Доп Услуги" },
+    { id: "software", label: "ПО" },
   ];
 
   return (
@@ -60,6 +66,18 @@ export default function CatalogTabs({
         {activeTab === "services" && (
           <div className="tab-pane active">
             <ServicesTableClient rows={servicesRows} />
+          </div>
+        )}
+
+        {activeTab === "additional-services" && (
+          <div className="tab-pane active">
+            <AdditionalServicesTableClient rows={additionalServicesRows} />
+          </div>
+        )}
+
+        {activeTab === "software" && (
+          <div className="tab-pane active">
+            <SoftwareTableClient rows={softwareRows} />
           </div>
         )}
       </div>
