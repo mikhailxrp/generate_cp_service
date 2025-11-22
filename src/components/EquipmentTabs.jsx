@@ -18,12 +18,12 @@ export default function EquipmentTabs({ initialData }) {
     { id: "switches", label: "Выключатели", typeCode: "pow_off" },
     { id: "fuses", label: "Предохранители", typeCode: "fuse" },
     { id: "uzips", label: "Узип", typeCode: "uzip" },
-    { id: "elpanels", label: "Распред. Щиты", typeCode: "el_panel" },
+    { id: "elpanels", label: "Распред. Щиты", typeCode: "panel_ac" },
     { id: "lotki", label: "Лотки", typeCode: "lotki" },
-    { id: "krep", label: "Крепеж", typeCode: "krep" },
-    { id: "cpo_cs", label: "Лотки CPO90/CS90", typeCode: "cpo_cs" },
+    { id: "krep", label: "Крепеж", typeCode: "mount" },
+    { id: "cpo_cs", label: "Лотки CPO90/CS90", typeCode: "cpo90" },
     { id: "smartmeters", label: "Счетчики", typeCode: "smartmeter" },
-    { id: "transformers", label: "Трансформаторы", typeCode: "trans" },
+    { id: "transformers", label: "Трансформаторы", typeCode: "ct" },
   ];
 
   // Функция для обновления данных конкретной таблицы
@@ -202,7 +202,7 @@ export default function EquipmentTabs({ initialData }) {
 
         {activeEquipmentTab === "elpanels" && (
           <PriceTableClient
-            typeCode="el_panel"
+            typeCode="panel_ac"
             rows={data.elpanels}
             onRowsUpdate={handleElpanelsUpdate}
           />
@@ -218,7 +218,7 @@ export default function EquipmentTabs({ initialData }) {
 
         {activeEquipmentTab === "krep" && (
           <PriceTableClient
-            typeCode="krep"
+            typeCode="mount"
             rows={data.krep}
             onRowsUpdate={handleKrepUpdate}
           />
@@ -226,7 +226,7 @@ export default function EquipmentTabs({ initialData }) {
 
         {activeEquipmentTab === "cpo_cs" && (
           <PriceTableClient
-            typeCode="cpo_cs"
+            typeCode="cpo90"
             rows={data.cpo_cs}
             onRowsUpdate={handleCpoCsUpdate}
           />
@@ -242,7 +242,7 @@ export default function EquipmentTabs({ initialData }) {
 
         {activeEquipmentTab === "transformers" && (
           <PriceTableClient
-            typeCode="trans"
+            typeCode="ct"
             rows={data.transformers}
             onRowsUpdate={handleTransformersUpdate}
           />

@@ -165,36 +165,18 @@ function EquipmentSelectionModal({ onClose, onSelect }) {
     { id: "pow_off", label: "Выключатели" },
     { id: "fuse", label: "Предохранители" },
     { id: "uzip", label: "Узип" },
-    { id: "el_panel", label: "Распред. Щиты" },
+    { id: "panel_ac", label: "Распред. Щиты" },
     { id: "lotki", label: "Лотки" },
-    { id: "krep", label: "Крепеж" },
-    { id: "cpo_cs", label: "Лотки CPO90/CS90" },
+    { id: "mount", label: "Крепеж" },
+    { id: "cpo90", label: "Лотки CPO90" },
     { id: "smartmeter", label: "Счетчики" },
-    { id: "trans", label: "Трансформаторы" },
+    { id: "ct", label: "Трансформаторы" },
   ];
 
   // Функция для получения цены в зависимости от типа оборудования
   const getPriceByType = (item, typeCode) => {
-    // Для кабелей берем цену из attrs["Цена_за 1м"]
-    // Для коннекторов берем цену из attrs["Цена_за 1шт"]
-    // Для лотков берем цену из attrs["Цена_за 1м.п"]
-    // Для крепежа берем цену из attrs["Цена_за 1шт"]
-    // Для лотков CPO90/CS90 берем цену из attrs["Цена_за 1 компл"]
-    let price = item.priceRub;
-
-    if (typeCode === "cable") {
-      price = item.attrs?.["Цена_за 1м"] || item.priceRub;
-    } else if (typeCode === "connector") {
-      price = item.attrs?.["Цена_за 1шт"] || item.priceRub;
-    } else if (typeCode === "lotki") {
-      price = item.attrs?.["Цена_за 1м.п"] || item.priceRub;
-    } else if (typeCode === "krep") {
-      price = item.attrs?.["Цена_за 1шт"] || item.priceRub;
-    } else if (typeCode === "cpo_cs") {
-      price = item.attrs?.["Цена_за 1 компл"] || item.priceRub;
-    }
-
-    return price;
+    // priceRub всегда содержит цену (приходит как строка из БД)
+    return item.priceRub || "0";
   };
 
   // Загрузка оборудования при изменении категории
@@ -396,26 +378,8 @@ export default function CreateSesButton({ id, cpData }) {
 
   // Функция для получения цены в зависимости от типа оборудования
   const getPriceByType = (item, typeCode) => {
-    // Для кабелей берем цену из attrs["Цена_за 1м"]
-    // Для коннекторов берем цену из attrs["Цена_за 1шт"]
-    // Для лотков берем цену из attrs["Цена_за 1м.п"]
-    // Для крепежа берем цену из attrs["Цена_за 1шт"]
-    // Для лотков CPO90/CS90 берем цену из attrs["Цена_за 1 компл"]
-    let price = item.priceRub;
-
-    if (typeCode === "cable") {
-      price = item.attrs?.["Цена_за 1м"] || item.priceRub;
-    } else if (typeCode === "connector") {
-      price = item.attrs?.["Цена_за 1шт"] || item.priceRub;
-    } else if (typeCode === "lotki") {
-      price = item.attrs?.["Цена_за 1м.п"] || item.priceRub;
-    } else if (typeCode === "krep") {
-      price = item.attrs?.["Цена_за 1шт"] || item.priceRub;
-    } else if (typeCode === "cpo_cs") {
-      price = item.attrs?.["Цена_за 1 компл"] || item.priceRub;
-    }
-
-    return price;
+    // priceRub всегда содержит цену (приходит как строка из БД)
+    return item.priceRub || "0";
   };
 
   // Функция добавления оборудования в BOM

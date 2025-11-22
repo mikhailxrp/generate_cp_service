@@ -435,21 +435,6 @@
   }
 }
 
-/* Print Styles */
-@media print {
-  .profile-card .btn,
-  .form-check-input,
-  .security-item .btn {
-    display: none;
-  }
-
-  .profile-card {
-    box-shadow: none;
-    border: 1px solid #dee2e6;
-    page-break-inside: avoid;
-  }
-}
-
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .profile-card,

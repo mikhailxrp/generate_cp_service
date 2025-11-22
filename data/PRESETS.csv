@@ -1,3 +1,0 @@
-use_case,range_kWp,pv_module_skus,inverter_sku,ess_sku,pcs_sku,mount_sku,notes
-сетевой_крыша,8-12,LR5-54HTH-435,SG20RT,,,RM-FLAT-10,Частник; 1-2 MPPT
-гибрид_ESS,15-30,HJT-54-440,SUN-10K-G06,ATESS-RACK-100,,GM-PILE,Резерв + peak-shaving

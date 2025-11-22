@@ -12,7 +12,6 @@
     "create-user": "node scripts/create-user.js"
   },
   "dependencies": {
-    "@sparticuz/chromium": "^141.0.0",
     "bcryptjs": "^3.0.2",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
@@ -24,19 +23,17 @@
     "jose": "^6.1.0",
     "mysql2": "^3.15.3",
     "next": "15.5.6",
-    "pdf-lib": "^1.17.1",
-    "playwright-core": "^1.56.1",
     "react": "19.1.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "19.1.0",
     "react-toastify": "^11.0.5",
-    "tunnel-ssh": "^5.2.0"
+    "tunnel-ssh": "^5.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "drizzle-kit": "^0.31.5",
     "eslint": "^9",
-    "eslint-config-next": "15.5.6",
-    "playwright": "^1.56.1"
+    "eslint-config-next": "15.5.6"
   }
 }

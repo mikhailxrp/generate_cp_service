@@ -1,3 +1,0 @@
-SKU,Наименование,Категория,Тип_ESS,Ёмкость_кВтч,Мощность_PCS_кВт,Номин_напряжение_V,DoD_%,КПД_rt_%,Циклы_до_80%DoD,Гарантия_лет,Grid_forming,UPS,Peak_shaving,Black_start,BMS,EMS_совместимость,Цена_базовая,Валюта,Наличие,Приоритет,Регион_склада,Срок_поставки_дни,Deg_cost_per_cycle_RUB,Calendar_fade_%год,Сервис24_7,Ссылка_на_спеку,Комментарий
-ATESS-RACK-100,ATESS Rack 100kWh + PCS 50kW,ess,rack,100,50,512,80,90,6000,10,Да,Да,Да,Да,Да,"Modbus/TCP, SunSpec",5800000,RUB,Да,Высокий,Москва,30,45,2,Опция,https://example.com/atess100.pdf,Для peak-shaving
-ATESS-CTNR-1200,ATESS Контейнер 1.2MWh + PCS 500kW,ess,container,1200,500,768,85,91,6000,10,Да,Да,Да,Да,Да,IEC61850,95000000,RUB,Под заказ,Высокий,СПб,60,38,"1,5",Да,https://example.com/atess1200.pdf,Проектные поставки

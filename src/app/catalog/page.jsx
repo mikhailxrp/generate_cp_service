@@ -1,7 +1,6 @@
 import { getDb } from "@/db/index";
 import { priceItems, presets, compat, services } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { fmtMoney, safe, titleByType } from "@/lib/format";
 import Header from "@/components/header/Header";
 import CatalogTabs from "@/components/CatalogTabs";
 import "./catalog.css";
@@ -39,7 +38,6 @@ export default async function CatalogPage() {
     uzips,
     elpanels,
     lotki,
-    krep,
     cpo_cs,
     smartmeters,
     transformers,
@@ -54,13 +52,15 @@ export default async function CatalogPage() {
     fetchPriceByType("pow_off", 50),
     fetchPriceByType("fuse", 50),
     fetchPriceByType("uzip", 50),
-    fetchPriceByType("el_panel", 50),
+    fetchPriceByType("panel_ac", 50),
     fetchPriceByType("lotki", 50),
-    fetchPriceByType("krep", 50),
-    fetchPriceByType("cpo_cs", 50),
+    fetchPriceByType("cpo90", 50),
     fetchPriceByType("smartmeter", 50),
-    fetchPriceByType("trans", 50),
+    fetchPriceByType("ct", 50),
   ]);
+
+  // krep использует те же данные что и mounts
+  const krep = mounts;
 
   // 2) Пресеты
   const presetsRows = await db.select().from(presets).limit(100);

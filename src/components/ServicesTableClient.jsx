@@ -14,6 +14,7 @@ export default function ServicesTableClient({ rows: initialRows }) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [services, setServices] = useState(initialRows || []);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Синхронизируем с initialRows при изменении
   useEffect(() => {
@@ -72,6 +73,7 @@ export default function ServicesTableClient({ rows: initialRows }) {
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setIsImporting(true);
     try {
       const text = await file.text();
       const records = parseCsv(text);
@@ -129,6 +131,7 @@ export default function ServicesTableClient({ rows: initialRows }) {
         showToast.error(msg);
       }
     } finally {
+      setIsImporting(false);
       e.target.value = "";
     }
   };
@@ -265,6 +268,41 @@ export default function ServicesTableClient({ rows: initialRows }) {
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
+
+      {/* Loading overlay */}
+      {isImporting && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: "2rem 3rem",
+              borderRadius: "8px",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
+              textAlign: "center",
+            }}
+          >
+            <div className="spinner-border text-primary mb-3" role="status">
+              <span className="visually-hidden">Загрузка...</span>
+            </div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 500, color: "#333" }}>
+              Импорт CSV...
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

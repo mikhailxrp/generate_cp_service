@@ -16,12 +16,12 @@ export const titleByType = (type) =>
     pow_off: "Выключатели",
     fuse: "Предохранители",
     uzip: "Узип",
-    el_panel: "Распред. Щиты",
+    panel_ac: "Распред. Щиты",
     lotki: "Лотки",
-    krep: "Крепеж",
-    cpo_cs: "Лотки CPO90/CS90",
+    mount: "Крепеж",
+    cpo90: "Лотки CPO90",
     smartmeter: "Счётчики",
-    trans: "Трансформаторы",
+    ct: "Трансформаторы",
   }[type] || type);
 
 export const formatYears = (years) => {

@@ -59,6 +59,23 @@ export default function EquipmentModal({
     return value ? "Да" : "Нет";
   };
 
+  // Форматируем наличие: 1 -> "Да", 0 -> "Нет", остальное -> как есть
+  const formatStock = (stock) => {
+    if (stock === null || stock === undefined) return "—";
+    if (stock === 1 || stock === "1") return "Да";
+    if (stock === 0 || stock === "0") return "Нет";
+    return String(stock);
+  };
+
+  // Форматируем приоритет: 1 -> "высокий", 2 -> "средний", 3 -> "низкий"
+  const formatPriority = (priority) => {
+    if (priority === null || priority === undefined) return "—";
+    if (priority === 1 || priority === "1") return "высокий";
+    if (priority === 2 || priority === "2") return "средний";
+    if (priority === 3 || priority === "3") return "низкий";
+    return String(priority);
+  };
+
   const getFieldLabel = (key) => {
     const labels = {
       id: "ID",
@@ -79,17 +96,99 @@ export default function EquipmentModal({
     return labels[key] || key;
   };
 
+  // Функция для перевода ключей на русский
+  const translateKey = (key) => {
+    const translations = {
+      bos: "BOS (баланс системы)",
+      meta: "Метаданные",
+      compat: "Совместимость",
+      mechanical: "Механические характеристики",
+      electrical: "Электрические характеристики",
+    };
+    return translations[key] || key;
+  };
+
+  const renderValue = (value, depth = 0) => {
+    if (value === null || value === undefined) {
+      return "—";
+    }
+
+    // Если это объект или массив, рекурсивно рендерим
+    if (typeof value === "object") {
+      if (Array.isArray(value)) {
+        return (
+          <ul style={{ margin: 0, paddingLeft: "20px" }}>
+            {value.map((item, idx) => (
+              <li key={idx}>{renderValue(item, depth + 1)}</li>
+            ))}
+          </ul>
+        );
+      }
+
+      // Это объект - рендерим как вложенную структуру
+      return (
+        <div style={{ marginLeft: depth > 0 ? "20px" : "0", marginTop: "5px" }}>
+          {Object.entries(value).map(([k, v]) => (
+            <div key={k} style={{ marginBottom: "5px" }}>
+              <strong>{k}:</strong> {renderValue(v, depth + 1)}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Примитивные значения
+    if (typeof value === "boolean") {
+      return formatBoolean(value);
+    }
+    return String(value);
+  };
+
   const renderAttributes = (attrs) => {
     if (!attrs) return "—";
 
     try {
       const parsed = typeof attrs === "string" ? JSON.parse(attrs) : attrs;
       if (typeof parsed === "object" && parsed !== null) {
+        // Фильтруем поля, которые не должны отображаться
+        const fieldsToHide = new Set([
+          "Полное_наименование",
+          "Полное наименование",
+          "full_name",
+        ]);
+
+        // Рекурсивная функция для фильтрации полей
+        const filterFields = (obj) => {
+          if (typeof obj !== "object" || obj === null) return obj;
+          if (Array.isArray(obj)) return obj.map(filterFields);
+
+          const filtered = {};
+          for (const [key, value] of Object.entries(obj)) {
+            if (!fieldsToHide.has(key)) {
+              if (typeof value === "object" && value !== null) {
+                filtered[key] = filterFields(value);
+              } else {
+                filtered[key] = value;
+              }
+            }
+          }
+          return filtered;
+        };
+
+        const filteredAttrs = filterFields(parsed);
+
         return (
           <div className="attributes-container">
-            {Object.entries(parsed).map(([key, value]) => (
-              <div key={key} className="attribute-item">
-                <strong>{key}:</strong> {formatValue(value)}
+            {Object.entries(filteredAttrs).map(([key, value]) => (
+              <div
+                key={key}
+                className="attribute-item"
+                style={{ marginBottom: "15px" }}
+              >
+                <strong style={{ display: "block", marginBottom: "5px" }}>
+                  {translateKey(key)}:
+                </strong>
+                <div style={{ marginLeft: "10px" }}>{renderValue(value)}</div>
               </div>
             ))}
           </div>
@@ -176,7 +275,7 @@ export default function EquipmentModal({
                     <div className="info-item">
                       <span className="info-label">Наличие:</span>
                       <span className="info-value">
-                        {formatValue(equipment.stock)}
+                        {formatStock(equipment.stock)}
                       </span>
                     </div>
                     <div className="info-item">
@@ -194,7 +293,7 @@ export default function EquipmentModal({
                     <div className="info-item">
                       <span className="info-label">Приоритет:</span>
                       <span className="info-value">
-                        {formatValue(equipment.priority)}
+                        {formatPriority(equipment.priority)}
                       </span>
                     </div>
                   </div>

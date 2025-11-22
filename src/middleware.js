@@ -8,11 +8,6 @@ export function middleware(req) {
   // Разрешённые пути (не требуют авторизации)
   const publicPaths = ["/login", "/api/user/public"];
 
-  // Разрешить /preview в режиме печати (для Playwright)
-  if (pathname === "/preview" && searchParams.get("print") === "1") {
-    return NextResponse.next();
-  }
-
   // Если путь в списке публичных - пропускаем
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
   if (isPublicPath) {

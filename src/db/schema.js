@@ -28,12 +28,41 @@ export const users = mysqlTable("users", {
     .default(sql`CURRENT_TIMESTAMP`),
 });
 
+/* ---------- PRICE CATEGORIES: категории цен ---------- */
+export const priceCategories = mysqlTable(
+  "price_categories",
+  {
+    id: int("id").autoincrement().primaryKey(),
+
+    // системный код категории: 'panel', 'inverter', 'ess', ...
+    code: varchar("code", { length: 50 }).notNull().unique(),
+
+    // человекочитаемое название: "Солнечные модули", "Инверторы"
+    title: varchar("title", { length: 255 }).notNull(),
+
+    // группировка по роли: 'core' | 'bos' | 'accessory' | 'other'
+    groupCode: varchar("group_code", { length: 50 }).notNull().default("other"),
+
+    description: text("description"),
+
+    isActive: int("is_active").notNull().default(1),
+
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+  },
+  (table) => ({
+    idxCode: sql`INDEX idx_price_categories_code (${table.code})`,
+    idxGroup: sql`INDEX idx_price_categories_group (${table.groupCode})`,
+  })
+);
+
 /* ---------- Единая таблица для 4 листов: MODULES/INVERTERS/ESS/MOUNT ---------- */
 export const priceItems = mysqlTable(
   "price_items",
   {
     id: int("id").autoincrement().primaryKey(),
     typeCode: varchar("type_code", { length: 50 }).notNull(), // 'panel' | 'inverter' | 'ess' | 'mount'
+    categoryId: int("category_id").notNull(), // FK на price_categories.id
     sku: varchar("sku", { length: 100 }).notNull().unique(),
     title: varchar("title", { length: 255 }).notNull(),
 
@@ -57,6 +86,7 @@ export const priceItems = mysqlTable(
   (table) => ({
     idxType: sql`INDEX idx_type_code (${table.typeCode})`,
     idxPriority: sql`INDEX idx_priority (${table.priority})`,
+    idxCategory: sql`INDEX idx_price_items_category_id (${table.categoryId})`,
   })
 );
 

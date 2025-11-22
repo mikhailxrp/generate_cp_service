@@ -17,11 +17,9 @@ import knowledgeBase from "@/know_base/db.json" assert { type: "json" };
 function PreviewContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const printMode = searchParams.get("print") === "1";
   const [cpData, setCpData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [extractedData, setExtractedData] = useState({});
-  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     async function fetchCpData() {
@@ -114,13 +112,6 @@ function PreviewContent() {
     });
   }, [cpData]);
 
-  // Добавляем маркер для Playwright когда данные загружены
-  useEffect(() => {
-    if (!loading && cpData && printMode) {
-      document.body.setAttribute("data-preview-ready", "true");
-    }
-  }, [loading, cpData, printMode]);
-
   if (loading) {
     return (
       <div
@@ -174,182 +165,64 @@ function PreviewContent() {
     <div
       style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
     >
-      {!printMode && <Header />}
-      {printMode && (
-        <style>{`
-          @page { size: auto; margin: 0; }
-          html, body { margin: 0 !important; padding: 0 !important; }
-          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          #pdf-root { width: 100% !important;}
-          #pdf-root .preview-block-container {
-            width: 1100px !important;
-            margin: 0 auto !important;
-          }
-          .pdf-page { break-after: page; page-break-after: always; padding-top: 20px; padding-bottom: 20px; }
-          .btn, .btn-wrapper { display: none !important; }
-        `}</style>
-      )}
+      <Header />
       <div style={{ flex: 1 }}>
-        {printMode ? (
-          // Режим печати: без Bootstrap-обёрток
-          cpData && (
-            <div id="pdf-root">
-              <div className="pdf-page">
-                <CpBlockOne
-                  clientName={extractedData.clientName}
-                  clientType={extractedData.clientType}
-                  sesPower={extractedData.sesPower}
-                  systemType={extractedData.systemType}
-                />
-              </div>
-              <div className="pdf-page">
-                <CpBlockSecond
-                  pains={extractedData.clientPains}
-                  kbPains={knowledgeBase.pains}
-                />
-              </div>
-              <div className="pdf-page">
-                <CpBlockThird
-                  sesType={knowledgeBase.items}
-                  clientType={extractedData.clientType}
-                  systemType={extractedData.systemType}
-                />
-              </div>
-              <div className="pdf-page">
-                <CpBlockFourth
-                  bomData={extractedData.bomData}
-                  servicesData={extractedData.servicesData}
-                  combinedData={extractedData.combinedData}
-                  totalAnnualGeneration={extractedData.totalAnnualGeneration}
-                  priceKwh={extractedData.priceKwh}
-                  monthlyConsumptionKwh={extractedData.monthlyConsumptionKwh}
-                />
-              </div>
-              <div className="pdf-page">
-                <CpBlockFifth />
-              </div>
-              <div className="pdf-page">
-                <CpBlockSixth />
-              </div>
-              <div className="pdf-page">
-                <CpBlockSeventhWrapper />
-              </div>
-            </div>
-          )
-        ) : (
-          // Обычный режим: с Bootstrap-обёртками
-          <div className="container">
-            <div className="row justify-content-center mt-4 mb-5">
-              <div className="col-lg-10">
-                {cpData && (
-                  <>
-                    <div id="pdf-root">
-                      <div>
-                        <CpBlockOne
-                          clientName={extractedData.clientName}
-                          clientType={extractedData.clientType}
-                          sesPower={extractedData.sesPower}
-                          systemType={extractedData.systemType}
-                        />
-                      </div>
-                      <div>
-                        <CpBlockSecond
-                          pains={extractedData.clientPains}
-                          kbPains={knowledgeBase.pains}
-                        />
-                      </div>
-                      <div>
-                        <CpBlockThird
-                          sesType={knowledgeBase.items}
-                          clientType={extractedData.clientType}
-                          systemType={extractedData.systemType}
-                        />
-                      </div>
-                      <div>
-                        <CpBlockFourth
-                          bomData={extractedData.bomData}
-                          servicesData={extractedData.servicesData}
-                          combinedData={extractedData.combinedData}
-                          totalAnnualGeneration={
-                            extractedData.totalAnnualGeneration
-                          }
-                          priceKwh={extractedData.priceKwh}
-                          monthlyConsumptionKwh={
-                            extractedData.monthlyConsumptionKwh
-                          }
-                        />
-                      </div>
-                      <div>
-                        <CpBlockFifth />
-                      </div>
-                      <div>
-                        <CpBlockSixth />
-                      </div>
-                      <div>
-                        <CpBlockSeventhWrapper />
-                      </div>
-                    </div>
-
-                    <div className="row justify-content-center mt-4 mb-5">
-                      <div className="col-lg-8">
-                        <div className="btn-wrapper d-flex gap-3 justify-content-center">
-                          <button
-                            className="btn btn-success btn-lg"
-                            disabled={downloading}
-                            onClick={async () => {
-                              try {
-                                setDownloading(true);
-                                const res = await fetch(
-                                  `/api/generate-pdf?id=${encodeURIComponent(
-                                    id
-                                  )}`
-                                );
-                                if (!res.ok) {
-                                  // Попытаемся прочитать ошибку из ответа
-                                  const errorData = await res
-                                    .json()
-                                    .catch(() => null);
-                                  console.error("Server error:", errorData);
-                                  throw new Error(
-                                    errorData?.message || `HTTP ${res.status}`
-                                  );
-                                }
-                                const blob = await res.blob();
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement("a");
-                                a.href = url;
-                                a.download = `kp_${
-                                  extractedData.clientName || id
-                                }.pdf`;
-                                document.body.appendChild(a);
-                                a.click();
-                                a.remove();
-                                URL.revokeObjectURL(url);
-                              } catch (e) {
-                                console.error("Ошибка при генерации PDF:", e);
-                                alert(
-                                  `Не удалось сформировать PDF: ${e.message}\nПроверьте консоль браузера и логи сервера.`
-                                );
-                              } finally {
-                                setDownloading(false);
-                              }
-                            }}
-                          >
-                            {downloading
-                              ? "Генерация..."
-                              : "Сгенерировать КП / Скачать PDF"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+        <div className="container">
+          <div className="row justify-content-center mt-4 mb-5">
+            <div className="col-lg-10">
+              {cpData && (
+                <>
+                  <div>
+                    <CpBlockOne
+                      clientName={extractedData.clientName}
+                      clientType={extractedData.clientType}
+                      sesPower={extractedData.sesPower}
+                      systemType={extractedData.systemType}
+                    />
+                  </div>
+                  <div>
+                    <CpBlockSecond
+                      pains={extractedData.clientPains}
+                      kbPains={knowledgeBase.pains}
+                    />
+                  </div>
+                  <div>
+                    <CpBlockThird
+                      sesType={knowledgeBase.items}
+                      clientType={extractedData.clientType}
+                      systemType={extractedData.systemType}
+                    />
+                  </div>
+                  <div>
+                    <CpBlockFourth
+                      bomData={extractedData.bomData}
+                      servicesData={extractedData.servicesData}
+                      combinedData={extractedData.combinedData}
+                      totalAnnualGeneration={
+                        extractedData.totalAnnualGeneration
+                      }
+                      priceKwh={extractedData.priceKwh}
+                      monthlyConsumptionKwh={
+                        extractedData.monthlyConsumptionKwh
+                      }
+                    />
+                  </div>
+                  <div>
+                    <CpBlockFifth />
+                  </div>
+                  <div>
+                    <CpBlockSixth />
+                  </div>
+                  <div>
+                    <CpBlockSeventhWrapper />
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
-      {!printMode && <Footer />}
+      <Footer />
     </div>
   );
 }

@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/index";
-import { priceItems } from "@/db/schema";
+import { priceItems, priceCategories } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+
+// Функция для получения categoryId по typeCode
+async function getCategoryIdByTypeCode(db, typeCode) {
+  const category = await db
+    .select()
+    .from(priceCategories)
+    .where(eq(priceCategories.code, typeCode))
+    .limit(1);
+
+  if (category.length === 0) {
+    throw new Error(`Категория с кодом "${typeCode}" не найдена`);
+  }
+
+  return category[0].id;
+}
 
 export async function PUT(request) {
   try {
@@ -21,6 +36,30 @@ export async function PUT(request) {
     // Убираем поля, которые не должны обновляться
     const { createdAt, priceUpdatedAt, updatedAt, ...cleanUpdateData } =
       updateData;
+
+    // Обработка attrs - может быть объектом или строкой JSON
+    if (cleanUpdateData.attrs !== undefined) {
+      if (typeof cleanUpdateData.attrs === "string") {
+        try {
+          cleanUpdateData.attrs = JSON.parse(cleanUpdateData.attrs);
+        } catch {
+          cleanUpdateData.attrs = {};
+        }
+      } else if (
+        typeof cleanUpdateData.attrs !== "object" ||
+        cleanUpdateData.attrs === null
+      ) {
+        cleanUpdateData.attrs = {};
+      }
+    }
+
+    // Если обновляется typeCode, нужно обновить и categoryId
+    if (cleanUpdateData.typeCode) {
+      cleanUpdateData.categoryId = await getCategoryIdByTypeCode(
+        db,
+        cleanUpdateData.typeCode
+      );
+    }
 
     // Обновляем запись в базе данных
     const updateResult = await db
@@ -99,8 +138,18 @@ export async function POST(request) {
       leadDays: raw.leadDays != null ? Number(raw.leadDays) : null,
       specUrl: raw.specUrl ? String(raw.specUrl).trim() : null,
       comment: raw.comment ? String(raw.comment).trim() : null,
-      attrs:
-        typeof raw.attrs === "object" && raw.attrs !== null ? raw.attrs : {},
+      attrs: (() => {
+        if (typeof raw.attrs === "string") {
+          try {
+            return JSON.parse(raw.attrs);
+          } catch {
+            return {};
+          }
+        }
+        return typeof raw.attrs === "object" && raw.attrs !== null
+          ? raw.attrs
+          : {};
+      })(),
       isActive: 1,
     };
 
@@ -109,6 +158,16 @@ export async function POST(request) {
         { error: "priceRub должен быть числом" },
         { status: 400 }
       );
+    }
+
+    // Получаем categoryId по typeCode
+    try {
+      cleanData.categoryId = await getCategoryIdByTypeCode(
+        db,
+        cleanData.typeCode
+      );
+    } catch (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     // UPSERT по SKU: если есть — обновим, иначе — создадим
@@ -120,12 +179,14 @@ export async function POST(request) {
 
     if (existing.length > 0) {
       console.log("[api/equipment] upsert update sku=", cleanData.sku);
+      // При обновлении также обновляем categoryId
+      const updateData = {
+        ...cleanData,
+        updatedAt: new Date(),
+      };
       await db
         .update(priceItems)
-        .set({
-          ...cleanData,
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(eq(priceItems.sku, cleanData.sku));
 
       const updated = await db

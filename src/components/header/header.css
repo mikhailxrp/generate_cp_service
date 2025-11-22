@@ -701,19 +701,3 @@
     font-size: 1.2rem;
   }
 }
-
-/* Print Styles */
-@media print {
-  .hamburger,
-  .mobile-menu,
-  .mobile-menu-overlay,
-  .profile,
-  .logout {
-    display: none !important;
-  }
-
-  .header {
-    box-shadow: none;
-    position: static;
-  }
-}

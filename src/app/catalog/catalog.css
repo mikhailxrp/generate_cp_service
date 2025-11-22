@@ -611,28 +611,6 @@
   }
 }
 
-/* Улучшенная печать */
-@media print {
-  .catalog-container {
-    padding: 0;
-  }
-
-  .table-responsive {
-    overflow: visible;
-    box-shadow: none;
-  }
-
-  .table thead th {
-    background-color: #e9ecef !important;
-    color: #000 !important;
-  }
-
-  .table tbody td a {
-    color: #000 !important;
-    text-decoration: underline;
-  }
-}
-
 /* Accessibility - высокая контрастность */
 @media (prefers-contrast: high) {
   .table thead th {

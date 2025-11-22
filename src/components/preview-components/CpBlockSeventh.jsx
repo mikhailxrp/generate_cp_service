@@ -2,31 +2,17 @@
 import "./preview-components.css";
 import { getUserProfile } from "@/app/actions/getUserProfile";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 export default function CpBlockSeventh() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
-  const userId = searchParams.get("userId");
-  const printMode = searchParams.get("print") === "1";
 
   useEffect(() => {
     async function fetchUser() {
       try {
-        // Если в режиме печати и передан userId - используем публичный API
-        if (printMode && userId) {
-          const response = await fetch(`/api/user/public?userId=${userId}`);
-          const result = await response.json();
-          if (result.success) {
-            setUser(result.user);
-          }
-        } else {
-          // Иначе используем обычный метод с сессией
-          const result = await getUserProfile();
-          if (result.success) {
-            setUser(result.user);
-          }
+        const result = await getUserProfile();
+        if (result.success) {
+          setUser(result.user);
         }
       } catch (error) {
         console.error("Ошибка загрузки профиля:", error);
@@ -35,9 +21,9 @@ export default function CpBlockSeventh() {
       }
     }
     fetchUser();
-  }, [printMode, userId]);
+  }, []);
 
-  // Пока загружается, показываем базовую структуру (чтобы pdf-page рендерился)
+  // Пока загружается, показываем базовую структуру
   if (loading || !user) {
     return (
       <div className="cp-block-two preview-block-container">
