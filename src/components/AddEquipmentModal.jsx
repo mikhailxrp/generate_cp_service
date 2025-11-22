@@ -70,7 +70,7 @@ export default function AddEquipmentModal({
           ? parseFloat(formData.priceRub).toString()
           : "0",
         currency: formData.currency,
-        stock: formData.stock || null,
+        stock: formData.stock !== "" ? parseInt(formData.stock) : null,
         priority: formData.priority ? parseInt(formData.priority) : 0,
         warehouseRegion: formData.warehouseRegion,
         leadDays: formData.leadDays ? parseInt(formData.leadDays) : null,
@@ -229,14 +229,17 @@ export default function AddEquipmentModal({
                 <div className="col-md-4">
                   <div className="mb-2">
                     <label className="form-label">Наличие</label>
-                    <input
-                      type="text"
-                      className="form-control"
+                    <select
+                      className="form-select"
                       value={formData.stock}
                       onChange={(e) =>
                         handleInputChange("stock", e.target.value)
                       }
-                    />
+                    >
+                      <option value="">—</option>
+                      <option value="1">ДА</option>
+                      <option value="0">НЕТ</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -271,14 +274,18 @@ export default function AddEquipmentModal({
                 <div className="col-md-4">
                   <div className="mb-2">
                     <label className="form-label">Приоритет</label>
-                    <input
-                      type="number"
-                      className="form-control"
+                    <select
+                      className="form-select"
                       value={formData.priority}
                       onChange={(e) =>
                         handleInputChange("priority", e.target.value)
                       }
-                    />
+                    >
+                      <option value="0">—</option>
+                      <option value="1">НИЗКИЙ</option>
+                      <option value="2">СРЕДНИЙ</option>
+                      <option value="3">ВЫСОКИЙ</option>
+                    </select>
                   </div>
                 </div>
               </div>

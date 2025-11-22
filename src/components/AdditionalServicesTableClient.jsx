@@ -1,35 +1,30 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { fmtMoney, safe, titleByType } from "@/lib/format";
+import { fmtMoney } from "@/lib/format";
 import EquipmentModal from "./EquipmentModal";
 import AddEquipmentModal from "./AddEquipmentModal";
 import { showToast } from "@/lib/toast";
 import { useUser } from "@/hooks/useUser";
 
-export default function PriceTableClient({
-  typeCode,
-  rows: initialRows,
-  onRowsUpdate,
-}) {
+export default function AdditionalServicesTableClient({ rows: initialRows }) {
   const { user } = useUser();
   const fileInputRef = useRef(null);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [rows, setRows] = useState(
+  const [additionalServices, setAdditionalServices] = useState(
     Array.isArray(initialRows) ? initialRows.filter((row) => row && row.id) : []
   );
   const [tableKey, setTableKey] = useState(0);
   const [forceUpdate, setForceUpdate] = useState(0);
   const [isImporting, setIsImporting] = useState(false);
 
-  // Обновляем rows при изменении initialRows
+  // Обновляем additionalServices при изменении initialRows
   useEffect(() => {
     if (Array.isArray(initialRows)) {
       const filteredRows = initialRows.filter((row) => row && row.id);
-      // Проверяем, действительно ли данные изменились
-      setRows((prevRows) => {
+      setAdditionalServices((prevRows) => {
         if (
           prevRows.length !== filteredRows.length ||
           !prevRows.every((row, index) => row.id === filteredRows[index]?.id)
@@ -52,34 +47,66 @@ export default function PriceTableClient({
     setTableKey((prev) => prev + 1);
   }, []);
 
-  // Дополнительный эффект для отслеживания изменений в rows
+  // Дополнительный эффект для отслеживания изменений в additionalServices
   useEffect(() => {
-    // Принудительно обновляем таблицу при изменении rows
     forceTableUpdate();
-  }, [rows, forceTableUpdate]);
-
-  // Дополнительный эффект для отслеживания изменений в tableKey
-  useEffect(() => {
-    // TableKey changed
-  }, [tableKey]);
-
-  // Дополнительный эффект для отслеживания изменений в forceUpdate
-  useEffect(() => {
-    // ForceUpdate changed
-  }, [forceUpdate]);
-
-  // Эффект для уведомления родительского компонента об изменениях
-  useEffect(() => {
-    if (onRowsUpdate && rows.length > 0) {
-      onRowsUpdate(rows);
-    }
-  }, [rows, onRowsUpdate]);
+  }, [additionalServices, forceTableUpdate]);
 
   // Создаем стабильный массив отфильтрованных строк
   const filteredRows = useMemo(() => {
-    const filtered = rows.filter((r) => r && r.id);
-    return filtered;
-  }, [rows, forceUpdate]);
+    return additionalServices.filter((r) => r && r.id);
+  }, [additionalServices, forceUpdate]);
+
+  // Функция для извлечения значений из attrs
+  const getAttr = (attrs, key, fallback = "-") => {
+    if (!attrs || typeof attrs !== "object") return fallback;
+    return attrs[key] || fallback;
+  };
+
+  // Функция для извлечения вложенных значений из attrs
+  const getNestedAttr = (attrs, path, fallback = "-") => {
+    if (!attrs || typeof attrs !== "object") return fallback;
+    const keys = path.split(".");
+    let value = attrs;
+    for (const key of keys) {
+      if (value && typeof value === "object" && key in value) {
+        value = value[key];
+      } else {
+        return fallback;
+      }
+    }
+    return value || fallback;
+  };
+
+  // Функция для форматирования цены (проценты выводятся как есть)
+  const formatPrice = (priceRub) => {
+    if (!priceRub) return "-";
+    
+    // Проверяем, является ли значение процентом (строка с %)
+    const priceStr = String(priceRub);
+    if (priceStr.includes("%")) {
+      return priceStr;
+    }
+    
+    // Если число, проверяем диапазон
+    const priceNum = Number(priceRub);
+    if (!isNaN(priceNum)) {
+      // Если число меньше 1 и больше 0, считаем это процентом в десятичном формате
+      if (priceNum > 0 && priceNum < 1) {
+        return `${(priceNum * 100).toFixed(0)}%`;
+      }
+      
+      // Иначе форматируем как валюту
+      return new Intl.NumberFormat("ru-RU", {
+        style: "currency",
+        currency: "RUB",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(priceNum);
+    }
+    
+    return priceStr;
+  };
 
   const handleRowClick = (equipment) => {
     setSelectedEquipment(equipment);
@@ -107,24 +134,18 @@ export default function PriceTableClient({
       }
 
       const result = await response.json();
+      showToast.success(result.message || "Услуга успешно сохранена!");
 
-      // Показываем уведомление об успехе
-      showToast.success(result.message || "Оборудование успешно сохранено!");
-
-      // Обновляем данные в таблице
       if (result.data && result.data.id) {
-        setRows((prevRows) => {
+        setAdditionalServices((prevRows) => {
           const updatedRows = prevRows.map((row) =>
             row.id === result.data.id ? result.data : row
           );
           return updatedRows;
         });
-
-        // Принудительно обновляем таблицу
         forceTableUpdate();
       }
 
-      // Обновляем выбранное оборудование, если оно было изменено
       if (selectedEquipment && selectedEquipment.id === result.data.id) {
         setSelectedEquipment(result.data);
       }
@@ -152,32 +173,22 @@ export default function PriceTableClient({
 
       const result = await response.json();
 
-      // Добавляем новое оборудование в таблицу
       if (result.data && result.data.id) {
-        // Создаем новый массив с новым оборудованием
-        setRows((prevRows) => {
+        setAdditionalServices((prevRows) => {
           const newRows = [result.data, ...prevRows];
           return newRows;
         });
-
-        // Принудительно обновляем компонент
         forceComponentUpdate();
-
-        // Дополнительная проверка через небольшую задержку
         setTimeout(() => {
           forceComponentUpdate();
         }, 100);
       }
 
-      // Закрываем модальное окно создания
       setIsAddModalOpen(false);
-
-      // Показываем уведомление об успехе после обновления состояния
       setTimeout(() => {
-        showToast.success(result.message || "Оборудование успешно создано!");
+        showToast.success(result.message || "Услуга успешно создана!");
       }, 100);
 
-      // Дополнительная проверка через большую задержку
       setTimeout(() => {
         forceComponentUpdate();
       }, 200);
@@ -200,17 +211,13 @@ export default function PriceTableClient({
       }
 
       const result = await response.json();
+      showToast.success(result.message || "Услуга успешно удалена!");
 
-      // Показываем уведомление об успехе
-      showToast.success(result.message || "Оборудование успешно удалено!");
-
-      // Удаляем оборудование из таблицы
-      setRows((prevRows) => {
+      setAdditionalServices((prevRows) => {
         const filteredRows = prevRows.filter((row) => row.id !== equipmentId);
         return filteredRows;
       });
 
-      // Принудительно обновляем таблицу
       forceTableUpdate();
     } catch (error) {
       console.error("Ошибка при удалении:", error);
@@ -221,7 +228,7 @@ export default function PriceTableClient({
 
   // --- Импорт из CSV ---
   const detectDelimiter = (text) => {
-    const candidates = [",", ";", "\t"]; // запятая, точка с запятой, таб
+    const candidates = [",", ";", "\t"];
     let best = ",";
     let bestCount = -1;
     const firstLines = text.split(/\r?\n/).slice(0, 5);
@@ -258,7 +265,6 @@ export default function PriceTableClient({
 
   const toNumber = (val) => {
     if (val === undefined || val === null) return undefined;
-    // Проверка на текстовые значения типа "нет", "н/д", "-", "—"
     const str = String(val).trim().toLowerCase();
     if (
       str === "" ||
@@ -275,9 +281,36 @@ export default function PriceTableClient({
     return Number.isFinite(n) ? n : undefined;
   };
 
-  // Парсит "Наличие" из CSV в числовой флаг
-  // "Да", "есть", "в наличии" → 1
-  // "Нет", "нет в наличии" → 0
+  // "Пуленепробиваемый" парсер для цен с поддержкой процентов
+  const toPrice = (v) => {
+    if (v == null) return null;
+
+    // Если это уже число (в т.ч. 0.2 из Excel-процента) — используем как есть
+    if (typeof v === "number") {
+      return v;
+    }
+
+    let str = String(v).replace(",", ".").trim();
+    if (!str) return null;
+
+    const hasPercent = str.includes("%");
+
+    // Вытаскиваем первое число из строки: "20 % от суммы" → "20"
+    const match = str.match(/[-+]?\d+(\.\d+)?/);
+    if (!match) return null;
+
+    const num = Number(match[0]);
+    if (Number.isNaN(num)) return null;
+
+    // Если в строке есть символ %, считаем, что это процент
+    if (hasPercent) {
+      return num / 100;
+    }
+
+    // Иначе — обычное число
+    return num;
+  };
+
   const parseStockFlag = (val) => {
     if (val == null) return 0;
     const s = String(val).toLowerCase().trim();
@@ -286,15 +319,12 @@ export default function PriceTableClient({
     return 0;
   };
 
-  // Парсит "Приоритет" из CSV в число
-  // "низкий" → 1, "средний" → 2, "высокий" → 3
   const parsePriority = (val) => {
     if (val == null) return 0;
     const s = String(val).toLowerCase().trim();
     if (s.startsWith("низ")) return 1;
     if (s.startsWith("сред")) return 2;
     if (s.startsWith("выс")) return 3;
-    // Если уже число, оставляем как есть
     const n = Number(s);
     if (Number.isFinite(n)) return n;
     return 0;
@@ -317,7 +347,6 @@ export default function PriceTableClient({
         return;
       }
 
-      // известные поля price_items (английские и русские)
       const knownFields = new Set([
         "sku",
         "SKU",
@@ -344,9 +373,16 @@ export default function PriceTableClient({
         "Ссылка_на_спеку",
         "comment",
         "Комментарий",
+        "Стоимость_работ_1",
+        "Стоимость_работ_2",
+        "Стоимость работ 1",
+        "Стоимость работ 2",
+        "Бренд",
+        "Категория",
+        "Сервис24_7",
+        "Полное_наименование",
       ]);
 
-      // Дедупликация по SKU перед импортом (оставляем последнюю запись)
       const uniqueRecords = new Map();
       for (const r of records) {
         const sku = (r.SKU ?? r.sku ?? "").trim();
@@ -360,44 +396,27 @@ export default function PriceTableClient({
       let skipped = 0;
       let lastError = null;
       for (const r of Array.from(uniqueRecords.values())) {
-        // Маппинг русских названий колонок на английские
         const sku = (r.SKU ?? r.sku ?? "").trim();
-        const title = (r.Наименование ?? r.title ?? "").trim();
+        const title = (
+          r.Наименование ?? 
+          r["Полное_наименование"] ?? 
+          r.title ?? 
+          ""
+        ).trim();
+        
+        const rawPrice = r.Цена_базовая ?? r.Цена ?? r.priceRub ?? r.price_rub;
+        const priceRub = toPrice(rawPrice);
 
-        // Для кабелей цена берется из поля "Цена_за_1м" или "Цена_за 1м"
-        let priceRub;
-        if (typeCode === "cable") {
-          priceRub = toNumber(
-            r.Цена_за_1м ??
-              r["Цена_за 1м"] ??
-              r.Цена_за_метр ??
-              r.Цена_базовая ??
-              r.Цена ??
-              r.priceRub ??
-              r.price_rub
-          );
-        } else {
-          priceRub = toNumber(
-            r.Цена_базовая ?? r.Цена ?? r.priceRub ?? r.price_rub
-          );
-        }
-
-        // Если нет SKU или title - пропускаем
         if (!sku || !title) {
           skipped++;
           continue;
         }
 
-        // Если нет цены - ставим 0 (можно будет потом отредактировать)
-        if (!Number.isFinite(priceRub)) {
-          priceRub = 0;
-        }
-
         const payload = {
-          typeCode,
+          typeCode: "sunhors",
           sku,
           title,
-          priceRub,
+          priceRub: Number.isFinite(priceRub) ? priceRub : 0,
           currency: (r.Валюта ?? r.currency ?? "RUB").trim(),
           stock: parseStockFlag(r.Наличие ?? r.stock),
           warehouseRegion:
@@ -412,11 +431,17 @@ export default function PriceTableClient({
           specUrl:
             (r.Ссылка_на_спеку ?? r.specUrl ?? r.spec_url ?? "").trim() || null,
           comment: (r.Комментарий ?? r.comment ?? "").trim() || null,
-          attrs: {},
+          attrs: {
+            "Стоимость_работ_1": r["Стоимость_работ_1"] || r["Стоимость работ 1"] || "",
+            "Стоимость_работ_2": r["Стоимость_работ_2"] || r["Стоимость работ 2"] || "",
+            "Бренд": r["Бренд"] || null,
+            "Категория": r["Категория"] || null,
+            "Сервис24_7": r["Сервис24_7"] || null,
+            "Полное_наименование": r["Полное_наименование"] || null,
+          },
           isActive: 1,
         };
 
-        // собрать остальные поля в attrs
         Object.keys(r).forEach((k) => {
           if (!knownFields.has(k)) {
             payload.attrs[k] = r[k];
@@ -444,7 +469,6 @@ export default function PriceTableClient({
       }
 
       if (created.length > 0) {
-        // Очистка дубликатов в БД после импорта
         try {
           await fetch("/api/equipment/cleanup-duplicates", {
             method: "DELETE",
@@ -453,7 +477,7 @@ export default function PriceTableClient({
           // Игнорируем ошибки очистки дубликатов
         }
 
-        setRows((prev) => {
+        setAdditionalServices((prev) => {
           const skuToIndex = new Map(prev.map((row, idx) => [row.sku, idx]));
           const next = [...prev];
           for (const item of created) {
@@ -480,12 +504,10 @@ export default function PriceTableClient({
       }
     } finally {
       setIsImporting(false);
-      // сбрасываем инпут, чтобы можно было выбрать тот же файл снова
       e.target.value = "";
     }
   };
 
-  // Ручная очистка дубликатов
   const handleCleanupDuplicates = async () => {
     if (!confirm("Удалить дубликаты из базы данных?")) return;
 
@@ -497,7 +519,6 @@ export default function PriceTableClient({
 
       if (resp.ok) {
         showToast.success(`Удалено дубликатов: ${data.deletedCount}`);
-        // Перезагрузить данные
         forceComponentUpdate();
       } else {
         showToast.error(data.error || "Ошибка при очистке");
@@ -511,7 +532,7 @@ export default function PriceTableClient({
     <>
       <div className="mb-5">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h3 className="catalog-title-h3 mb-0">{titleByType(typeCode)}</h3>
+          <h3 className="catalog-title-h3 mb-0">Доп Услуги</h3>
           {user?.role === "admin" && (
             <div className="d-flex gap-2">
               <button
@@ -535,7 +556,7 @@ export default function PriceTableClient({
                 onClick={() => setIsAddModalOpen(true)}
               >
                 <i className="bi bi-plus-circle me-1"></i>
-                Добавить оборудование
+                Добавить услугу
               </button>
             </div>
           )}
@@ -548,91 +569,31 @@ export default function PriceTableClient({
             <thead className="table-light">
               <tr>
                 <th>SKU</th>
-                <th>Наименование</th>
-                <th>
-                  {typeCode === "cable"
-                    ? "Цена за 1м"
-                    : typeCode === "connector"
-                    ? "Цена за 1шт"
-                    : typeCode === "lotki"
-                    ? "Цена за 1м.п"
-                    : typeCode === "krep"
-                    ? "Цена за 1шт"
-                    : typeCode === "cpo_cs"
-                    ? "Цена за 1 компл"
-                    : "Цена"}
-                </th>
+                <th>Наименование услуги</th>
+                <th>Цена базовая</th>
                 <th>Стоимость работ</th>
-                <th>Наличие</th>
-                <th>Приоритет</th>
-                <th>Паспорт</th>
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((r) => {
-                // Для кабелей берем цену из attrs["Цена_за 1м"]
-                // Для коннекторов берем цену из attrs["Цена_за 1шт"]
-                // Для лотков берем цену из attrs["Цена_за 1м.п"]
-                // Для крепежа берем цену из attrs["Цена_за 1шт"]
-                // Для лотков CPO90/CS90 берем цену из attrs["Цена_за 1 компл"]
-                let price = r.priceRub;
-                if (typeCode === "cable") {
-                  price = r.attrs?.["Цена_за 1м"] || r.priceRub;
-                } else if (typeCode === "connector") {
-                  price = r.attrs?.["Цена_за 1шт"] || r.priceRub;
-                } else if (typeCode === "lotki") {
-                  price = r.attrs?.["Цена_за 1м.п"] || r.priceRub;
-                } else if (typeCode === "krep") {
-                  price = r.attrs?.["Цена_за 1шт"] || r.priceRub;
-                } else if (typeCode === "cpo_cs") {
-                  price = r.attrs?.["Цена_за 1 компл"] || r.priceRub;
-                }
-
-                // Достаем стоимость работ из attrs.bos.work_cost_1 или напрямую из attrs["Стоимость_работ_1"]
-                const workCost = r.attrs?.bos?.work_cost_1 || r.attrs?.["Стоимость_работ_1"];
-
+              {filteredRows.map((item) => {
+                const workCost = getAttr(item.attrs, "Стоимость_работ_1");
                 return (
-                  <tr key={r.id} onClick={() => handleRowClick(r)}>
+                  <tr key={item.id} onClick={() => handleRowClick(item)}>
                     <td>
-                      <code>{r.sku || "—"}</code>
+                      <code>{item.sku}</code>
                     </td>
-                    <td>{r.title || "—"}</td>
-                    <td>{fmtMoney(price)}</td>
-                    <td>
-                      {workCost != null && workCost !== "" 
-                        ? fmtMoney(workCost) 
-                        : "—"}
-                    </td>
-                    <td>{r.stock === 1 ? "ДА" : r.stock === 0 ? "НЕТ" : "—"}</td>
-                    <td>
-                      {r.priority === 1
-                        ? "НИЗКИЙ"
-                        : r.priority === 2
-                        ? "СРЕДНИЙ"
-                        : r.priority === 3
-                        ? "ВЫСОКИЙ"
-                        : "—"}
-                    </td>
-                    <td>
-                      {r.specUrl ? (
-                        <a
-                          href={r.specUrl}
-                          target="_blank"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          PDF
-                        </a>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
+                    <td>{item.title || "-"}</td>
+                    <td>{formatPrice(item.priceRub)}</td>
+                    <td>{workCost !== "-" && workCost !== null && workCost !== undefined ? formatPrice(workCost) : "-"}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-        {rows.length === 0 && <div className="text-muted">Нет данных.</div>}
+        {additionalServices.length === 0 && (
+          <div className="text-muted">Нет данных.</div>
+        )}
       </div>
 
       <EquipmentModal
@@ -646,7 +607,7 @@ export default function PriceTableClient({
       <AddEquipmentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        typeCode={typeCode}
+        typeCode="sunhors"
         onSave={handleCreateEquipment}
       />
 
@@ -696,3 +657,4 @@ export default function PriceTableClient({
     </>
   );
 }
+
