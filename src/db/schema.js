@@ -157,9 +157,6 @@ export const mainInformation = mysqlTable("main_information", {
   bomData: json("bom_data"), // данные таблицы "Оборудование" (Bill of Materials)
   servicesData: json("services_data"), // данные таблицы "Услуги"
 
-  // Данные расчета окупаемости
-  paybackData: json("payback_data"), // данные для построения таблицы расчета окупаемости
-
   createdAt: timestamp("created_at")
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),

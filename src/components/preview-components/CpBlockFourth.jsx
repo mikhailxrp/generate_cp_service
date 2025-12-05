@@ -3,18 +3,17 @@
 import "./preview-components.css";
 import GraphCardWrapper from "@/components/GraphCardWrapper";
 import {
-  calcPaybackYears,
-  calcPaybackWithDegradation,
+  calculatePayback,
   formatNumber,
   formatMoney as formatMoneyPayback,
 } from "@/lib/payback";
+
 export default function CpBlockFourth({
   bomData = [],
   servicesData = [],
   combinedData = [],
   totalAnnualGeneration = 0, // тыс. кВт·ч в год
   priceKwh = 0, // ₽/кВт·ч
-  monthlyConsumptionKwh = 0, // кВт·ч в месяц
 }) {
   return (
     <div className="cp-block-two preview-block-container mb-4">
@@ -78,13 +77,14 @@ export default function CpBlockFourth({
                                     <th>Наименование</th>
                                     <th style={{ width: 120 }}>Кол-во</th>
                                     <th style={{ width: 180 }}>Цена, ₽</th>
-                                    <th style={{ width: 200 }}>Сумма, ₽</th>
+                                    <th style={{ width: 180 }}>Стоимость работ, ₽</th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {bomData.map((item, idx) => {
                                     const price = toNumber(
-                                      item.unitPriceRub ||
+                                      item.priceRub ||
+                                        item.unitPriceRub ||
                                         item.price ||
                                         item.basePrice ||
                                         0,
@@ -94,7 +94,8 @@ export default function CpBlockFourth({
                                       item.qty || item.quantity || 1,
                                       1
                                     );
-                                    const sum = price * qty;
+                                    const workCost = toNumber(item.workCost || 0, 0);
+                                    const totalWorkCost = workCost * qty;
                                     return (
                                       <tr key={idx}>
                                         <td>{safe(item.name || item.title)}</td>
@@ -102,7 +103,9 @@ export default function CpBlockFourth({
                                         <td>
                                           {price ? formatMoney(price) : "—"}
                                         </td>
-                                        <td>{sum ? formatMoney(sum) : "—"}</td>
+                                        <td>
+                                          {totalWorkCost > 0 ? formatMoney(totalWorkCost) : "—"}
+                                        </td>
                                       </tr>
                                     );
                                   })}
@@ -190,33 +193,25 @@ export default function CpBlockFourth({
                             </div>
                           </div>
                           {(() => {
+                            // Расчёт окупаемости по новой логике
                             const annualGenerationKwh =
-                              toNumber(totalAnnualGeneration, 0) * 1000; // перевод из тыс. кВт·ч
+                              toNumber(totalAnnualGeneration, 0) * 1000;
                             const tariff = toNumber(priceKwh, 0);
-                            const annualConsumptionKwh =
-                              toNumber(monthlyConsumptionKwh, 0) * 12;
-                            const selfConsumptionShare =
-                              annualConsumptionKwh > 0
-                                ? Math.min(
-                                    1,
-                                    annualGenerationKwh / annualConsumptionKwh
-                                  )
-                                : 1;
 
-                            // Используем те же функции расчета, что и в CreateSesButton.jsx
-                            const paybackData = {
-                              total_cost_rub: grandTotal,
-                              year_generation_kwh: annualGenerationKwh,
-                              tariff_rub_per_kwh: tariff,
-                              self_consumption_share: selfConsumptionShare,
-                              annual_onm_rub: 0,
-                              export_price_rub_per_kwh: null,
+                            if (!grandTotal || grandTotal <= 0 || !tariff)
+                              return null;
+
+                            const paybackInput = {
+                              project: {
+                                paybackData: {
+                                  annualGeneration: annualGenerationKwh,
+                                  systemCost: grandTotal,
+                                  tariffYear1: tariff,
+                                },
+                              },
                             };
 
-                            const simplePaybackYears =
-                              calcPaybackYears(paybackData);
-                            const detailedPayback =
-                              calcPaybackWithDegradation(paybackData);
+                            const result = calculatePayback(paybackInput);
 
                             const getYearWord = (value) => {
                               if (value === null || value === undefined)
@@ -233,9 +228,6 @@ export default function CpBlockFourth({
                                 return "года";
                               return "лет";
                             };
-
-                            if (!grandTotal || grandTotal <= 0 || !tariff)
-                              return null;
 
                             return (
                               <div className="row mt-3">
@@ -259,43 +251,34 @@ export default function CpBlockFourth({
                                             кВт·ч
                                           </li>
                                           <li>
-                                            <strong>
-                                              Годовое потребление:
-                                            </strong>{" "}
-                                            {formatNumber(annualConsumptionKwh)}{" "}
-                                            кВт·ч
-                                          </li>
-                                          <li>
-                                            <strong>
-                                              Доля самопотребления:
-                                            </strong>{" "}
-                                            {formatNumber(
-                                              selfConsumptionShare * 100
-                                            )}
-                                            %
-                                          </li>
-                                          <li>
-                                            <strong>Тариф:</strong>{" "}
+                                            <strong>Тариф (1-й год):</strong>{" "}
                                             {formatMoneyPayback(tariff)}
                                             /кВт·ч
+                                          </li>
+                                          <li>
+                                            <strong>Рост тарифа:</strong>{" "}
+                                            {formatNumber(
+                                              result.params.tariffInflationRate * 100
+                                            )}
+                                            % в год
                                           </li>
                                         </ul>
                                       </div>
                                       <div className="col-md-6 d-flex align-items-center justify-content-center">
-                                        {simplePaybackYears ? (
+                                        {result.paybackReached ? (
                                           <div className="text-center">
                                             <strong>Срок окупаемости:</strong>
                                             <div
                                               className="preview-price-total mt-2"
                                               style={{ lineHeight: 1 }}
                                             >
-                                              {formatNumber(simplePaybackYears)}
+                                              {formatNumber(result.paybackYearExact)}
                                             </div>
                                             <div
                                               className="preview-text-description"
                                               style={{ marginTop: 4 }}
                                             >
-                                              {getYearWord(simplePaybackYears)}
+                                              {getYearWord(result.paybackYearExact)}
                                             </div>
                                           </div>
                                         ) : (
@@ -310,7 +293,7 @@ export default function CpBlockFourth({
                                               className="preview-text-description"
                                               style={{ marginTop: 4 }}
                                             >
-                                              Не окупается
+                                              Не окупается за {result.params.yearsHorizon} лет
                                             </div>
                                           </div>
                                         )}
