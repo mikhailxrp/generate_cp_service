@@ -271,7 +271,7 @@ export default function GraphVisualForm({ step, id, cpData }) {
           </div>
           <div className="mb-3">
             <label htmlFor="peakpower" className="form-label">
-              Installed peak PV power
+              Установленная пиковая мощность PV
             </label>
             <input
               type="text"
@@ -285,7 +285,7 @@ export default function GraphVisualForm({ step, id, cpData }) {
           </div>
           <div className="mb-3">
             <label htmlFor="angle" className="form-label">
-              Angle of inclination
+              Угол наклона
             </label>
             <input
               type="text"
@@ -299,7 +299,7 @@ export default function GraphVisualForm({ step, id, cpData }) {
           </div>
           <div className="mb-3">
             <label htmlFor="aspect" className="form-label">
-              Aspect ratio
+              Азимут
             </label>
             <input
               type="text"

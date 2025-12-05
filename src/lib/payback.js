@@ -1,308 +1,172 @@
-import { paybackTable } from "./payback_table_from_excel.js";
-
 /**
- * МОДУЛЬ ОКУПАЕМОСТИ
- *
- * Режимы работы:
- * - TABLE_MODE: поиск по таблице paybackTable (по умолчанию)
- * - CALC_MODE: расчёт экономии и деградации
+ * МОДУЛЬ РАСЧЁТА ОКУПАЕМОСТИ СЭС
+ * 
+ * Логика повторяет Excel-таблицу "Окупаемость":
+ * - Колонка C: % остаточной мощности панелей
+ * - Колонка D: Годовая выработка СЭС (кВт·ч)
+ * - Колонка E: Тариф (руб/кВт·ч)
+ * - Колонка F: Сумма за год (экономия)
+ * - Колонка G: Нарастающий итог (кумулятивная экономия)
  */
 
-// ===== НАСТРОЙКИ =====
-const PAYBACK_MODE = "TABLE_MODE"; // "TABLE_MODE" или "CALC_MODE"
-
-// ===== ТАБЛИЧНЫЙ РЕЖИМ =====
-
 /**
- * Поиск года окупаемости по таблице paybackTable
- * @param {Object} params - Параметры расчёта
- * @param {number} params.total_cost_rub - Общая стоимость проекта (оборудование + услуги)
- * @returns {number|null} Год окупаемости или null, если не найден
+ * Расчёт окупаемости СЭС
+ * @param {Object} data - Объект с данными проекта
+ * @param {Object} options - Дополнительные опции (systemCost если не в data)
+ * @returns {Object} Результат расчёта
  */
-function calcPaybackYearsTable({ total_cost_rub }) {
-  const totalCost = Number(total_cost_rub) || 0;
+export function calculatePayback(data, options = {}) {
+  // === 1. БАЗОВЫЕ ПЕРЕМЕННЫЕ ===
+  const paybackData = data?.project?.paybackData || {};
 
-  if (!Array.isArray(paybackTable) || paybackTable.length === 0) {
-    console.warn("paybackTable is empty or not an array");
-    return null;
-  }
+  // Годовая генерация в первый год (кВт·ч) — обязательный параметр
+  // В Excel это ячейка D4
+  const annualGenerationYear1 = paybackData.annualGeneration || 0;
 
-  if (totalCost <= 0) {
-    return null;
-  }
+  // Общая стоимость СЭС с установкой (руб)
+  const systemCost = paybackData.systemCost ?? options.systemCost ?? 0;
 
-  // Сортируем таблицу по cumulative для поиска
-  const sortedTable = [...paybackTable].sort(
-    (a, b) => a.cumulative - b.cumulative
-  );
+  // Тариф в первый год (руб/кВт·ч)
+  // В Excel это E4 = 10
+  const tariffYear1 = paybackData.tariffYear1 ?? 10;
 
-  // Находим ближайшее значение cumulative >= totalCost
-  let bestMatch = null;
-  let minDistance = Infinity;
+  // Ежегодный рост тарифа (доля)
+  // В Excel: E5 = E4 * 1.07, т.е. +7% в год
+  const tariffInflationRate = paybackData.tariffInflationRate ?? 0.07;
 
-  for (const row of sortedTable) {
-    const cumulative = Number(row.cumulative) || 0;
-    const year = Number(row.year) || 0;
+  // Остаточная мощность во 2-й год (доля от 1.0)
+  // В Excel: C5 = 0.994
+  const secondYearResidual = paybackData.secondYearResidual ?? 0.994;
 
-    if (cumulative >= totalCost) {
-      const distance = cumulative - totalCost;
+  // Ежегодное падение остаточной мощности (абсолютное, начиная с 3-го года)
+  // В Excel: C6 = C5 - 0.0032
+  const yearlyDegradationDelta = paybackData.yearlyDegradationDelta ?? 0.0032;
 
-      // Если это первое подходящее значение или оно ближе к искомому
-      if (bestMatch === null || distance < minDistance) {
-        bestMatch = { year, cumulative, distance };
-        minDistance = distance;
-      }
-      // Если расстояние одинаковое, выбираем большее cumulative (консервативный подход)
-      else if (distance === minDistance && cumulative > bestMatch.cumulative) {
-        bestMatch = { year, cumulative, distance };
-      }
+  // Горизонт расчёта (лет)
+  // В Excel таблица на 25 лет
+  const yearsHorizon = paybackData.yearsHorizon ?? 25;
+
+  // === 2. ПОСЛЕДОВАТЕЛЬНОСТЬ ОСТАТОЧНОЙ МОЩНОСТИ (колонка C в Excel) ===
+  // C4 = 1 (100%)
+  // C5 = 0.994 (фиксированное значение)
+  // C6 = C5 - 0.0032, C7 = C6 - 0.0032, ...
+  const residuals = [];
+  for (let year = 1; year <= yearsHorizon; year++) {
+    if (year === 1) {
+      // Год 1: 100% мощности (C4 = 1)
+      residuals[year] = 1.0;
+    } else if (year === 2) {
+      // Год 2: фиксированное значение (C5 = 0.994)
+      residuals[year] = secondYearResidual;
+    } else {
+      // Год 3+: C_n = C_(n-1) - 0.0032
+      residuals[year] = Math.max(0, residuals[year - 1] - yearlyDegradationDelta);
     }
   }
 
-  return bestMatch ? bestMatch.year : null;
-}
-
-/**
- * Расчёт окупаемости с детализацией по таблице
- * @param {Object} params - Параметры расчёта
- * @param {number} params.total_cost_rub - Общая стоимость СЭС в рублях
- * @returns {Object} Результат расчёта с детализацией
- */
-function calcPaybackWithDegradationTable({ total_cost_rub }) {
-  const totalCost = Number(total_cost_rub) || 0;
-
-  if (!Array.isArray(paybackTable) || paybackTable.length === 0) {
-    console.warn("paybackTable is empty or not an array");
-    return {
-      paybackYear: null,
-      totalCost,
-      finalCumulativeSavings: 0,
-      yearlyData: [],
-      netProfit: -totalCost,
-    };
+  // === 3. ГОДОВАЯ ВЫРАБОТКА (колонка D в Excel) ===
+  // D4 = базовая генерация
+  // D5 = D4 * C5
+  // D6 = D4 * C6
+  // ...
+  const yearlyGeneration = [];
+  for (let year = 1; year <= yearsHorizon; year++) {
+    yearlyGeneration[year] = annualGenerationYear1 * (residuals[year] ?? 0);
   }
 
-  if (totalCost <= 0) {
-    return {
-      paybackYear: null,
-      totalCost,
-      finalCumulativeSavings: 0,
-      yearlyData: [],
-      netProfit: -totalCost,
-    };
+  // === 4. ТАРИФ ПО ГОДАМ (колонка E в Excel) ===
+  // E4 = 10
+  // E5 = E4 * 1.07
+  // E6 = E5 * 1.07
+  // ...
+  const tariffs = [];
+  for (let year = 1; year <= yearsHorizon; year++) {
+    if (year === 1) {
+      tariffs[year] = tariffYear1;
+    } else {
+      tariffs[year] = tariffs[year - 1] * (1 + tariffInflationRate);
+    }
   }
 
-  // Сортируем таблицу по году
-  const sortedTable = [...paybackTable].sort((a, b) => a.year - b.year);
+  // === 5. ЕЖЕГОДНАЯ ЭКОНОМИЯ И НАРАСТАЮЩИЙ ИТОГ (колонки F и G в Excel) ===
+  // F_n = D_n * E_n (экономия за год)
+  // G_n = G_(n-1) + F_n (нарастающий итог)
+  const yearlySavings = [];
+  const cumulativeSavings = [];
+  for (let year = 1; year <= yearsHorizon; year++) {
+    const gen = yearlyGeneration[year];
+    const tariff = tariffs[year];
+    const saving = gen * tariff;
+    
+    yearlySavings[year] = saving;
+    
+    if (year === 1) {
+      cumulativeSavings[year] = saving;
+    } else {
+      cumulativeSavings[year] = cumulativeSavings[year - 1] + saving;
+    }
+  }
 
+  // === 6. СРОК ОКУПАЕМОСТИ ===
+  // Первый год, когда cumulativeSavings >= systemCost
   let paybackYear = null;
-  const yearlyData = [];
-  let finalCumulativeSavings = 0;
+  let paybackYearExact = null;
 
-  for (let i = 0; i < sortedTable.length; i++) {
-    const row = sortedTable[i];
-    const year = Number(row.year) || 0;
-    const cumulative = Number(row.cumulative) || 0;
+  if (systemCost > 0) {
+    for (let year = 1; year <= yearsHorizon; year++) {
+      const cum = cumulativeSavings[year];
+      if (cum >= systemCost) {
+        paybackYear = year;
+        
+        // Линейная интерполяция для точного значения
+        if (year === 1) {
+          // Окупились в первый же год
+          const fraction = systemCost / cum;
+          paybackYearExact = fraction;
+        } else {
+          const prevCum = cumulativeSavings[year - 1];
+          const delta = cum - prevCum;
+          const fraction = delta > 0 ? (systemCost - prevCum) / delta : 0;
+          paybackYearExact = (year - 1) + fraction;
+        }
+        break;
+      }
+    }
+  }
 
-    // Вычисляем annualSaving как разность между текущим и предыдущим cumulative
-    const prevCumulative =
-      i > 0 ? Number(sortedTable[i - 1].cumulative) || 0 : 0;
-    const annualSaving = cumulative - prevCumulative;
-
-    yearlyData.push({
+  // === 7. ФОРМИРОВАНИЕ МАССИВА yearly ДЛЯ ВОЗВРАТА ===
+  const yearly = [];
+  for (let year = 1; year <= yearsHorizon; year++) {
+    yearly.push({
       year,
-      generation: 0, // Не используется в табличном подходе
-      annualSaving,
-      cumulativeSavings: cumulative,
-      remainingCost: Math.max(0, totalCost - cumulative),
+      residual: residuals[year],
+      yearlyGeneration: yearlyGeneration[year],
+      tariff: tariffs[year],
+      yearlySavings: yearlySavings[year],
+      cumulativeSavings: cumulativeSavings[year],
     });
-
-    // Проверяем окупаемость
-    if (paybackYear === null && cumulative >= totalCost) {
-      paybackYear = year;
-    }
-
-    finalCumulativeSavings = cumulative;
   }
 
+  // === 8. ВОЗВРАТ РЕЗУЛЬТАТА ===
   return {
+    yearly,
     paybackYear,
-    totalCost,
-    finalCumulativeSavings,
-    yearlyData,
-    netProfit: finalCumulativeSavings - totalCost,
+    paybackYearExact,
+    paybackReached: paybackYear != null,
+    systemCost,
+    // Итоговые значения за весь период
+    totalSavings: cumulativeSavings[yearsHorizon] || 0,
+    netProfit: (cumulativeSavings[yearsHorizon] || 0) - systemCost,
+    params: {
+      annualGenerationYear1,
+      tariffYear1,
+      tariffInflationRate,
+      secondYearResidual,
+      yearlyDegradationDelta,
+      yearsHorizon,
+    },
   };
 }
-
-// ===== ПУБЛИЧНЫЕ ФУНКЦИИ =====
-
-/**
- * Расчёт годовой экономии (только для CALC_MODE)
- * @param {Object} params - Параметры расчёта
- * @returns {number} Годовая экономия в рублях
- */
-export function calcAnnualSaving(params) {
-  if (PAYBACK_MODE === "TABLE_MODE") {
-    console.warn("calcAnnualSaving не используется в TABLE_MODE");
-    return 0;
-  }
-  // Здесь будет код для CALC_MODE
-  return 0;
-}
-
-/**
- * Расчёт окупаемости
- * @param {Object} params - Параметры расчёта
- * @returns {number|null} Окупаемость в годах или null
- */
-export function calcPaybackYears(params) {
-  if (PAYBACK_MODE === "TABLE_MODE") {
-    return calcPaybackYearsTable(params);
-  }
-  // Здесь будет код для CALC_MODE
-  return null;
-}
-
-/**
- * Расчёт окупаемости с детализацией
- * @param {Object} params - Параметры расчёта
- * @returns {Object} Результат расчёта с детализацией
- */
-export function calcPaybackWithDegradation(params) {
-  if (PAYBACK_MODE === "TABLE_MODE") {
-    return calcPaybackWithDegradationTable(params);
-  }
-  // Здесь будет код для CALC_MODE
-  return {
-    paybackYear: null,
-    totalCost: 0,
-    finalCumulativeSavings: 0,
-    yearlyData: [],
-    netProfit: 0,
-  };
-}
-
-// ===== ОРИГИНАЛЬНЫЙ КОД (ЗАКОММЕНТИРОВАН) =====
-/*
-export function calcAnnualSaving({
-  year_generation_kwh,
-  tariff_rub_per_kwh,
-  self_consumption_share = 1,
-  annual_onm_rub = 0,
-  export_price_rub_per_kwh = null,
-  monthlyGenKwh = null,
-  monthlyLoadKwh = null,
-}) {
-  let savingRub = 0;
-
-  if (
-    Array.isArray(monthlyGenKwh) &&
-    Array.isArray(monthlyLoadKwh) &&
-    monthlyGenKwh.length === 12 &&
-    monthlyLoadKwh.length === 12
-  ) {
-    // Точный режим: помесячно считаем собственное потребление и экспорт
-    for (let i = 0; i < 12; i++) {
-      const gen = Math.max(0, Number(monthlyGenKwh[i]) || 0);
-      const load = Math.max(0, Number(monthlyLoadKwh[i]) || 0);
-      const selfUsed = Math.min(gen, load); // кВт·ч, ушедшие в нагрузку
-      const surplus = Math.max(0, gen - selfUsed); // излишки
-      const earnSelf = selfUsed * tariff_rub_per_kwh; // экономия на сетевом тарифе
-      const earnExp = export_price_rub_per_kwh
-        ? surplus * export_price_rub_per_kwh
-        : 0;
-      savingRub += earnSelf + earnExp;
-    }
-  } else {
-    // Простой режим: доля самопотребления без профилей
-    const base =
-      (Number(year_generation_kwh) || 0) *
-      (Number(tariff_rub_per_kwh) || 0) *
-      (Number(self_consumption_share) || 0);
-    // Если задан экспорт и self_consumption_share < 1 — добавим доход от продажи излишков
-    let exportRub = 0;
-    if (export_price_rub_per_kwh && self_consumption_share < 1) {
-      const gen = Number(year_generation_kwh) || 0;
-      const surplusKwh = gen * (1 - self_consumption_share);
-      exportRub = surplusKwh * export_price_rub_per_kwh;
-    }
-    savingRub = base + exportRub;
-  }
-
-  // Вычитаем ежегодные расходы на обслуживание
-  return Math.max(0, savingRub - (Number(annual_onm_rub) || 0));
-}
-
-export function calcPaybackYears({ total_cost_rub, ...rest }) {
-  const annualSaving = calcAnnualSaving(rest);
-  if (!annualSaving || annualSaving <= 0) return null;
-  const years = (Number(total_cost_rub) || 0) / annualSaving;
-  // Ограничим снизу/сверху для аккуратного вывода
-  return Number.isFinite(years) ? Number(years.toFixed(2)) : null;
-}
-
-export function calcPaybackWithDegradation({
-  total_cost_rub,
-  year_generation_kwh,
-  tariff_rub_per_kwh,
-  degradation_percent = 0.5,
-  self_consumption_share = 1,
-  annual_onm_rub = 0,
-  export_price_rub_per_kwh = null,
-  max_years = 25,
-}) {
-  const totalCost = Number(total_cost_rub) || 0;
-  const baseGeneration = Number(year_generation_kwh) || 0;
-  const tariff = Number(tariff_rub_per_kwh) || 0;
-  const degradation = Number(degradation_percent) || 0;
-  const selfConsumption = Number(self_consumption_share) || 1;
-  const annualOM = Number(annual_onm_rub) || 0;
-  const exportPrice = export_price_rub_per_kwh
-    ? Number(export_price_rub_per_kwh)
-    : null;
-
-  let cumulativeSavings = 0;
-  const yearlyData = [];
-  let paybackYear = null;
-
-  for (let year = 1; year <= max_years; year++) {
-    // Учитываем деградацию: каждый год генерация уменьшается на degradation_percent%
-    const currentGeneration =
-      baseGeneration * Math.pow(1 - degradation / 100, year - 1);
-
-    // Расчёт экономии для текущего года
-    const annualSaving = calcAnnualSaving({
-      year_generation_kwh: currentGeneration,
-      tariff_rub_per_kwh: tariff,
-      self_consumption_share: selfConsumption,
-      annual_onm_rub: annualOM,
-      export_price_rub_per_kwh: exportPrice,
-    });
-
-    cumulativeSavings += annualSaving;
-    yearlyData.push({
-      year,
-      generation: currentGeneration,
-      annualSaving,
-      cumulativeSavings,
-      remainingCost: Math.max(0, totalCost - cumulativeSavings),
-    });
-
-    // Проверяем окупаемость
-    if (paybackYear === null && cumulativeSavings >= totalCost) {
-      paybackYear = year;
-    }
-  }
-
-  return {
-    paybackYear,
-    totalCost,
-    finalCumulativeSavings: cumulativeSavings,
-    yearlyData,
-    netProfit: cumulativeSavings - totalCost,
-  };
-}
-*/
 
 /**
  * Форматирование числа с разделителями тысяч
@@ -331,3 +195,7 @@ export function formatMoney(amount) {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+
+
+
