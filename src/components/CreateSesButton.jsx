@@ -1152,6 +1152,7 @@ export default function CreateSesButton({ id, cpData }) {
                               <th>Количество</th>
                               <th>Ед.изм.</th>
                               <th>Цена за единицу</th>
+                              <th>Сумма</th>
                               <th>Стоимость работ</th>
                               {showControls && (
                                 <th
@@ -1236,6 +1237,22 @@ export default function CreateSesButton({ id, cpData }) {
                                   </td>
                                   <td>
                                     {(() => {
+                                      const price = parseFloat(
+                                        item.priceRub ||
+                                          item.unitPriceRub ||
+                                          item.price ||
+                                          item.basePrice ||
+                                          0
+                                      );
+                                      const qty = parseFloat(
+                                        item.qty || item.quantity || 1
+                                      );
+                                      const sum = price * qty;
+                                      return fmtMoney(sum);
+                                    })()}
+                                  </td>
+                                  <td>
+                                    {(() => {
                                       const workCost = getWorkCostForItem(
                                         item.sku
                                       );
@@ -1271,6 +1288,7 @@ export default function CreateSesButton({ id, cpData }) {
                             <tr>
                               <th colSpan="5">Итого по оборудованию:</th>
                               <th>{fmtMoney(calculateTotal(bomToDisplay))}</th>
+                              <th></th>
                               {showControls && <th></th>}
                             </tr>
                           </tfoot>
