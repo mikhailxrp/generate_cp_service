@@ -298,7 +298,7 @@ export default function SoftwareTableClient({ rows: initialRows }) {
 
       // Сначала соберем уникальные записи по комбинации (title + roofType + systemType)
       const uniqueRecordsMap = new Map();
-      
+
       for (const r of records) {
         const title = String(
           r["Полное_наименование"] || r["Наименование"] || ""
@@ -315,7 +315,7 @@ export default function SoftwareTableClient({ rows: initialRows }) {
 
         // Создаем уникальный ключ на основе title + roofType + gridType
         const uniqueKey = `${title}|||${roofType}|||${gridType}`.toLowerCase();
-        
+
         // Если такой комбинации еще нет, добавляем
         if (!uniqueRecordsMap.has(uniqueKey)) {
           uniqueRecordsMap.set(uniqueKey, {
@@ -350,7 +350,7 @@ export default function SoftwareTableClient({ rows: initialRows }) {
         const roofSlug = (data.roofType || "GEN").replace(/\s+/g, "_");
         const gridSlug = (data.gridType || "SYS").replace(/\s+/g, "_");
         let sku = `DEMO-${roofSlug}-${gridSlug}-${index}`;
-        
+
         // Подрезаем до 100 символов
         if (sku.length > 100) sku = sku.slice(0, 100);
 
@@ -408,7 +408,7 @@ export default function SoftwareTableClient({ rows: initialRows }) {
           lastError = err?.message || String(err);
         }
       }
-      
+
       skipped = records.length - uniqueRecordsMap.size;
 
       if (created.length > 0) {
@@ -595,4 +595,3 @@ export default function SoftwareTableClient({ rows: initialRows }) {
     </>
   );
 }
-

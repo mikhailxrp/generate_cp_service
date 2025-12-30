@@ -48,7 +48,7 @@ export default function MainInfoCard({ cpData }) {
           <div className="row">
             <div className="col-5 fw-bold text-muted">Тип клиента:</div>
             <div className="col-7">
-              {cpData.clientType === "legal"
+              {cpData.clientType === "B2B"
                 ? "Юридическое лицо"
                 : "Физическое лицо"}
             </div>

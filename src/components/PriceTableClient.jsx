@@ -589,7 +589,8 @@ export default function PriceTableClient({
                 }
 
                 // Достаем стоимость работ из attrs.bos.work_cost_1 или напрямую из attrs["Стоимость_работ_1"]
-                const workCost = r.attrs?.bos?.work_cost_1 || r.attrs?.["Стоимость_работ_1"];
+                const workCost =
+                  r.attrs?.bos?.work_cost_1 || r.attrs?.["Стоимость_работ_1"];
 
                 return (
                   <tr key={r.id} onClick={() => handleRowClick(r)}>
@@ -599,11 +600,13 @@ export default function PriceTableClient({
                     <td>{r.title || "—"}</td>
                     <td>{fmtMoney(price)}</td>
                     <td>
-                      {workCost != null && workCost !== "" 
-                        ? fmtMoney(workCost) 
+                      {workCost != null && workCost !== ""
+                        ? fmtMoney(workCost)
                         : "—"}
                     </td>
-                    <td>{r.stock === 1 ? "ДА" : r.stock === 0 ? "НЕТ" : "—"}</td>
+                    <td>
+                      {r.stock === 1 ? "ДА" : r.stock === 0 ? "НЕТ" : "—"}
+                    </td>
                     <td>
                       {r.priority === 1
                         ? "НИЗКИЙ"

@@ -41,6 +41,7 @@ export default async function CatalogPage() {
     cpo_cs,
     smartmeters,
     transformers,
+    krep,
   ] = await Promise.all([
     fetchPriceByType("panel", 50),
     fetchPriceByType("inverter", 50),
@@ -57,10 +58,8 @@ export default async function CatalogPage() {
     fetchPriceByType("cpo90", 50),
     fetchPriceByType("smartmeter", 50),
     fetchPriceByType("ct", 50),
+    fetchPriceByType("metizi", 50),
   ]);
-
-  // krep использует те же данные что и mounts
-  const krep = mounts;
 
   // 2) Пресеты
   const presetsRows = await db.select().from(presets).limit(100);

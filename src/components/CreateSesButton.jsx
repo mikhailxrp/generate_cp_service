@@ -5,24 +5,20 @@ import { useRouter } from "next/navigation";
 import { showToast } from "@/lib/toast";
 import { fmtMoney, safe } from "@/lib/format";
 import { saveBomAndServicesAction } from "@/app/actions/saveBomAndServices";
+import { savePaybackDataAction } from "@/app/actions/savePaybackData";
 import TransportAndTravelTable from "@/components/TransportAndTravelTable";
-import {
-  calculatePayback,
-  formatNumber,
-  formatMoney,
-} from "@/lib/payback";
-
+import { calculatePayback, formatNumber, formatMoney } from "@/lib/payback";
 
 // Функция форматирования цены услуги (проценты или рубли)
 const formatServicePrice = (priceRub) => {
   if (!priceRub && priceRub !== 0) return "-";
-  
+
   // Проверяем, является ли значение процентом (строка с %)
   const priceStr = String(priceRub);
   if (priceStr.includes("%")) {
     return priceStr;
   }
-  
+
   // Если число, проверяем диапазон
   const priceNum = Number(priceRub);
   if (!isNaN(priceNum)) {
@@ -30,11 +26,11 @@ const formatServicePrice = (priceRub) => {
     if (priceNum >= 0 && priceNum < 1) {
       return `${(priceNum * 100).toFixed(0)}%`;
     }
-    
+
     // Иначе форматируем как валюту
     return fmtMoney(priceNum);
   }
-  
+
   return priceStr;
 };
 
@@ -133,7 +129,9 @@ function ServicesSelectionModal({ onClose, onSelect }) {
                       </tr>
                     ) : (
                       filteredServices.map((item) => {
-                        const workCost = item.attrs?.Стоимость_работ_1 || item.attrs?.bos?.work_cost_1;
+                        const workCost =
+                          item.attrs?.Стоимость_работ_1 ||
+                          item.attrs?.bos?.work_cost_1;
                         return (
                           <tr key={item.id}>
                             <td>{item.title}</td>
@@ -233,9 +231,10 @@ function EquipmentSelectionModal({ onClose, onSelect }) {
   }, [selectedCategory]);
 
   // Фильтрация по поисковому запросу и исключение услуг (unit === "service")
-  const filteredEquipment = equipment.filter((item) =>
-    item.title?.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    item.unit !== "service"
+  const filteredEquipment = equipment.filter(
+    (item) =>
+      item.title?.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      item.unit !== "service"
   );
 
   return (
@@ -317,7 +316,9 @@ function EquipmentSelectionModal({ onClose, onSelect }) {
                       </tr>
                     ) : (
                       filteredEquipment.map((item) => {
-                        const workCost = item.attrs?.Стоимость_работ_1 || item.attrs?.bos?.work_cost_1;
+                        const workCost =
+                          item.attrs?.Стоимость_работ_1 ||
+                          item.attrs?.bos?.work_cost_1;
                         return (
                           <tr key={item.id}>
                             <td>{item.title}</td>
@@ -327,9 +328,7 @@ function EquipmentSelectionModal({ onClose, onSelect }) {
                             <td>
                               {fmtMoney(getPriceByType(item, selectedCategory))}
                             </td>
-                            <td>
-                              {workCost ? fmtMoney(workCost) : "-"}
-                            </td>
+                            <td>{workCost ? fmtMoney(workCost) : "-"}</td>
                             <td>
                               <button
                                 className="btn btn-sm btn-success"
@@ -368,11 +367,16 @@ export default function CreateSesButton({ id, cpData }) {
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [showServicesModal, setShowServicesModal] = useState(false);
 
-  const { servicesData, bomData } = cpData;
+  const { servicesData, bomData, transportData } = cpData;
 
   // Локальное управление BOM и Services
   const [localBomData, setLocalBomData] = useState(bomData || []);
-  const [localServicesData, setLocalServicesData] = useState(servicesData || []);
+  const [localServicesData, setLocalServicesData] = useState(
+    servicesData || []
+  );
+  const [localTransportData, setLocalTransportData] = useState(
+    transportData || null
+  );
 
   // Проверяем, есть ли данные из cpData
   const hasCpData = bomData && bomData.length > 0;
@@ -381,11 +385,10 @@ export default function CreateSesButton({ id, cpData }) {
   React.useEffect(() => {
     if (bomData && bomData.length > 0) {
       // Фильтруем только оборудование (не услуги)
-      const equipment = bomData.filter(item => item.unit !== "service");
-      
+      const equipment = bomData.filter((item) => item.unit !== "service");
       setLocalBomData(equipment);
     }
-    
+
     if (servicesData && servicesData.length > 0) {
       setLocalServicesData(servicesData);
     }
@@ -395,20 +398,71 @@ export default function CreateSesButton({ id, cpData }) {
   React.useEffect(() => {
     // Проверяем сначала fullBom (новая структура), потом bom (старая)
     const bomSource = responseData?.fullBom || responseData?.bom;
-    
+
     if (bomSource && !hasCpData) {
       // Фильтруем только оборудование (не услуги)
-      const equipment = bomSource.filter(item => 
-        item.unit !== "service" &&
-        item.componentCode !== 'service_installation' && 
-        item.componentCode !== 'service_commissioning' && 
-        item.componentCode !== 'service_support' &&
-        item.role !== 'service_installation' &&
-        item.role !== 'service_commissioning' &&
-        item.role !== 'service_support'
+      const equipment = bomSource.filter(
+        (item) =>
+          item.unit !== "service" &&
+          item.componentCode !== "service_installation" &&
+          item.componentCode !== "service_commissioning" &&
+          item.componentCode !== "service_support" &&
+          item.role !== "service_installation" &&
+          item.role !== "service_commissioning" &&
+          item.role !== "service_support"
       );
-      
-      setLocalBomData(equipment);
+
+      // Обогащаем оборудование размерами и стоимостью работ из selectedPanel и inverter
+      const enrichedEquipment = equipment.map((item) => {
+        let enrichedItem = { ...item };
+
+        // Сохраняем workCost1 из responseData.bos.bom если есть
+        if (item.workCost1) {
+          enrichedItem.workCost = parseFloat(item.workCost1 || 0);
+        }
+
+        // Проверяем, это панель?
+        if (responseData?.selectedPanel?.sku === item.sku) {
+          const panelAttrs = responseData.selectedPanel.attrs;
+          // Пробуем разные варианты хранения размеров
+          let dimensions =
+            panelAttrs?.["Размеры_мм(ДxШxВ)"] ||
+            panelAttrs?.["Размеры_мм(Д×Ш×В)"] ||
+            panelAttrs?.["Размеры_мм(Д×Ш×Т)"] ||
+            panelAttrs?.mechanical?.dimensions_mm ||
+            panelAttrs?.dimensions_mm ||
+            null;
+
+          // Сохраняем стоимость работ
+          const workCost = parseFloat(panelAttrs?.Стоимость_работ_1 || 0);
+
+          enrichedItem.dimensions = dimensions;
+          if (workCost > 0) enrichedItem.workCost = workCost;
+        }
+
+        // Проверяем, это инвертор?
+        if (responseData?.inverter?.sku === item.sku) {
+          const inverterAttrs = responseData.inverter.attrs;
+          // Пробуем разные варианты хранения размеров
+          let dimensions =
+            inverterAttrs?.["Размеры_мм(ДxШxГ)"] ||
+            inverterAttrs?.["Размеры_мм(Д×Ш×Г)"] ||
+            inverterAttrs?.["Размеры_мм(Д×Ш×В)"] ||
+            inverterAttrs?.mechanical?.dimensions_mm ||
+            inverterAttrs?.dimensions_mm ||
+            null;
+
+          // Сохраняем стоимость работ
+          const workCost = parseFloat(inverterAttrs?.Стоимость_работ_1 || 0);
+
+          enrichedItem.dimensions = dimensions;
+          if (workCost > 0) enrichedItem.workCost = workCost;
+        }
+
+        return enrichedItem;
+      });
+
+      setLocalBomData(enrichedEquipment);
     }
   }, [responseData, hasCpData]);
 
@@ -427,6 +481,45 @@ export default function CreateSesButton({ id, cpData }) {
   // Функция добавления оборудования в BOM
   const handleAddEquipment = (equipment) => {
     const correctPrice = getPriceByType(equipment, equipment.typeCode);
+
+    // Извлекаем размеры и workCost в зависимости от типа оборудования
+    let dimensions = null;
+    let workCost = 0;
+
+    if (equipment.attrs) {
+      const attrs =
+        typeof equipment.attrs === "string"
+          ? JSON.parse(equipment.attrs)
+          : equipment.attrs;
+
+      // Извлекаем стоимость работ
+      workCost = parseFloat(
+        attrs?.Стоимость_работ_1 || attrs?.bos?.work_cost_1 || 0
+      );
+
+      // Для панелей - пробуем разные варианты
+      if (equipment.typeCode === "panel") {
+        dimensions =
+          attrs["Размеры_мм(ДxШxВ)"] ||
+          attrs["Размеры_мм(Д×Ш×В)"] ||
+          attrs["Размеры_мм(Д×Ш×Т)"] ||
+          attrs.mechanical?.dimensions_mm ||
+          attrs.dimensions_mm ||
+          null;
+      }
+
+      // Для инверторов - пробуем разные варианты
+      if (equipment.typeCode === "inverter") {
+        dimensions =
+          attrs["Размеры_мм(ДxШxГ)"] ||
+          attrs["Размеры_мм(Д×Ш×Г)"] ||
+          attrs["Размеры_мм(Д×Ш×В)"] ||
+          attrs.mechanical?.dimensions_mm ||
+          attrs.dimensions_mm ||
+          null;
+      }
+    }
+
     const newItem = {
       name: equipment.title,
       title: equipment.title,
@@ -439,6 +532,8 @@ export default function CreateSesButton({ id, cpData }) {
       sku: equipment.sku,
       unit: equipment.unit || "шт",
       typeCode: equipment.typeCode,
+      dimensions: dimensions,
+      workCost: workCost, // Добавляем workCost для сохранения в БД
     };
     setLocalBomData((prev) => [...prev, newItem]);
     showToast.success("Оборудование добавлено");
@@ -464,7 +559,9 @@ export default function CreateSesButton({ id, cpData }) {
 
   // Функция удаления услуги из Services
   const handleRemoveServiceItem = (serviceSku) => {
-    setLocalServicesData((prev) => prev.filter((item) => item.sku !== serviceSku));
+    setLocalServicesData((prev) =>
+      prev.filter((item) => item.sku !== serviceSku)
+    );
     showToast.success("Услуга удалена");
   };
 
@@ -488,12 +585,12 @@ export default function CreateSesButton({ id, cpData }) {
 
     setLocalServicesData((prev) => {
       const updated = prev.map((item) =>
-        item.sku === serviceSku 
-          ? { 
-              ...item, 
+        item.sku === serviceSku
+          ? {
+              ...item,
               price: price,
-              basePrice: price
-            } 
+              basePrice: price,
+            }
           : item
       );
       return updated;
@@ -520,20 +617,19 @@ export default function CreateSesButton({ id, cpData }) {
 
     setLocalBomData((prev) => {
       const updated = prev.map((item) =>
-        item.sku === itemSku 
-          ? { 
-              ...item, 
+        item.sku === itemSku
+          ? {
+              ...item,
               priceRub: price,
               unitPriceRub: price,
               price: price,
-              basePrice: price
-            } 
+              basePrice: price,
+            }
           : item
       );
       return updated;
     });
   };
-
 
   const handleCreateSes = async () => {
     if (!id) {
@@ -551,7 +647,7 @@ export default function CreateSesButton({ id, cpData }) {
 
       let response;
       try {
-        response = await fetch("https://sunhorse.ru/webhook-test/create-ses-v2", {
+        response = await fetch("https://sunhorse.ru/webhook/create-ses-v2", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -607,7 +703,7 @@ export default function CreateSesButton({ id, cpData }) {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
           const text = await response.text();
-          
+
           if (text.trim()) {
             try {
               const data = JSON.parse(text);
@@ -715,7 +811,7 @@ export default function CreateSesButton({ id, cpData }) {
     return services.reduce((total, item) => {
       const price = parseFloat(item.price || item.basePrice || 0);
       const quantity = parseFloat(item.quantity || 1);
-      
+
       // Если цена меньше 1, это процент от БАЗОВОЙ стоимости СЭС (оборудование + монтаж)
       const isPercentage = price >= 0 && price < 1;
       let itemTotal;
@@ -730,54 +826,157 @@ export default function CreateSesButton({ id, cpData }) {
     }, 0);
   };
 
-  // Функция получения стоимости работ для элемента из responseData
+  // Функция получения стоимости работ для элемента
   const getWorkCostForItem = (itemSku) => {
-    // Ищем элемент в responseData.bos.bom
+    // Сначала проверяем сам элемент в localBomData (если данные загружены из БД)
+    const localItem = localBomData?.find((item) => item.sku === itemSku);
+    if (localItem?.workCost || localItem?.workCost1) {
+      return parseFloat(localItem.workCost || localItem.workCost1 || 0);
+    }
+
+    // Если не нашли в localBomData, ищем в responseData.bos.bom
     if (responseData?.bos?.bom) {
-      const bomItem = responseData.bos.bom.find(item => item.sku === itemSku);
+      const bomItem = responseData.bos.bom.find((item) => item.sku === itemSku);
       if (bomItem) {
         return parseFloat(bomItem.workCost1 || 0);
       }
     }
-    
+
     // Проверяем, это инвертор?
     if (responseData?.inverter?.sku === itemSku) {
       return parseFloat(responseData.inverter.attrs?.Стоимость_работ_1 || 0);
     }
-    
+
     // Проверяем, это панель?
     if (responseData?.selectedPanel?.sku === itemSku) {
-      return parseFloat(responseData.selectedPanel.attrs?.Стоимость_работ_1 || 0);
+      return parseFloat(
+        responseData.selectedPanel.attrs?.Стоимость_работ_1 || 0
+      );
     }
-    
+
     return 0;
+  };
+
+  // Функция для обогащения bomData стоимостью работ из БД
+  const enrichBomDataWithWorkCost = async (bomData) => {
+    if (!bomData || bomData.length === 0) return bomData;
+
+    // Создаем массив промисов для загрузки данных оборудования
+    const enrichedItems = await Promise.all(
+      bomData.map(async (item) => {
+        // Если workCost уже есть, пропускаем
+        if (item.workCost || item.workCost1) {
+          return item;
+        }
+
+        try {
+          // Загружаем данные оборудования из API по SKU
+          const response = await fetch(
+            `/api/equipment/by-sku?sku=${encodeURIComponent(item.sku)}`
+          );
+          if (!response.ok) {
+            console.warn(`Не удалось загрузить данные для SKU: ${item.sku}`);
+            return item;
+          }
+
+          const data = await response.json();
+          if (!data.success || !data.item) {
+            return item;
+          }
+
+          const equipment = data.item;
+
+          // Извлекаем workCost из attrs
+          let workCost = 0;
+          if (equipment.attrs) {
+            const attrs =
+              typeof equipment.attrs === "string"
+                ? JSON.parse(equipment.attrs)
+                : equipment.attrs;
+
+            workCost = parseFloat(
+              attrs?.Стоимость_работ_1 || attrs?.bos?.work_cost_1 || 0
+            );
+          }
+
+          // Возвращаем обогащенный элемент
+          return {
+            ...item,
+            workCost: workCost,
+          };
+        } catch (error) {
+          console.error(
+            `Ошибка при загрузке данных для SKU ${item.sku}:`,
+            error
+          );
+          return item;
+        }
+      })
+    );
+
+    return enrichedItems;
+  };
+
+  // Функция расчета транспортных расходов
+  const calculateTransportCost = () => {
+    // Если транспортные расходы не нужны
+    if (cpData?.transportCosts !== "yes") {
+      return 0;
+    }
+
+    // Если нет данных о транспорте, возвращаем 0
+    if (!localTransportData) {
+      return 0;
+    }
+
+    // Возвращаем стоимость с НДС
+    return parseFloat(localTransportData.totalCost || 0);
   };
 
   // Функция расчета стоимости монтажа СЭС
   const calculateInstallationCost = () => {
     let totalInstallationCost = 0;
-    
+
+    // Если есть данные из БД (hasCpData), считаем из localBomData
+    if (hasCpData && localBomData && localBomData.length > 0) {
+      totalInstallationCost = localBomData.reduce((sum, item) => {
+        const workCost = getWorkCostForItem(item.sku);
+        const qty = parseFloat(item.qty || item.quantity || 1);
+        return sum + workCost * qty;
+      }, 0);
+      return totalInstallationCost;
+    }
+
+    // Иначе считаем из responseData (данные с сервера)
+
     // 1. Берем стоимость работ из bos.bom (workCost1)
     if (responseData?.bos?.bom) {
       totalInstallationCost += responseData.bos.bom.reduce((sum, item) => {
         const workCost = parseFloat(item.workCost1 || 0);
         const qty = parseFloat(item.qty || 1);
-        return sum + (workCost * qty);
+        return sum + workCost * qty;
       }, 0);
     }
-    
+
     // 2. Добавляем стоимость работ инвертора
     if (responseData?.inverter?.attrs?.Стоимость_работ_1) {
-      totalInstallationCost += parseFloat(responseData.inverter.attrs.Стоимость_работ_1);
+      totalInstallationCost += parseFloat(
+        responseData.inverter.attrs.Стоимость_работ_1
+      );
     }
-    
+
     // 3. Добавляем стоимость работ панелей (умножаем на количество панелей)
-    if (responseData?.selectedPanel?.attrs?.Стоимость_работ_1 && responseData?.panelConfig?.totalPanels) {
-      const panelWorkCost = parseFloat(responseData.selectedPanel.attrs.Стоимость_работ_1);
+    if (
+      responseData?.selectedPanel?.attrs?.Стоимость_работ_1 &&
+      responseData?.panelConfig?.totalPanels
+    ) {
+      const panelWorkCost = parseFloat(
+        responseData.selectedPanel.attrs.Стоимость_работ_1
+      );
       const totalPanels = parseFloat(responseData.panelConfig.totalPanels);
       totalInstallationCost += panelWorkCost * totalPanels;
     }
-    
+
     return totalInstallationCost;
   };
 
@@ -794,7 +993,8 @@ export default function CreateSesButton({ id, cpData }) {
     if (totalCost <= 0) return null;
 
     // Годовая генерация: totalAnnualGeneration хранится в тысячах кВт·ч
-    const annualGeneration = (parseFloat(cpData.totalAnnualGeneration) || 0) * 1000;
+    const annualGeneration =
+      (parseFloat(cpData.totalAnnualGeneration) || 0) * 1000;
     const tariff = parseFloat(cpData.priceKwh) || 10;
 
     if (annualGeneration <= 0) return null;
@@ -824,11 +1024,32 @@ export default function CreateSesButton({ id, cpData }) {
 
     setIsSaving(true);
     try {
+      // Обогащаем bomData стоимостью работ перед сохранением
+      const enrichedBomData = await enrichBomDataWithWorkCost(
+        localBomData || []
+      );
+
+      // Рассчитываем общую стоимость проекта
+      const equipmentCost = calculateTotal(enrichedBomData);
+      const installationCost = calculateInstallationCost();
+      const servicesCost = calculateServicesTotal(localServicesData || []);
+      const transportCost = calculateTransportCost();
+      const totalCost =
+        equipmentCost + installationCost + servicesCost + transportCost;
+
       await saveBomAndServicesAction(
         id,
-        localBomData || [],
-        localServicesData || []
+        enrichedBomData,
+        localServicesData || [],
+        localTransportData,
+        totalCost
       );
+
+      // Сохраняем результаты расчета окупаемости
+      if (paybackResult) {
+        await savePaybackDataAction(id, paybackResult);
+      }
+
       showToast.success("КП сгенерирован!");
       router.push(`/preview?id=${id}`);
     } catch (error) {
@@ -920,7 +1141,10 @@ export default function CreateSesButton({ id, cpData }) {
                     <h6 className="mb-3">Оборудование</h6>
                     {bomToDisplay && bomToDisplay.length > 0 ? (
                       <div className="table-responsive">
-                        <table className="table table-sm table-striped align-middle" style={{ fontSize: "0.75rem" }}>
+                        <table
+                          className="table table-sm table-striped align-middle"
+                          style={{ fontSize: "0.75rem" }}
+                        >
                           <thead className="table-light">
                             <tr>
                               <th>Наименование</th>
@@ -930,89 +1154,118 @@ export default function CreateSesButton({ id, cpData }) {
                               <th>Цена за единицу</th>
                               <th>Стоимость работ</th>
                               {showControls && (
-                                <th style={{ width: "80px" }} className="text-end">Действия</th>
+                                <th
+                                  style={{ width: "80px" }}
+                                  className="text-end"
+                                >
+                                  Действия
+                                </th>
                               )}
                             </tr>
                           </thead>
                           <tbody>
-                            {bomToDisplay.filter(item => item.title !== null && item.title !== undefined).map((item, index) => (
-                              <tr key={item.sku || index}>
-                                <td>{safe(item.name || item.title)}</td>
-                                <td><small className="text-muted">{safe(item.sku)}</small></td>
-                                <td>
-                                  {showControls ? (
-                                    <input
-                                      type="number"
-                                      className="form-control form-control-sm"
-                                      style={{ width: "80px" }}
-                                      min="1"
-                                      step="1"
-                                      value={item.qty || item.quantity || 1}
-                                      onChange={(e) =>
-                                        handleQuantityChange(
-                                          item.sku,
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                  ) : (
-                                    safe(item.qty || item.quantity, 1)
-                                  )}
-                                </td>
-                                <td><small className="text-muted">{safe(item.unit)}</small></td>
-                                <td>
-                                  {showControls ? (
-                                    <input
-                                      type="number"
-                                      className="form-control form-control-sm"
-                                      style={{ width: "120px" }}
-                                      min="0"
-                                      step="0.01"
-                                      value={
-                                        item.priceRub ||
-                                        item.unitPriceRub ||
-                                        item.price ||
-                                        item.basePrice ||
-                                        0
-                                      }
-                                      onChange={(e) =>
-                                        handlePriceChange(
-                                          item.sku,
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                  ) : (
-                                    fmtMoney(
-                                      item.priceRub ||
-                                        item.unitPriceRub ||
-                                        item.price ||
-                                        item.basePrice
-                                    )
-                                  )}
-                                </td>
-                                <td>
-                                  {(() => {
-                                    const workCost = getWorkCostForItem(item.sku);
-                                    const qty = item.qty || item.quantity || 1;
-                                    const totalWorkCost = workCost * qty;
-                                    return totalWorkCost > 0 ? fmtMoney(totalWorkCost) : "-";
-                                  })()}
-                                </td>
-                                {showControls && (
-                                  <td className="text-end">
-                                    <button
-                                      className="btn btn-sm btn-outline-danger"
-                                      onClick={() => handleRemoveBomItem(item.sku)}
-                                      title="Удалить"
-                                      style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
-                                    >
-                                      <i className="bi bi-trash"></i>
-                                    </button>
+                            {bomToDisplay
+                              .filter(
+                                (item) =>
+                                  item.title !== null &&
+                                  item.title !== undefined
+                              )
+                              .map((item, index) => (
+                                <tr key={item.sku || index}>
+                                  <td>{safe(item.name || item.title)}</td>
+                                  <td>
+                                    <small className="text-muted">
+                                      {safe(item.sku)}
+                                    </small>
                                   </td>
-                                )}
-                              </tr>
-                            ))}
+                                  <td>
+                                    {showControls ? (
+                                      <input
+                                        type="number"
+                                        className="form-control form-control-sm"
+                                        style={{ width: "80px" }}
+                                        min="1"
+                                        step="1"
+                                        value={item.qty || item.quantity || 1}
+                                        onChange={(e) =>
+                                          handleQuantityChange(
+                                            item.sku,
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                    ) : (
+                                      safe(item.qty || item.quantity, 1)
+                                    )}
+                                  </td>
+                                  <td>
+                                    <small className="text-muted">
+                                      {safe(item.unit)}
+                                    </small>
+                                  </td>
+                                  <td>
+                                    {showControls ? (
+                                      <input
+                                        type="number"
+                                        className="form-control form-control-sm"
+                                        style={{ width: "120px" }}
+                                        min="0"
+                                        step="0.01"
+                                        value={
+                                          item.priceRub ||
+                                          item.unitPriceRub ||
+                                          item.price ||
+                                          item.basePrice ||
+                                          0
+                                        }
+                                        onChange={(e) =>
+                                          handlePriceChange(
+                                            item.sku,
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                    ) : (
+                                      fmtMoney(
+                                        item.priceRub ||
+                                          item.unitPriceRub ||
+                                          item.price ||
+                                          item.basePrice
+                                      )
+                                    )}
+                                  </td>
+                                  <td>
+                                    {(() => {
+                                      const workCost = getWorkCostForItem(
+                                        item.sku
+                                      );
+                                      const qty =
+                                        item.qty || item.quantity || 1;
+                                      const totalWorkCost = workCost * qty;
+                                      return totalWorkCost > 0
+                                        ? fmtMoney(totalWorkCost)
+                                        : "-";
+                                    })()}
+                                  </td>
+                                  {showControls && (
+                                    <td className="text-end">
+                                      <button
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() =>
+                                          handleRemoveBomItem(item.sku)
+                                        }
+                                        title="Удалить"
+                                        style={{
+                                          padding: "0.15rem 0.4rem",
+                                          fontSize: "0.7rem",
+                                        }}
+                                      >
+                                        <i className="bi bi-trash"></i>
+                                      </button>
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
                           </tbody>
                           <tfoot className="table-light">
                             <tr>
@@ -1061,7 +1314,10 @@ export default function CreateSesButton({ id, cpData }) {
                     </div>
                     {localServicesData && localServicesData.length > 0 ? (
                       <div className="table-responsive">
-                        <table className="table table-sm table-striped align-middle" style={{ fontSize: "0.75rem" }}>
+                        <table
+                          className="table table-sm table-striped align-middle"
+                          style={{ fontSize: "0.75rem" }}
+                        >
                           <thead className="table-light">
                             <tr>
                               <th>Наименование</th>
@@ -1069,32 +1325,47 @@ export default function CreateSesButton({ id, cpData }) {
                               <th>Количество</th>
                               <th>Цена за единицу</th>
                               <th>Сумма</th>
-                              <th style={{ width: "80px" }} className="text-end">Действия</th>
+                              <th
+                                style={{ width: "80px" }}
+                                className="text-end"
+                              >
+                                Действия
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
                             {localServicesData.map((item, index) => {
                               const qty = parseFloat(item.quantity || 1);
-                              const price = parseFloat(item.price || item.basePrice || 0);
-                              
+                              const price = parseFloat(
+                                item.price || item.basePrice || 0
+                              );
+
                               // Если цена меньше 1, это процент от БАЗОВОЙ стоимости СЭС
                               const isPercentage = price >= 0 && price < 1;
                               let sum;
                               if (isPercentage) {
                                 // Базовая стоимость СЭС = оборудование + монтаж (без услуг)
-                                const equipmentCost = calculateTotal(localBomData || []);
-                                const installationCost = calculateInstallationCost();
-                                const baseSESCost = equipmentCost + installationCost;
+                                const equipmentCost = calculateTotal(
+                                  localBomData || []
+                                );
+                                const installationCost =
+                                  calculateInstallationCost();
+                                const baseSESCost =
+                                  equipmentCost + installationCost;
                                 // Процент считается от базовой стоимости СЭС
                                 sum = qty * (price * baseSESCost);
                               } else {
                                 sum = qty * price;
                               }
-                              
+
                               return (
                                 <tr key={item.sku || index}>
                                   <td>{safe(item.name || item.title)}</td>
-                                  <td><small className="text-muted">{safe(item.sku)}</small></td>
+                                  <td>
+                                    <small className="text-muted">
+                                      {safe(item.sku)}
+                                    </small>
+                                  </td>
                                   <td>
                                     <input
                                       type="number"
@@ -1114,7 +1385,8 @@ export default function CreateSesButton({ id, cpData }) {
                                   <td>
                                     {isPercentage ? (
                                       <span className="badge bg-info">
-                                        {(price * 100).toFixed(0)}% от стоимости СЭС
+                                        {(price * 100).toFixed(0)}% от стоимости
+                                        СЭС
                                       </span>
                                     ) : (
                                       <input
@@ -1137,9 +1409,14 @@ export default function CreateSesButton({ id, cpData }) {
                                   <td className="text-end">
                                     <button
                                       className="btn btn-sm btn-outline-danger"
-                                      onClick={() => handleRemoveServiceItem(item.sku)}
+                                      onClick={() =>
+                                        handleRemoveServiceItem(item.sku)
+                                      }
                                       title="Удалить"
-                                      style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                                      style={{
+                                        padding: "0.15rem 0.4rem",
+                                        fontSize: "0.7rem",
+                                      }}
                                     >
                                       <i className="bi bi-trash"></i>
                                     </button>
@@ -1151,7 +1428,11 @@ export default function CreateSesButton({ id, cpData }) {
                           <tfoot className="table-light">
                             <tr>
                               <th colSpan="4">Итого по услугам:</th>
-                              <th>{fmtMoney(calculateServicesTotal(localServicesData))}</th>
+                              <th>
+                                {fmtMoney(
+                                  calculateServicesTotal(localServicesData)
+                                )}
+                              </th>
                               <th></th>
                             </tr>
                           </tfoot>
@@ -1160,7 +1441,8 @@ export default function CreateSesButton({ id, cpData }) {
                     ) : (
                       <div className="alert alert-info">
                         <i className="bi bi-info-circle me-2"></i>
-                        Услуги пока не добавлены. Нажмите кнопку выше для добавления.
+                        Услуги пока не добавлены. Нажмите кнопку выше для
+                        добавления.
                       </div>
                     )}
                   </div>
@@ -1172,12 +1454,16 @@ export default function CreateSesButton({ id, cpData }) {
                     <h6 className="mb-3">Стоимость монтажа СЭС</h6>
                     {bomToDisplay && bomToDisplay.length > 0 ? (
                       (() => {
-                        const totalInstallationCost = calculateInstallationCost();
+                        const totalInstallationCost =
+                          calculateInstallationCost();
                         const sesPower = parseFloat(cpData?.sesPower || 0);
 
                         return (
                           <div className="table-responsive">
-                            <table className="table table-sm table-striped align-middle" style={{ fontSize: "0.75rem" }}>
+                            <table
+                              className="table table-sm table-striped align-middle"
+                              style={{ fontSize: "0.75rem" }}
+                            >
                               <thead className="table-light">
                                 <tr>
                                   <th>Наименование</th>
@@ -1187,11 +1473,13 @@ export default function CreateSesButton({ id, cpData }) {
                               <tbody>
                                 <tr>
                                   <td>
-                                    Общая стоимость монтажа комплекта СЭС мощностью{" "}
-                                    <strong>{sesPower}</strong> кВт
+                                    Общая стоимость монтажа комплекта СЭС
+                                    мощностью <strong>{sesPower}</strong> кВт
                                   </td>
                                   <td className="text-end">
-                                    <strong>{fmtMoney(totalInstallationCost)}</strong>
+                                    <strong>
+                                      {fmtMoney(totalInstallationCost)}
+                                    </strong>
                                   </td>
                                 </tr>
                               </tbody>
@@ -1244,7 +1532,10 @@ export default function CreateSesButton({ id, cpData }) {
                     {cpData?.transportCosts === "yes" ? (
                       <>
                         <h6 className="mb-3">Транспортные расходы</h6>
-                        <TransportAndTravelTable />
+                        <TransportAndTravelTable
+                          initialData={localTransportData}
+                          onChange={setLocalTransportData}
+                        />
                       </>
                     ) : cpData?.transportCosts === "no" ? (
                       <div className="alert alert-info">
@@ -1273,15 +1564,25 @@ export default function CreateSesButton({ id, cpData }) {
                               <ul className="list-unstyled small">
                                 <li>
                                   <strong>Годовая генерация (1-й год):</strong>{" "}
-                                  {formatNumber(paybackResult.params.annualGenerationYear1)} кВт·ч
+                                  {formatNumber(
+                                    paybackResult.params.annualGenerationYear1
+                                  )}{" "}
+                                  кВт·ч
                                 </li>
                                 <li>
                                   <strong>Тариф (1-й год):</strong>{" "}
-                                  {formatMoney(paybackResult.params.tariffYear1)}/кВт·ч
+                                  {formatMoney(
+                                    paybackResult.params.tariffYear1
+                                  )}
+                                  /кВт·ч
                                 </li>
                                 <li>
                                   <strong>Рост тарифа:</strong>{" "}
-                                  {formatNumber(paybackResult.params.tariffInflationRate * 100)}% в год
+                                  {formatNumber(
+                                    paybackResult.params.tariffInflationRate *
+                                      100
+                                  )}
+                                  % в год
                                 </li>
                                 <li>
                                   <strong>Стоимость СЭС:</strong>{" "}
@@ -1295,7 +1596,10 @@ export default function CreateSesButton({ id, cpData }) {
                                 {paybackResult.paybackReached ? (
                                   <div>
                                     <h5 className="text-success">
-                                      {formatNumber(paybackResult.paybackYearExact)} лет
+                                      {formatNumber(
+                                        paybackResult.paybackYearExact
+                                      )}{" "}
+                                      лет
                                     </h5>
                                     <small className="text-muted">
                                       Срок окупаемости
@@ -1304,7 +1608,8 @@ export default function CreateSesButton({ id, cpData }) {
                                 ) : (
                                   <div>
                                     <h5 className="text-warning">
-                                      Не окупается за {paybackResult.params.yearsHorizon} лет
+                                      Не окупается за{" "}
+                                      {paybackResult.params.yearsHorizon} лет
                                     </h5>
                                     <small className="text-muted">
                                       Экономия недостаточна
@@ -1318,12 +1623,15 @@ export default function CreateSesButton({ id, cpData }) {
                           {paybackResult.paybackReached && (
                             <div className="mt-3">
                               <h6 className="fs-6">
-                                Детальный расчёт за {paybackResult.params.yearsHorizon} лет:
+                                Детальный расчёт за{" "}
+                                {paybackResult.params.yearsHorizon} лет:
                               </h6>
                               <div className="row text-center">
                                 <div className="col-md-3">
                                   <div className="border rounded p-2">
-                                    <strong className="small">Окупаемость</strong>
+                                    <strong className="small">
+                                      Окупаемость
+                                    </strong>
                                     <br />
                                     <span className="text-success fs-6">
                                       {paybackResult.paybackYear} лет
@@ -1333,7 +1641,8 @@ export default function CreateSesButton({ id, cpData }) {
                                 <div className="col-md-3">
                                   <div className="border rounded p-2">
                                     <strong className="small">
-                                      Чистая прибыль за {paybackResult.params.yearsHorizon} лет
+                                      Чистая прибыль за{" "}
+                                      {paybackResult.params.yearsHorizon} лет
                                     </strong>
                                     <br />
                                     <span className="text-success fs-6">
@@ -1343,7 +1652,9 @@ export default function CreateSesButton({ id, cpData }) {
                                 </div>
                                 <div className="col-md-3">
                                   <div className="border rounded p-2">
-                                    <strong className="small">Накопленная экономия</strong>
+                                    <strong className="small">
+                                      Накопленная экономия
+                                    </strong>
                                     <br />
                                     <span className="text-info fs-6">
                                       {formatMoney(paybackResult.totalSavings)}
@@ -1353,13 +1664,17 @@ export default function CreateSesButton({ id, cpData }) {
                                 <div className="col-md-3">
                                   <div className="border rounded p-2">
                                     <strong className="small">
-                                      ROI за {paybackResult.params.yearsHorizon} лет
+                                      ROI за {paybackResult.params.yearsHorizon}{" "}
+                                      лет
                                     </strong>
                                     <br />
                                     <span className="text-primary fs-6">
                                       {formatNumber(
-                                        (paybackResult.netProfit / paybackResult.systemCost) * 100
-                                      )}%
+                                        (paybackResult.netProfit /
+                                          paybackResult.systemCost) *
+                                          100
+                                      )}
+                                      %
                                     </span>
                                   </div>
                                 </div>
@@ -1383,9 +1698,12 @@ export default function CreateSesButton({ id, cpData }) {
                           </h6>
                           <h5 className="text-primary">
                             {fmtMoney(
-                              calculateTotal(bomToDisplay || []) + 
-                              calculateInstallationCost() + 
-                              calculateServicesTotal(localServicesData || [])
+                              calculateTotal(bomToDisplay || []) +
+                                calculateInstallationCost() +
+                                calculateServicesTotal(
+                                  localServicesData || []
+                                ) +
+                                calculateTransportCost()
                             )}
                           </h5>
                         </div>
@@ -1419,11 +1737,36 @@ export default function CreateSesButton({ id, cpData }) {
 
                         setIsSaving(true);
                         try {
-                          await saveBomAndServicesAction(
-                            id,
-                            localBomData || [],
+                          // Обогащаем bomData стоимостью работ перед сохранением
+                          const enrichedBomData =
+                            await enrichBomDataWithWorkCost(localBomData || []);
+
+                          // Рассчитываем общую стоимость проекта
+                          const equipmentCost = calculateTotal(enrichedBomData);
+                          const installationCost = calculateInstallationCost();
+                          const servicesCost = calculateServicesTotal(
                             localServicesData || []
                           );
+                          const transportCost = calculateTransportCost();
+                          const totalCost =
+                            equipmentCost +
+                            installationCost +
+                            servicesCost +
+                            transportCost;
+
+                          await saveBomAndServicesAction(
+                            id,
+                            enrichedBomData,
+                            localServicesData || [],
+                            localTransportData,
+                            totalCost
+                          );
+
+                          // Сохраняем результаты расчета окупаемости
+                          if (paybackResult) {
+                            await savePaybackDataAction(id, paybackResult);
+                          }
+
                           showToast.success("КП сгенерирован!");
                           router.push(`/preview?id=${id}`);
                         } catch (error) {
@@ -1475,7 +1818,6 @@ export default function CreateSesButton({ id, cpData }) {
           onSelect={handleAddService}
         />
       )}
-
 
       <style jsx>{`
         .loading-overlay {

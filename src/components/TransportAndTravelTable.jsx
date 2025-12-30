@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 // ==================== КОНСТАНТЫ ДЛЯ РАСЧЁТОВ ====================
 const VAT_RATE = 0.2;
@@ -18,12 +18,15 @@ const formatMoney = (value) => {
   });
 };
 
-export default function TransportAndTravelTable() {
+export default function TransportAndTravelTable({ 
+  initialData = null, 
+  onChange = null 
+}) {
   // ==================== STATE: ВХОДНЫЕ ДАННЫЕ ====================
-  const [employeesCount, setEmployeesCount] = useState(2);      // Количество сотрудников
-  const [daysOnSite, setDaysOnSite] = useState(15);             // Количество дней на объекте
-  const [daysOnRoad, setDaysOnRoad] = useState(2);              // Количество дней в дороге
-  const [distanceOneWayKm, setDistanceOneWayKm] = useState(500); // Расстояние до объекта (в одну сторону)
+  const [employeesCount, setEmployeesCount] = useState(initialData?.employeesCount || 2);
+  const [daysOnSite, setDaysOnSite] = useState(initialData?.daysOnSite || 15);
+  const [daysOnRoad, setDaysOnRoad] = useState(initialData?.daysOnRoad || 2);
+  const [distanceOneWayKm, setDistanceOneWayKm] = useState(initialData?.distanceOneWayKm || 500);
 
   // Валидация: не позволять отрицательные значения
   const handleChange = (setter, isInteger = false) => (e) => {
@@ -96,6 +99,20 @@ export default function TransportAndTravelTable() {
       totalVat,
     };
   }, [employeesCount, daysOnSite, daysOnRoad, distanceOneWayKm]);
+
+  // Передаем данные наружу через onChange
+  useEffect(() => {
+    if (onChange) {
+      onChange({
+        employeesCount,
+        daysOnSite,
+        daysOnRoad,
+        distanceOneWayKm,
+        totalCost: calculations.totalVat, // используем стоимость с НДС
+        totalCostNoVat: calculations.totalNoVat,
+      });
+    }
+  }, [employeesCount, daysOnSite, daysOnRoad, distanceOneWayKm, calculations, onChange]);
 
   return (
     <div className="transport-travel-calculator">

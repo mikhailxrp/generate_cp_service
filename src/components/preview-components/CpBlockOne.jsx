@@ -1,192 +1,98 @@
 "use client";
 import "./preview-components.css";
+import { useState, useEffect } from "react";
 
 export default function CpBlockOne({
   clientName,
   clientType,
   sesPower,
   systemType,
+  engineerName,
+  clientAddress,
 }) {
+  const [displayAddress, setDisplayAddress] = useState("");
+
+  useEffect(() => {
+    async function processAddress() {
+      if (!clientAddress) {
+        setDisplayAddress("");
+        return;
+      }
+
+      // Проверяем, является ли адрес координатами (формат: "lat,lng" или объект)
+      const isCoordinates = (addr) => {
+        if (typeof addr === "string") {
+          const parts = addr.split(",").map((p) => p.trim());
+          if (parts.length === 2) {
+            const lat = parseFloat(parts[0]);
+            const lng = parseFloat(parts[1]);
+            return (
+              !isNaN(lat) &&
+              !isNaN(lng) &&
+              Math.abs(lat) <= 90 &&
+              Math.abs(lng) <= 180
+            );
+          }
+        }
+        return false;
+      };
+
+      if (isCoordinates(clientAddress)) {
+        // Это координаты - получаем адрес через OpenStreetMap
+        try {
+          const [lat, lng] = clientAddress.split(",").map((p) => p.trim());
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            setDisplayAddress(data.display_name || clientAddress);
+          } else {
+            setDisplayAddress(clientAddress);
+          }
+        } catch (error) {
+          console.error("Ошибка геокодирования:", error);
+          setDisplayAddress(clientAddress);
+        }
+      } else {
+        // Это уже строка адреса
+        setDisplayAddress(clientAddress);
+      }
+    }
+
+    processAddress();
+  }, [clientAddress]);
+
   return (
-    <div className="cp-block-one preview-block-container">
-      {/* Main hero card */}
-      <div className="hero-card">
-        {/* Background image container */}
-        <div className="hero-image-container">
+    <div className="cp-block cp-block-one">
+      <div className="cp-block-one-wrapper">
+        {/* Шапка с заголовком и логотипом */}
+        <div className="cp-block-one-wrapper__header">
+          <div className="cp-block-one-wrapper__title">
+            <div className="cp-block-one-wrapper__title-line-1">
+              ЦИФРОВОЙ АУДИТ
+            </div>
+            <div className="cp-block-one-wrapper__title-line-2">
+              ЭНЕРГОЭФФЕКТИВНОСТИ
+            </div>
+          </div>
           <img
-            src="/image/herro-solar-panel.jpg"
-            alt="Solar panel installation"
-            className="preview-image-hero"
+            src="/brand/logo.svg"
+            alt="Логотип"
+            className="cp-block-one-wrapper__logo"
           />
         </div>
 
-        {/* Content area with gradient overlay */}
-        <div className="content-area">
-          <div className="content-container">
-            <h1 className="preview-title-main">
-              Технико-коммерческое предложение
-            </h1>
-            <h3
-              className="preview-title-section"
-              style={{ marginBottom: "15px" }}
-            >
-              {systemType === "network"
-                ? "Сетевая"
-                : systemType === "hybrid"
-                ? "Гибридная"
-                : "Автономная"}{" "}
-              <span className="preview-badge">
-                СЭС {Math.round(sesPower)} кВт
-              </span>{" "}
-              {clientType === "B2B"
-                ? `для компнаии ${clientName}`
-                : `для ${clientName}`}
-            </h3>
-            {/* <h4 className="preview-title-section">
-              
-            </h4> */}
-            <p className="preview-text-description">
-              Профессиональное решение для вашего объекта с учетом всех
-              технических требований и экономической эффективности проекта.
-            </p>
-            <div className="features-list">
-              <div className="feature-item">
-                <span className="feature-icon preview-accent-green">✓</span>
-                <span className="preview-text-feature">
-                  Индивидуальный расчет
-                </span>
-              </div>
-              <div className="feature-item">
-                <span className="feature-icon preview-accent-green">✓</span>
-                <span className="preview-text-feature">Гарантия качества</span>
-              </div>
-              <div className="feature-item">
-                <span className="feature-icon preview-accent-green">✓</span>
-                <span className="preview-text-feature">
-                  Полное сопровождение
-                </span>
-              </div>
-            </div>
-          </div>
+        {displayAddress && (
+          <div className="cp-block-one-wrapper__address">{displayAddress}</div>
+        )}
+
+        {/* Подпись разработчика */}
+        <div className="cp-block-one-wrapper__footer">
+          Разработал инженер: {engineerName || ""}
         </div>
-
-        {/* Green accent bar */}
-        <div className="accent-bar"></div>
       </div>
-
-      <style jsx>{`
-        .decorative-bg-shape {
-          position: absolute;
-          top: -50px;
-          right: -100px;
-          width: 300px;
-          height: 200px;
-          background: #ffffff;
-          border-radius: 50% 30% 70% 40%;
-          z-index: 1;
-          opacity: 0.8;
-        }
-
-        .hero-card {
-          position: relative;
-          display: flex;
-          background: #ffffff;
-          border-radius: 12px;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-          overflow: hidden;
-          min-height: 400px;
-          z-index: 2;
-          transition: all 0.3s ease;
-        }
-
-        .hero-card:hover {
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-          transform: scale(1.01);
-        }
-
-        .hero-image-container {
-          position: relative;
-          flex: 0 0 50%;
-          overflow: hidden;
-        }
-
-        .content-area {
-          position: relative;
-          flex: 0 0 50%;
-          background: linear-gradient(
-            to right,
-            rgba(255, 255, 255, 0.95) 0%,
-            rgba(255, 255, 255, 0.75) 100%
-          );
-          display: flex;
-          align-items: center;
-          padding: 32px;
-        }
-
-        .content-container {
-          max-width: 100%;
-        }
-
-        .features-list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .feature-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .feature-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .accent-bar {
-          position: absolute;
-          right: 50%;
-          top: 0;
-          bottom: 0;
-          width: 6px;
-          background: #009639;
-          border-radius: 0 8px 8px 0;
-          z-index: 3;
-        }
-
-        /* Responsive design */
-        @media (max-width: 1023px) {
-          .hero-card {
-            flex-direction: column;
-            min-height: auto;
-          }
-
-          .hero-image-container {
-            flex: 0 0 300px;
-          }
-
-          .content-area {
-            flex: 1;
-            padding: 24px;
-          }
-
-          .accent-bar {
-            right: 0;
-            top: auto;
-            bottom: 0;
-            width: 100%;
-            height: 6px;
-            border-radius: 8px 8px 0 0;
-          }
-        }
-      `}</style>
     </div>
   );
 }

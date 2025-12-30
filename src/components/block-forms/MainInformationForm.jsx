@@ -90,7 +90,8 @@ export default function MainInformationForm({ step, id }) {
       const newFormData = { ...formData, [name]: value };
       const availableOptions = getDirectionOptions(value);
       // Для flat_east-west всегда ставим 2
-      newFormData.directions_count = value === "flat_east-west" ? "2" : availableOptions[0].value;
+      newFormData.directions_count =
+        value === "flat_east-west" ? "2" : availableOptions[0].value;
       setFormData(newFormData);
     } else if (name === "client_type") {
       // При изменении типа клиента сбрасываем класс клиента
@@ -279,8 +280,8 @@ export default function MainInformationForm({ step, id }) {
             <option value="carpot_east-west">Карпот(восток-запад)</option>
             <option value="canopy">Навес</option>
             <option value="ground">Наземка</option>
-            <option value="facade">Фасад</option>
-            <option value="other">Другое</option>
+            {/* <option value="facade">Фасад</option> */}
+            {/* <option value="other">Другое</option> */}
           </select>
         </div>
 

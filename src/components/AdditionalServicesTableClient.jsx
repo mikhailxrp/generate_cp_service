@@ -81,13 +81,13 @@ export default function AdditionalServicesTableClient({ rows: initialRows }) {
   // Функция для форматирования цены (проценты выводятся как есть)
   const formatPrice = (priceRub) => {
     if (!priceRub) return "-";
-    
+
     // Проверяем, является ли значение процентом (строка с %)
     const priceStr = String(priceRub);
     if (priceStr.includes("%")) {
       return priceStr;
     }
-    
+
     // Если число, проверяем диапазон
     const priceNum = Number(priceRub);
     if (!isNaN(priceNum)) {
@@ -95,7 +95,7 @@ export default function AdditionalServicesTableClient({ rows: initialRows }) {
       if (priceNum > 0 && priceNum < 1) {
         return `${(priceNum * 100).toFixed(0)}%`;
       }
-      
+
       // Иначе форматируем как валюту
       return new Intl.NumberFormat("ru-RU", {
         style: "currency",
@@ -104,7 +104,7 @@ export default function AdditionalServicesTableClient({ rows: initialRows }) {
         maximumFractionDigits: 2,
       }).format(priceNum);
     }
-    
+
     return priceStr;
   };
 
@@ -398,12 +398,12 @@ export default function AdditionalServicesTableClient({ rows: initialRows }) {
       for (const r of Array.from(uniqueRecords.values())) {
         const sku = (r.SKU ?? r.sku ?? "").trim();
         const title = (
-          r.Наименование ?? 
-          r["Полное_наименование"] ?? 
-          r.title ?? 
+          r.Наименование ??
+          r["Полное_наименование"] ??
+          r.title ??
           ""
         ).trim();
-        
+
         const rawPrice = r.Цена_базовая ?? r.Цена ?? r.priceRub ?? r.price_rub;
         const priceRub = toPrice(rawPrice);
 
@@ -432,12 +432,14 @@ export default function AdditionalServicesTableClient({ rows: initialRows }) {
             (r.Ссылка_на_спеку ?? r.specUrl ?? r.spec_url ?? "").trim() || null,
           comment: (r.Комментарий ?? r.comment ?? "").trim() || null,
           attrs: {
-            "Стоимость_работ_1": r["Стоимость_работ_1"] || r["Стоимость работ 1"] || "",
-            "Стоимость_работ_2": r["Стоимость_работ_2"] || r["Стоимость работ 2"] || "",
-            "Бренд": r["Бренд"] || null,
-            "Категория": r["Категория"] || null,
-            "Сервис24_7": r["Сервис24_7"] || null,
-            "Полное_наименование": r["Полное_наименование"] || null,
+            Стоимость_работ_1:
+              r["Стоимость_работ_1"] || r["Стоимость работ 1"] || "",
+            Стоимость_работ_2:
+              r["Стоимость_работ_2"] || r["Стоимость работ 2"] || "",
+            Бренд: r["Бренд"] || null,
+            Категория: r["Категория"] || null,
+            Сервис24_7: r["Сервис24_7"] || null,
+            Полное_наименование: r["Полное_наименование"] || null,
           },
           isActive: 1,
         };
@@ -584,7 +586,13 @@ export default function AdditionalServicesTableClient({ rows: initialRows }) {
                     </td>
                     <td>{item.title || "-"}</td>
                     <td>{formatPrice(item.priceRub)}</td>
-                    <td>{workCost !== "-" && workCost !== null && workCost !== undefined ? formatPrice(workCost) : "-"}</td>
+                    <td>
+                      {workCost !== "-" &&
+                      workCost !== null &&
+                      workCost !== undefined
+                        ? formatPrice(workCost)
+                        : "-"}
+                    </td>
                   </tr>
                 );
               })}
@@ -657,4 +665,3 @@ export default function AdditionalServicesTableClient({ rows: initialRows }) {
     </>
   );
 }
-

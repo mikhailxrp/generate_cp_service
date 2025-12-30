@@ -20,7 +20,7 @@ export default function EquipmentTabs({ initialData }) {
     { id: "uzips", label: "Узип", typeCode: "uzip" },
     { id: "elpanels", label: "Распред. Щиты", typeCode: "panel_ac" },
     { id: "lotki", label: "Лотки", typeCode: "lotki" },
-    { id: "krep", label: "Крепеж", typeCode: "mount" },
+    { id: "krep", label: "Метизы", typeCode: "mount" },
     { id: "cpo_cs", label: "Лотки CPO90/CS90", typeCode: "cpo90" },
     { id: "smartmeters", label: "Счетчики", typeCode: "smartmeter" },
     { id: "transformers", label: "Трансформаторы", typeCode: "ct" },

@@ -22,7 +22,10 @@ export default function EditEquipmentModal({
         typeCode: equipment.typeCode || "",
         priceRub: equipment.priceRub || "",
         currency: equipment.currency || "RUB",
-        stock: equipment.stock !== null && equipment.stock !== undefined ? equipment.stock : "",
+        stock:
+          equipment.stock !== null && equipment.stock !== undefined
+            ? equipment.stock
+            : "",
         warehouseRegion: equipment.warehouseRegion || "",
         leadDays: equipment.leadDays || "",
         priority: equipment.priority || 0,

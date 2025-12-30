@@ -156,6 +156,9 @@ export const mainInformation = mysqlTable("main_information", {
   // Данные таблиц из CreateSesButton
   bomData: json("bom_data"), // данные таблицы "Оборудование" (Bill of Materials)
   servicesData: json("services_data"), // данные таблицы "Услуги"
+  paybackData: json("payback_data"), // результаты расчета окупаемости
+  transportData: json("transport_data"), // параметры транспортных расходов (сотрудники, дни, расстояние)
+  totalCost: decimal("total_cost", { precision: 12, scale: 2 }), // общая стоимость проекта (оборудование + монтаж + услуги + транспорт)
 
   createdAt: timestamp("created_at")
     .notNull()
