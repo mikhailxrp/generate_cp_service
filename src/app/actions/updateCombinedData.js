@@ -8,7 +8,8 @@ export async function updateCombinedDataAction(
   id,
   combinedData,
   currentStep,
-  totalAnnualGeneration = null
+  totalAnnualGeneration = null,
+  solarParams = null
 ) {
   const db = getDb();
 
@@ -22,6 +23,25 @@ export async function updateCombinedDataAction(
   // Добавляем totalAnnualGeneration если оно передано
   if (totalAnnualGeneration !== null) {
     updateData.totalAnnualGeneration = totalAnnualGeneration;
+  }
+
+  // Добавляем параметры солнечной радиации если они переданы
+  if (solarParams) {
+    if (solarParams.angle !== undefined && solarParams.angle !== null && solarParams.angle !== "") {
+      updateData.solarAngle = solarParams.angle;
+    }
+    if (solarParams.aspect !== undefined && solarParams.aspect !== null && solarParams.aspect !== "") {
+      updateData.solarAspect = solarParams.aspect;
+    }
+    if (solarParams.lat !== undefined && solarParams.lat !== null && solarParams.lat !== "") {
+      updateData.solarLat = solarParams.lat;
+    }
+    if (solarParams.lon !== undefined && solarParams.lon !== null && solarParams.lon !== "") {
+      updateData.solarLon = solarParams.lon;
+    }
+    if (solarParams.peakpower !== undefined && solarParams.peakpower !== null && solarParams.peakpower !== "") {
+      updateData.solarPeakpower = solarParams.peakpower;
+    }
   }
 
   await db

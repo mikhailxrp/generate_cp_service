@@ -138,6 +138,13 @@ export const mainInformation = mysqlTable("main_information", {
     scale: 3,
   }),
 
+  // Solar radiation parameters
+  solarAngle: decimal("solar_angle", { precision: 5, scale: 2 }), // угол наклона панелей
+  solarAspect: decimal("solar_aspect", { precision: 5, scale: 2 }), // азимут
+  solarLat: decimal("solar_lat", { precision: 10, scale: 7 }), // широта
+  solarLon: decimal("solar_lon", { precision: 10, scale: 7 }), // долгота
+  solarPeakpower: decimal("solar_peakpower", { precision: 10, scale: 2 }), // пиковая мощность
+
   // Fields from InformationForm.jsx
   essBattery: varchar("ess_battery", { length: 100 }),
   networkPhazes: varchar("network_phazes", { length: 10 }),
@@ -159,6 +166,7 @@ export const mainInformation = mysqlTable("main_information", {
   paybackData: json("payback_data"), // результаты расчета окупаемости
   transportData: json("transport_data"), // параметры транспортных расходов (сотрудники, дни, расстояние)
   totalCost: decimal("total_cost", { precision: 12, scale: 2 }), // общая стоимость проекта (оборудование + монтаж + услуги + транспорт)
+  summary: text("summary"), // итоговая информация от API create-ses-v2
 
   createdAt: timestamp("created_at")
     .notNull()

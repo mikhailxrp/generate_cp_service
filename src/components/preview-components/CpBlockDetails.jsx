@@ -117,21 +117,30 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                             {yearData.tariff.toFixed(2)}
                           </td>
                           <td className="cp-details-table__cell">
-                            {yearData.yearlyGeneration.toLocaleString("ru-RU")}
+                            {Math.round(
+                              yearData.yearlyGeneration
+                            ).toLocaleString("ru-RU")}
                           </td>
                           <td className="cp-details-table__cell">
-                            {yearData.yearlySavings.toLocaleString("ru-RU")}
+                            {Math.round(yearData.yearlySavings).toLocaleString(
+                              "ru-RU"
+                            )}
                           </td>
                           <td className="cp-details-table__cell cp-details-table__cell--cumulative">
                             {isPositiveCashflow && isPaybackYear ? (
                               <>
-                                + {netCashflow.toLocaleString("ru-RU")}{" "}
+                                +{" "}
+                                {Math.round(netCashflow).toLocaleString(
+                                  "ru-RU"
+                                )}{" "}
                                 <span className="cp-details-table__payback-badge">
                                   Окупаемость
                                 </span>
                               </>
                             ) : (
-                              yearData.cumulativeSavings.toLocaleString("ru-RU")
+                              Math.round(
+                                yearData.cumulativeSavings
+                              ).toLocaleString("ru-RU")
                             )}
                           </td>
                         </tr>
@@ -150,15 +159,23 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                     </td>
                     <td className="cp-details-table__footer-cell">...</td>
                     <td className="cp-details-table__footer-cell">
-                      {paybackData.yearly
-                        .reduce((sum, y) => sum + y.yearlyGeneration, 0)
-                        .toLocaleString("ru-RU")}
+                      {Math.round(
+                        paybackData.yearly.reduce(
+                          (sum, y) => sum + y.yearlyGeneration,
+                          0
+                        )
+                      ).toLocaleString("ru-RU")}
                     </td>
                     <td className="cp-details-table__footer-cell">
-                      {paybackData.totalSavings.toLocaleString("ru-RU")}
+                      {Math.round(paybackData.totalSavings).toLocaleString(
+                        "ru-RU"
+                      )}
                     </td>
                     <td className="cp-details-table__footer-cell cp-details-table__footer-cell--profit">
-                      + {paybackData.netProfit.toLocaleString("ru-RU")}
+                      +{" "}
+                      {Math.round(paybackData.netProfit).toLocaleString(
+                        "ru-RU"
+                      )}
                     </td>
                   </tr>
                 </tfoot>
@@ -323,7 +340,7 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                               fill="#000"
                               textAnchor="middle"
                             >
-                              Окупаемость (РР) СНЭ
+                              Окупаемость
                             </text>
                           </svg>
                         </div>
@@ -333,9 +350,9 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                           <div className="cp-payback-chart__cost-amount">
                             {(totalCost / 1000000).toFixed(1)} млн. ₽
                           </div>
-                          <div className="cp-payback-chart__cost-label">
+                          {/* <div className="cp-payback-chart__cost-label">
                             Стоимость СНЭ
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     </div>

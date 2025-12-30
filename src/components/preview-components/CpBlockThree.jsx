@@ -7,6 +7,7 @@ export default function CpBlockThree({
   bomData,
   combinedData,
   totalAnnualGeneration,
+  solarAngle,
 }) {
   const typeAreaMap = {
     flat_south: "Крышная",
@@ -23,8 +24,6 @@ export default function CpBlockThree({
     ground: "Наземная",
     facade: "Фасадная",
   };
-
-  console.log("combinedData", combinedData);
 
   const getTypeAreaText = () => {
     if (!typeArea) return "";
@@ -59,18 +58,6 @@ export default function CpBlockThree({
 
     // Форматируем с пробелами как разделитель тысяч
     return Math.round(totalArea).toLocaleString("ru-RU");
-  };
-
-  const getOrientationAndAngle = () => {
-    if (!typeArea) return "Юг, 10°";
-
-    // Для восток-запад ориентаций
-    if (typeArea === "flat_east-west" || typeArea === "carpot_east-west") {
-      return "Восток-Запад, 10°";
-    }
-
-    // Для всех остальных случаев
-    return "Юг, 10°";
   };
 
   const getPanelPower = () => {
@@ -263,11 +250,9 @@ export default function CpBlockThree({
                 <div className="cp-params-row__value">{getTypeAreaText()}</div>
               </div>
               <div className="cp-params-row">
-                <div className="cp-params-row__label">
-                  Ориентация и угол наклона
-                </div>
+                <div className="cp-params-row__label">Угол наклона</div>
                 <div className="cp-params-row__value">
-                  {getOrientationAndAngle()}
+                  {Math.round(solarAngle)}°
                 </div>
               </div>
               <div className="cp-params-row">

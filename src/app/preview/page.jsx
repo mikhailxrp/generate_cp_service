@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import Header from "@/components/header/Header";
@@ -37,6 +37,7 @@ import CpBlockContact from "@/components/preview-components/CpBlockContact";
 
 function PreviewContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const id = searchParams.get("id");
   const [cpData, setCpData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,10 +45,24 @@ function PreviewContent() {
   const [userData, setUserData] = useState(null);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [archiveData, setArchiveData] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     async function fetchData() {
       if (!id) {
+        // Если нет ID, загружаем архив
+        try {
+          const archiveResponse = await fetch("/api/main-information");
+          if (archiveResponse.ok) {
+            const archiveResult = await archiveResponse.json();
+            if (archiveResult.success) {
+              setArchiveData(archiveResult.data);
+            }
+          }
+        } catch (error) {
+          console.error("Ошибка при получении архива:", error);
+        }
         setLoading(false);
         return;
       }
@@ -119,6 +134,8 @@ function PreviewContent() {
       paybackData,
       totalCost,
       transportData,
+      solarAngle,
+      summary,
     } = cpData;
 
     setExtractedData({
@@ -150,8 +167,71 @@ function PreviewContent() {
       paybackData,
       totalCost,
       transportData,
+      solarAngle,
+      summary,
     });
   }, [cpData]);
+
+  // Функция группировки по датам
+  const groupByDate = (data) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    const monthAgo = new Date(today);
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+
+    const groups = {
+      today: [],
+      yesterday: [],
+      week: [],
+      month: [],
+      older: [],
+    };
+
+    data.forEach((item) => {
+      const itemDate = new Date(item.createdAt);
+      itemDate.setHours(0, 0, 0, 0);
+
+      if (itemDate.getTime() === today.getTime()) {
+        groups.today.push(item);
+      } else if (itemDate.getTime() === yesterday.getTime()) {
+        groups.yesterday.push(item);
+      } else if (itemDate >= weekAgo) {
+        groups.week.push(item);
+      } else if (itemDate >= monthAgo) {
+        groups.month.push(item);
+      } else {
+        groups.older.push(item);
+      }
+    });
+
+    return groups;
+  };
+
+  const groupedData = groupByDate(archiveData);
+
+  const getFilteredData = () => {
+    switch (activeTab) {
+      case "today":
+        return groupedData.today;
+      case "yesterday":
+        return groupedData.yesterday;
+      case "week":
+        return groupedData.week;
+      case "month":
+        return groupedData.month;
+      case "older":
+        return groupedData.older;
+      default:
+        return archiveData;
+    }
+  };
 
   const generatePdf = async () => {
     setGeneratingPdf(true);
@@ -256,14 +336,233 @@ function PreviewContent() {
         style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
       >
         <Header />
-        <div
-          className="container"
-          style={{ flex: 1, display: "flex", alignItems: "center" }}
-        >
-          <div className="row justify-content-center w-100">
-            <div className="col-lg-10 text-center">
-              <Link href="/" className="btn btn-primary btn-lg">
-                Создать КП
+        <div className="container my-5" style={{ flex: 1 }}>
+          <h2 className="text-center mb-4">Архив коммерческих предложений</h2>
+
+          {/* Вкладки фильтрации */}
+          <div className="mb-4">
+            <ul className="nav nav-pills justify-content-center flex-wrap gap-2">
+              <li className="nav-item">
+                <button
+                  className={`nav-link ${activeTab === "all" ? "active" : ""}`}
+                  onClick={() => setActiveTab("all")}
+                >
+                  Все ({archiveData.length})
+                </button>
+              </li>
+              {groupedData.today.length > 0 && (
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
+                      activeTab === "today" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("today")}
+                  >
+                    Сегодня ({groupedData.today.length})
+                  </button>
+                </li>
+              )}
+              {groupedData.yesterday.length > 0 && (
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
+                      activeTab === "yesterday" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("yesterday")}
+                  >
+                    Вчера ({groupedData.yesterday.length})
+                  </button>
+                </li>
+              )}
+              {groupedData.week.length > 0 && (
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
+                      activeTab === "week" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("week")}
+                  >
+                    Неделя ({groupedData.week.length})
+                  </button>
+                </li>
+              )}
+              {groupedData.month.length > 0 && (
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
+                      activeTab === "month" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("month")}
+                  >
+                    Месяц ({groupedData.month.length})
+                  </button>
+                </li>
+              )}
+              {groupedData.older.length > 0 && (
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
+                      activeTab === "older" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("older")}
+                  >
+                    Старые ({groupedData.older.length})
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Список КП */}
+          <div className="row g-4 mb-5">
+            {getFilteredData().length === 0 ? (
+              <div className="col-12 text-center text-muted py-5">
+                <svg
+                  width="64"
+                  height="64"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mb-3"
+                  style={{ opacity: 0.3 }}
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                <p className="fs-5">Нет КП в этой категории</p>
+              </div>
+            ) : (
+              getFilteredData().map((item) => (
+                <div key={item.id} className="col-md-6 col-lg-4">
+                  <div
+                    className="card h-100 shadow-sm"
+                    style={{
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      border: "1px solid #e0e0e0",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-8px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 12px 24px rgba(0,0,0,0.15)";
+                      e.currentTarget.style.borderColor = "#0d6efd";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow =
+                        "0 2px 8px rgba(0,0,0,0.1)";
+                      e.currentTarget.style.borderColor = "#e0e0e0";
+                    }}
+                    onClick={() => {
+                      window.location.href = `/preview?id=${item.id}`;
+                    }}
+                  >
+                    <div className="card-body d-flex flex-column">
+                      <h5
+                        className="card-title text-truncate mb-3"
+                        title={item.clientName}
+                      >
+                        {item.clientName}
+                      </h5>
+                      <p className="card-text text-muted small mb-3">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ marginRight: "6px", marginTop: "-2px" }}
+                        >
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                          <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        {item.clientAddress}
+                      </p>
+                      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <span
+                          className="badge bg-primary"
+                          style={{ fontSize: "0.85rem" }}
+                        >
+                          ⚡ {item.sesPower} кВт
+                        </span>
+                        <span
+                          className="badge bg-secondary"
+                          style={{ fontSize: "0.85rem" }}
+                        >
+                          {item.systemType === "network"
+                            ? "🔌 Сетевая"
+                            : "🔋 Гибридная"}
+                        </span>
+                      </div>
+                      {item.totalCost && (
+                        <p
+                          className="mb-2 fw-bold text-success"
+                          style={{ fontSize: "1.1rem" }}
+                        >
+                          {Number(item.totalCost).toLocaleString("ru-RU")} ₽
+                        </p>
+                      )}
+                      {item.projectNumber && (
+                        <p className="text-muted small mb-2">
+                          📋 Проект: {item.projectNumber}
+                        </p>
+                      )}
+                      <p className="text-muted small mb-0 mt-auto">
+                        🕐{" "}
+                        {new Date(item.createdAt).toLocaleDateString("ru-RU", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Кнопка создать КП */}
+          <div className="row">
+            <div className="col-12 text-center">
+              <Link
+                href="/"
+                className="btn btn-primary btn-lg"
+                style={{
+                  padding: "14px 40px",
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  borderRadius: "12px",
+                  boxShadow: "0 4px 15px rgba(13, 110, 253, 0.3)",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ marginRight: "8px", marginTop: "-2px" }}
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                Создать новое КП
               </Link>
             </div>
           </div>
@@ -331,6 +630,7 @@ function PreviewContent() {
                   combinedData={extractedData.combinedData}
                   totalAnnualGeneration={extractedData.totalAnnualGeneration}
                   paybackData={extractedData.paybackData}
+                  solarAngle={extractedData.solarAngle}
                 />
                 {/* БЛОК МЕТРИКА И ТЕХНИЧЕМСКИЕ ПАРАМЕТРЫ КОНЕЦ */}
                 {extractedData.dgUnit && <CpBlockMikroGen />}
@@ -340,7 +640,7 @@ function PreviewContent() {
                   paybackData={extractedData.paybackData}
                   totalCost={extractedData.totalCost}
                 />
-                <CpBlockLeasing clientName={extractedData.clientName} />
+                {/* <CpBlockLeasing clientName={extractedData.clientName} /> */}
                 <CpBlockRoadMap />
                 <CpBlockEssg paybackData={extractedData.paybackData} />
                 <CpBlockGuarantees />
@@ -351,6 +651,7 @@ function PreviewContent() {
                   servicesData={extractedData.servicesData}
                   bomData={extractedData.bomData}
                   transportData={extractedData.transportData}
+                  summary={extractedData.summary}
                 />
                 <CpBlockContact userData={userData} />
               </div>
@@ -392,7 +693,12 @@ function PreviewContent() {
             backgroundColor: "rgba(0, 0, 0, 0.5)",
             animation: "fadeIn 0.3s ease-in",
           }}
-          onClick={() => setShowSuccessModal(false)}
+          onClick={() => {
+            setShowSuccessModal(false);
+            setCpData(null);
+            setExtractedData({});
+            router.push("/preview");
+          }}
         >
           <div
             className="modal-dialog modal-dialog-centered"
@@ -463,7 +769,12 @@ function PreviewContent() {
                 </Link>
                 <button
                   className="btn btn-link text-muted mt-3 d-block mx-auto"
-                  onClick={() => setShowSuccessModal(false)}
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    setCpData(null);
+                    setExtractedData({});
+                    router.push("/preview");
+                  }}
                   style={{ textDecoration: "none" }}
                 >
                   Закрыть

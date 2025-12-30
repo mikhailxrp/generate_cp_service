@@ -198,9 +198,24 @@ export default function GraphVisualForm({ step, id, cpData }) {
   const handleGenerateGraph = async () => {
     const combinedData = combineMonthlyDataFlexible(allDirectionsData);
 
+    // Собираем параметры солнечной радиации для сохранения
+    const solarParams = {
+      angle: formData.angle,
+      aspect: formData.aspect,
+      lat: formData.lat,
+      lon: formData.lon,
+      peakpower: formData.peakpower,
+    };
+
     try {
       // Сохраняем данные в базу и переходим на следующий шаг
-      await updateCombinedDataAction(id, combinedData, step);
+      await updateCombinedDataAction(
+        id,
+        combinedData,
+        step,
+        null, // totalAnnualGeneration
+        solarParams // параметры солнечной радиации
+      );
 
       // Сбрасываем массив данных
       setAllDirectionsData([]);

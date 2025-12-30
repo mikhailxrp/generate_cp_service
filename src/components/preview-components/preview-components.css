@@ -1897,6 +1897,8 @@
 }
 
 .cp-block-contact-avatar {
+  width: 100%;
+  height: auto;
   object-fit: cover;
   border: 3px solid #00a04a;
 }

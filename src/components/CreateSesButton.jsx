@@ -6,6 +6,7 @@ import { showToast } from "@/lib/toast";
 import { fmtMoney, safe } from "@/lib/format";
 import { saveBomAndServicesAction } from "@/app/actions/saveBomAndServices";
 import { savePaybackDataAction } from "@/app/actions/savePaybackData";
+import { saveSummaryAction } from "@/app/actions/saveSummary";
 import TransportAndTravelTable from "@/components/TransportAndTravelTable";
 import { calculatePayback, formatNumber, formatMoney } from "@/lib/payback";
 
@@ -729,9 +730,19 @@ export default function CreateSesButton({ id, cpData }) {
               if (Array.isArray(data) && data.length > 0) {
                 // Если пришел массив, берем первый элемент
                 setResponseData(data[0]);
+
+                // Сохраняем summary если есть
+                if (data[0].summary) {
+                  await saveSummaryAction(id, data[0].summary);
+                }
               } else if (data && typeof data === "object") {
                 // Если пришел объект
                 setResponseData(data);
+
+                // Сохраняем summary если есть
+                if (data.summary) {
+                  await saveSummaryAction(id, data.summary);
+                }
               } else {
                 showToast.error("Получены данные в неожиданном формате");
               }
@@ -1048,6 +1059,11 @@ export default function CreateSesButton({ id, cpData }) {
       // Сохраняем результаты расчета окупаемости
       if (paybackResult) {
         await savePaybackDataAction(id, paybackResult);
+      }
+
+      // Сохраняем summary если есть
+      if (responseData?.summary) {
+        await saveSummaryAction(id, responseData.summary);
       }
 
       showToast.success("КП сгенерирован!");
@@ -1783,6 +1799,11 @@ export default function CreateSesButton({ id, cpData }) {
                           // Сохраняем результаты расчета окупаемости
                           if (paybackResult) {
                             await savePaybackDataAction(id, paybackResult);
+                          }
+
+                          // Сохраняем summary если есть (может быть из cpData)
+                          if (cpData?.summary) {
+                            await saveSummaryAction(id, cpData.summary);
                           }
 
                           showToast.success("КП сгенерирован!");

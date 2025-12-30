@@ -6,6 +6,7 @@ export default function CpBlockPrice({
   servicesData,
   transportData,
   bomData,
+  summary,
 }) {
   const getValidDate = () => {
     const date = new Date();
@@ -17,7 +18,7 @@ export default function CpBlockPrice({
     });
   };
 
-  console.log("BOMDATA ", servicesData);
+  console.log("BOMDATA ", summary);
 
   const costWithoutVAT = totalCost ? (totalCost * 0.78).toFixed(2) : 0;
 
@@ -27,13 +28,6 @@ export default function CpBlockPrice({
 
   const getDescriptionItems = () => {
     const items = [];
-
-    // Берем первые 5 позиций из bomData
-    if (bomData && Array.isArray(bomData)) {
-      const bomItems = bomData.slice(0, 5).map((item) => item.title);
-      items.push(...bomItems);
-      items.push("...и др.");
-    }
 
     // Добавляем все позиции из servicesData
     if (servicesData && Array.isArray(servicesData)) {
@@ -70,13 +64,13 @@ export default function CpBlockPrice({
       <div className="cp-block-price-wrapper">
         <img src="/image/price-title.png" alt="Price" />
 
-        <div className="cp-price-content mt-5">
+        <div className="cp-price-content mt-2">
           <div className="cp-price-description">
             <div className="cp-price-description__title">
               Солнечная электростанция "под ключ" в составе:
             </div>
             <div className="cp-price-description__text">
-              {getDescriptionItems()}
+              {summary}, {getDescriptionItems()}
             </div>
           </div>
           <div className="cp-price-description__sum">
