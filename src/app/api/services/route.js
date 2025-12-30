@@ -39,7 +39,6 @@ export async function POST(request) {
       priority: 0,
     };
 
-    console.log("[api/services] insert sku=", clean.sku);
     const insertResult = await db.insert(services).values(clean);
     const insertId = insertResult.insertId;
 

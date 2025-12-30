@@ -36,8 +36,6 @@ export default async function Home({ searchParams }) {
     cpData = result[0] || null;
   }
 
-  console.log(cpData);
-
   return (
     <>
       <Header />

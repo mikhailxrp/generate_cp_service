@@ -4,8 +4,6 @@ import "./preview-components.css";
 export default function CpBlockPayback({ paybackData }) {
   const currentYear = new Date().getFullYear();
 
-  console.log("paybackData", paybackData);
-
   // Расчет трех сценариев на основе базового paybackData
   const calculateScenarios = () => {
     if (!paybackData || !paybackData.paybackYearExact) {

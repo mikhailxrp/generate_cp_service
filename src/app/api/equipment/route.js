@@ -91,8 +91,6 @@ export async function PUT(request) {
     });
   } catch (error) {
     console.error("Ошибка при обновлении оборудования:", error);
-    console.error("Детали ошибки:", error.message);
-    console.error("Стек ошибки:", error.stack);
     return NextResponse.json(
       { error: `Внутренняя ошибка сервера: ${error.message}` },
       { status: 500 }
@@ -178,7 +176,6 @@ export async function POST(request) {
       .limit(1);
 
     if (existing.length > 0) {
-      console.log("[api/equipment] upsert update sku=", cleanData.sku);
       // При обновлении также обновляем categoryId
       const updateData = {
         ...cleanData,
@@ -202,12 +199,6 @@ export async function POST(request) {
     }
 
     // Создаем новую запись
-    console.log(
-      "[api/equipment] insert sku=",
-      cleanData.sku,
-      "type=",
-      cleanData.typeCode
-    );
     const insertResult = await db.insert(priceItems).values(cleanData);
     const insertId = insertResult.insertId;
 
@@ -248,8 +239,6 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error("Ошибка при создании оборудования:", error);
-    console.error("Детали ошибки:", error.message);
-    console.error("Стек ошибки:", error.stack);
     return NextResponse.json(
       { error: `Внутренняя ошибка сервера: ${error.message}` },
       { status: 500 }

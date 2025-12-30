@@ -24,7 +24,6 @@ export async function POST(request) {
     if (!Array.isArray(pvModuleSkus)) pvModuleSkus = [];
 
     const db = getDb();
-    console.log("[api/presets] insert useCase=", useCase);
     const insertResult = await db.insert(presets).values({
       useCase,
       rangeKwp: rangeKwp ? String(rangeKwp) : null,

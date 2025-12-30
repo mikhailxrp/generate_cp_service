@@ -78,10 +78,7 @@ function PreviewContent() {
         const cpResult = await cpResponse.json();
 
         if (cpResult.data) {
-          console.log("✅ Установка cpData:", cpResult.data);
           setCpData(cpResult.data);
-        } else {
-          console.warn("⚠️ cpResult.data отсутствует");
         }
 
         // Получаем данные пользователя

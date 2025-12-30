@@ -4,8 +4,6 @@ import "./preview-components.css";
 export default function CpBlockTwo({ priceKwh, totalCost, paybackData }) {
   const currentYear = new Date().getFullYear();
 
-  console.log("paybackData", paybackData);
-
   // Форматирование числа с разделителями тысяч
   const formatCost = (cost) => {
     if (!cost) return "0";

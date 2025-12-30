@@ -27,13 +27,6 @@ export async function POST(request) {
 
     const db = getDb();
 
-    console.log(
-      "[api/compat] upsert pair=",
-      inverterSku,
-      essSku,
-      "is=",
-      isCompatible
-    );
     // уникальность пары
     const exists = await db
       .select()

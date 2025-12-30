@@ -2,8 +2,6 @@
 import "./preview-components.css";
 
 export default function CpBlockFour({ paybackData, priceKwh }) {
-  console.log(paybackData);
-
   // Расчет экономии за первый год
   const getSavingsYear1 = () => {
     if (!paybackData || !paybackData.params) {

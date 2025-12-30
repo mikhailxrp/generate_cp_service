@@ -183,7 +183,6 @@ export default function InformationForm({ step, id }) {
     setSubmitError(null);
 
     if (!validateForm()) {
-      console.log("Форма содержит ошибки:", errors);
       setIsSubmitting(false);
       return;
     }
@@ -209,7 +208,6 @@ export default function InformationForm({ step, id }) {
   useEffect(() => {
     const handleFormChange = () => {
       const data = collectFormData();
-      console.log("Изменения в форме:", data);
     };
 
     const form = document.querySelector("form.wrapper-form");

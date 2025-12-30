@@ -18,8 +18,6 @@ export default function CpBlockPrice({
     });
   };
 
-  console.log("BOMDATA ", summary);
-
   const costWithoutVAT = totalCost ? (totalCost * 0.78).toFixed(2) : 0;
 
   const formatNumber = (num) => {
