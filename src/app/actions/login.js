@@ -5,6 +5,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export async function loginAction(email, password) {
   try {
@@ -37,10 +38,14 @@ export async function loginAction(email, password) {
     // Создать сессию
     await createSession(user.id, user.email, user.role);
 
-    return {
-      success: true,
-    };
+    // СЕРВЕРНЫЙ редирект - кука уже установлена
+    redirect("/");
   } catch (error) {
+    // redirect() бросает исключение - это нормально
+    if (error?.message === "NEXT_REDIRECT") {
+      throw error;
+    }
+
     console.error("Login error:", error);
     return {
       success: false,

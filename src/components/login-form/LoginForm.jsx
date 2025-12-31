@@ -29,16 +29,16 @@ export default function LoginForm() {
     try {
       const result = await loginAction(email, password);
 
-      if (result.success) {
-        showToast.success("Вход выполнен успешно");
-        router.push("/");
-        router.refresh();
-      } else {
+      // Если дошли сюда - значит ошибка (успешный логин редиректит на сервере)
+      if (result && !result.success) {
         showToast.error(result.error || "Ошибка входа");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      showToast.error("Произошла ошибка при входе");
+      // redirect() бросает NEXT_REDIRECT - это нормально, не показываем ошибку
+      if (error?.message !== "NEXT_REDIRECT") {
+        console.error("Login error:", error);
+        showToast.error("Произошла ошибка при входе");
+      }
     } finally {
       setIsLoading(false);
     }
