@@ -632,6 +632,25 @@ export default function CreateSesButton({ id, cpData }) {
     });
   };
 
+  // Функция изменения стоимости работ оборудования (по SKU для надежности)
+  const handleWorkCostChange = (itemSku, newWorkCost) => {
+    const workCost = parseFloat(newWorkCost);
+    if (isNaN(workCost) || workCost < 0) return;
+
+    setLocalBomData((prev) => {
+      const updated = prev.map((item) =>
+        item.sku === itemSku
+          ? {
+              ...item,
+              workCost: workCost,
+              workCost1: workCost, // Для совместимости с разными форматами
+            }
+          : item
+      );
+      return updated;
+    });
+  };
+
   const handleCreateSes = async () => {
     if (!id) {
       showToast.error("ID не найден");
@@ -1268,17 +1287,36 @@ export default function CreateSesButton({ id, cpData }) {
                                     })()}
                                   </td>
                                   <td>
-                                    {(() => {
-                                      const workCost = getWorkCostForItem(
-                                        item.sku
-                                      );
-                                      const qty =
-                                        item.qty || item.quantity || 1;
-                                      const totalWorkCost = workCost * qty;
-                                      return totalWorkCost > 0
-                                        ? fmtMoney(totalWorkCost)
-                                        : "-";
-                                    })()}
+                                    {showControls ? (
+                                      <input
+                                        type="number"
+                                        className="form-control form-control-sm"
+                                        style={{ width: "120px" }}
+                                        min="0"
+                                        step="0.01"
+                                        value={
+                                          getWorkCostForItem(item.sku) || 0
+                                        }
+                                        onChange={(e) =>
+                                          handleWorkCostChange(
+                                            item.sku,
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                    ) : (
+                                      (() => {
+                                        const workCost = getWorkCostForItem(
+                                          item.sku
+                                        );
+                                        const qty =
+                                          item.qty || item.quantity || 1;
+                                        const totalWorkCost = workCost * qty;
+                                        return totalWorkCost > 0
+                                          ? fmtMoney(totalWorkCost)
+                                          : "-";
+                                      })()
+                                    )}
                                   </td>
                                   {showControls && (
                                     <td className="text-end">
