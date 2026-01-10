@@ -128,8 +128,8 @@ export const mainInformation = mysqlTable("main_information", {
   clientAddress: varchar("client_address", { length: 255 }).notNull(),
   clientType: varchar("client_type", { length: 255 }).notNull(),
   clientClass: varchar("client_class", { length: 255 }).notNull(),
-  // NEW: ссылка на логотип клиента
-  clientLogo: varchar("client_logo", { length: 1024 }),
+  // NEW: ссылка на логотип клиента (локальное хранилище)
+  clientLogoUrl: varchar("client_logo", { length: 1024 }),
   systemType: varchar("system_type", { length: 255 }).notNull(),
   typeArea: varchar("type_area", { length: 255 }).notNull().default(""),
   directionsCount: int("directions_count").notNull().default(1),

@@ -85,9 +85,27 @@
 }
 
 /* Логотип */
-.cp-block-one-wrapper__logo {
+.header-logos-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.header-logos-wrapper_divider {
+  height: 30px;
+  width: 3px;
+  background: #4a4a4a;
+}
+
+.header-logos-wrapper .cp-block-one-wrapper__logo {
   height: 28px;
   object-fit: contain;
+}
+
+.header-logos-wrapper .cp-block-one-wrapper__client-logo {
+  max-width: 150px;
+  height: 30px;
 }
 
 /* Адрес клиента */

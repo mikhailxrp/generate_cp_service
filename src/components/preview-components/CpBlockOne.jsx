@@ -9,6 +9,7 @@ export default function CpBlockOne({
   systemType,
   engineerName,
   clientAddress,
+  clientLogoUrl,
 }) {
   const [displayAddress, setDisplayAddress] = useState("");
 
@@ -77,11 +78,27 @@ export default function CpBlockOne({
               ЭНЕРГОЭФФЕКТИВНОСТИ
             </div>
           </div>
-          <img
-            src="/brand/logo.svg"
-            alt="Логотип"
-            className="cp-block-one-wrapper__logo"
-          />
+          <div className="header-logos-wrapper">
+            {clientLogoUrl && clientLogoUrl.trim() !== "" && (
+              <>
+                <div>
+                  <img
+                    src={clientLogoUrl}
+                    alt="Логотип клиента"
+                    className="cp-block-one-wrapper__client-logo"
+                  />
+                </div>
+                <div className="header-logos-wrapper_divider"></div>
+              </>
+            )}
+            <div>
+              <img
+                src="/brand/logo.svg"
+                alt="Логотип"
+                className="cp-block-one-wrapper__logo"
+              />
+            </div>
+          </div>
         </div>
 
         {displayAddress && (

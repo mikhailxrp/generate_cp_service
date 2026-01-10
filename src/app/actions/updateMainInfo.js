@@ -16,6 +16,7 @@ export async function updateMainInfoAction(id, data, currentStep) {
       clientAddress: data.client_address || "",
       clientType: data.client_type || "",
       clientClass: data.client_class || "",
+      clientLogoUrl: data.client_logo_url || null,
       systemType: data.system_type || "",
       typeArea: data.type_area || "",
       directionsCount: parseInt(data.directions_count) || 1,

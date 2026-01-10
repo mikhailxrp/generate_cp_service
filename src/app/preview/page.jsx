@@ -120,6 +120,7 @@ function PreviewContent() {
       transportData,
       solarAngle,
       summary,
+      clientLogoUrl,
     } = cpData;
 
     setExtractedData({
@@ -153,6 +154,7 @@ function PreviewContent() {
       transportData,
       solarAngle,
       summary,
+      clientLogoUrl,
     });
   }, [cpData]);
 
@@ -307,6 +309,7 @@ function PreviewContent() {
                         }`.trim()
                       : ""
                   }
+                  clientLogoUrl={extractedData.clientLogoUrl}
                 />
                 <CpBlockTwo
                   priceKwh={extractedData.priceKwh}

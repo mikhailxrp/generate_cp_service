@@ -9,6 +9,9 @@ export default function ArchivePage() {
   const [archiveData, setArchiveData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  const ITEMS_PER_PAGE = 12;
 
   useEffect(() => {
     async function fetchArchive() {
@@ -89,6 +92,19 @@ export default function ArchivePage() {
       default:
         return archiveData;
     }
+  };
+
+  // Сброс счетчика при смене вкладки
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [activeTab]);
+
+  const filteredData = getFilteredData();
+  const visibleData = filteredData.slice(0, visibleCount);
+  const hasMore = filteredData.length > visibleCount;
+
+  const loadMore = () => {
+    setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
   };
 
   if (loading) {
@@ -198,8 +214,8 @@ export default function ArchivePage() {
         </div>
 
         {/* Список КП */}
-        <div className="row g-4 mb-5">
-          {getFilteredData().length === 0 ? (
+        <div className="row g-4 mb-4">
+          {filteredData.length === 0 ? (
             <div className="col-12 text-center text-muted py-5">
               <svg
                 width="64"
@@ -221,7 +237,7 @@ export default function ArchivePage() {
               <p className="fs-5">Нет КП в этой категории</p>
             </div>
           ) : (
-            getFilteredData().map((item) => (
+            visibleData.map((item) => (
               <div key={item.id} className="col-md-6 col-lg-4">
                 <div
                   className="card h-100 shadow-sm"
@@ -315,6 +331,43 @@ export default function ArchivePage() {
             ))
           )}
         </div>
+
+        {/* Кнопка "Загрузить еще" */}
+        {hasMore && (
+          <div className="row mb-5">
+            <div className="col-12 text-center">
+              <button
+                onClick={loadMore}
+                className="btn btn-outline-primary btn-lg"
+                style={{
+                  padding: "12px 40px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  borderRadius: "12px",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ marginRight: "8px", marginTop: "-2px" }}
+                >
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Загрузить еще (
+                {Math.min(ITEMS_PER_PAGE, filteredData.length - visibleCount)})
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Кнопка создать КП */}
         <div className="row">

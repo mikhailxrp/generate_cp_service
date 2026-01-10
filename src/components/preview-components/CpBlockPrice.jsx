@@ -18,9 +18,12 @@ export default function CpBlockPrice({
     });
   };
 
-  const costWithoutVAT = totalCost ? (totalCost * 0.78).toFixed(2) : 0;
+  const costWithoutVAT = totalCost ? (totalCost * 0.78).toFixed(2) : "0";
 
   const formatNumber = (num) => {
+    if (num === null || num === undefined || isNaN(num)) {
+      return "0";
+    }
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   };
 

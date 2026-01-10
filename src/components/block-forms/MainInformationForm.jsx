@@ -2,13 +2,15 @@
 import { useState, useEffect } from "react";
 import "../style-components.css";
 import { updateMainInfoAction } from "@/app/actions/updateMainInfo";
+import LogoUpload from "@/components/LogoUpload";
 
-export default function MainInformationForm({ step, id }) {
+export default function MainInformationForm({ step, id, cpData }) {
   const [formData, setFormData] = useState({
     client_name: "",
     client_address: "",
     client_type: "B2B",
     client_class: "",
+    client_logo_url: "",
     system_type: "network", // дефолтное значение
     type_area: "flat_south",
     directions_count: "1", // дефолтное значение
@@ -19,6 +21,23 @@ export default function MainInformationForm({ step, id }) {
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
+  // Загрузка данных из cpData при монтировании
+  useEffect(() => {
+    if (cpData) {
+      setFormData({
+        client_name: cpData.clientName || "",
+        client_address: cpData.clientAddress || "",
+        client_type: cpData.clientType || "B2B",
+        client_class: cpData.clientClass || "",
+        client_logo_url: cpData.clientLogoUrl || "",
+        system_type: cpData.systemType || "network",
+        type_area: cpData.typeArea || "flat_south",
+        directions_count: String(cpData.directionsCount || 1),
+        ses_power_kw: String(cpData.sesPower || ""),
+      });
+    }
+  }, [cpData]);
 
   // Валидация только после попытки отправки
   useEffect(() => {
@@ -168,29 +187,15 @@ export default function MainInformationForm({ step, id }) {
           )}
         </div>
 
-        {/*         <div className="mb-3">
-          <label htmlFor="client-name" className="form-label">
-            Лотип компании клиента <span className="text-danger">*</span>
-          </label>
-          <input
-            type="text"
-            className={`form-control ${
-              hasAttemptedSubmit && validationErrors.client_name
-                ? "is-invalid"
-                : ""
-            }`}
-            id="client-name"
-            name="client_name"
-            value={formData.client_name}
-            onChange={handleChange}
-            required
+        <div className="mb-3">
+          <label className="form-label">Логотип компании клиента</label>
+          <LogoUpload
+            currentLogoUrl={formData.client_logo_url}
+            onLogoChange={(url) =>
+              setFormData({ ...formData, client_logo_url: url || "" })
+            }
           />
-          {hasAttemptedSubmit && validationErrors.client_name && (
-            <div className="invalid-feedback">
-              {validationErrors.client_name}
-            </div>
-          )}
-        </div> */}
+        </div>
 
         <div className="mb-3">
           <label htmlFor="client-address" className="form-label">

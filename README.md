@@ -24,7 +24,7 @@ npm start
 - **Drizzle ORM** - работа с базой данных MySQL
 - **Bootstrap 5.3** - UI компоненты
 - **Chart.js** - визуализация графиков
-- **Cloudinary** - хранение изображений
+- **Sharp** - обработка и оптимизация изображений
 - **Jose** - JWT аутентификация
 
 ## 📁 Структура проекта
@@ -88,11 +88,6 @@ DB_NAME=your_database
 # JWT секрет
 JWT_SECRET=your-secret-key
 
-# Cloudinary (для загрузки аватаров)
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
 # SSH туннель (опционально)
 USE_SSH_TUNNEL=false
 SSH_HOST=your_ssh_host
@@ -105,12 +100,13 @@ SSH_PRIVATE_KEY_PATH=/path/to/key
 Подробная документация находится в папке `docs/`:
 
 - [Настройка авторизации](docs/AUTH_SETUP.md)
+- [Локальное хранение файлов](docs/LOCAL_UPLOAD.md) ⭐ NEW
 - [Загрузка аватаров](docs/AVATAR_UPLOAD_TEST.md)
-- [Cloudinary setup](docs/CLOUDINARY_SETUP.md)
 - [Импорт из CSV](docs/CSV_IMPORT_QUICKSTART.md)
 - [Профиль пользователя](docs/PROFILE_FEATURES.md)
 - [Лог разработки](docs/DEVELOPMENT_LOG.md)
 - [Отчёт об очистке проекта](docs/CLEANUP_REPORT.md)
+- [Миграция на локальное хранение](MIGRATION_TO_LOCAL_STORAGE.md) 🔄
 
 ### Документация по импорту
 - [CSV категории](docs/scripts/CSV_CATEGORIES_REFERENCE.md)

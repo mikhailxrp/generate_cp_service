@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { processAndSaveImage, deleteImage } from "@/lib/imageUpload";
-import { getDb } from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { processAndSaveImage } from "@/lib/imageUpload";
 
 export async function POST(request) {
   try {
@@ -26,15 +23,8 @@ export async function POST(request) {
       );
     }
 
-    // Получаем старый аватар для удаления
-    const db = getDb();
-    const [user] = await db
-      .select({ avatarUrl: users.avatarUrl })
-      .from(users)
-      .where(eq(users.id, session.userId));
-
-    // Обрабатываем и сохраняем новое изображение
-    const result = await processAndSaveImage(file, "avatars", session.userId);
+    // Обрабатываем и сохраняем логотип
+    const result = await processAndSaveImage(file, "logos");
 
     if (!result.success) {
       return NextResponse.json(
@@ -43,21 +33,17 @@ export async function POST(request) {
       );
     }
 
-    // Удаляем старый аватар (если был)
-    if (user?.avatarUrl && user.avatarUrl.startsWith("/uploads/")) {
-      await deleteImage(user.avatarUrl);
-    }
-
     return NextResponse.json({
       success: true,
       url: result.url,
       fileName: result.fileName,
     });
   } catch (error) {
-    console.error("Upload avatar error:", error);
+    console.error("Upload logo error:", error);
     return NextResponse.json(
-      { success: false, error: "Ошибка при загрузке аватара" },
+      { success: false, error: "Ошибка при загрузке логотипа" },
       { status: 500 }
     );
   }
 }
+

@@ -66,7 +66,13 @@ export default async function Home({ searchParams }) {
 
         <div className="row mt-4 mb-5">
           <div className="col-lg-6">
-            {step === 1 && <MainInformationForm step={step} id={id ?? null} />}
+            {step === 1 && (
+              <MainInformationForm
+                step={step}
+                id={id ?? null}
+                cpData={cpData}
+              />
+            )}
             {step === 2 && (
               <GraphVisualForm step={step} id={id ?? null} cpData={cpData} />
             )}
