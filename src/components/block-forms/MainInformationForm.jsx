@@ -146,7 +146,7 @@ export default function MainInformationForm({ step, id }) {
         <h2 className="title-block text-center">Блок основная информация</h2>
         <div className="mb-3">
           <label htmlFor="client-name" className="form-label">
-            Название клиента <span className="text-danger">*</span>
+            Название компании клиента <span className="text-danger">*</span>
           </label>
           <input
             type="text"
@@ -167,6 +167,30 @@ export default function MainInformationForm({ step, id }) {
             </div>
           )}
         </div>
+
+        {/*         <div className="mb-3">
+          <label htmlFor="client-name" className="form-label">
+            Лотип компании клиента <span className="text-danger">*</span>
+          </label>
+          <input
+            type="text"
+            className={`form-control ${
+              hasAttemptedSubmit && validationErrors.client_name
+                ? "is-invalid"
+                : ""
+            }`}
+            id="client-name"
+            name="client_name"
+            value={formData.client_name}
+            onChange={handleChange}
+            required
+          />
+          {hasAttemptedSubmit && validationErrors.client_name && (
+            <div className="invalid-feedback">
+              {validationErrors.client_name}
+            </div>
+          )}
+        </div> */}
 
         <div className="mb-3">
           <label htmlFor="client-address" className="form-label">
