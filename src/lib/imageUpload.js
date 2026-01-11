@@ -103,7 +103,9 @@ export async function processAndSaveImage(file, type = "avatars", userId = null)
     );
 
     // Путь для сохранения
-    const uploadDir = path.join(process.cwd(), "public", "uploads", type);
+    const uploadDir = process.env.UPLOAD_DIR 
+      ? path.join(process.env.UPLOAD_DIR, type)
+      : path.join(process.cwd(), "public", "uploads", type);
     const filePath = path.join(uploadDir, fileName);
 
     // Сохраняем файл
@@ -138,7 +140,9 @@ export async function deleteImage(url) {
     }
 
     // Получаем путь к файлу
-    const filePath = path.join(process.cwd(), "public", url);
+    const filePath = process.env.UPLOAD_DIR
+      ? path.join(process.env.UPLOAD_DIR, url.replace('/uploads/', ''))
+      : path.join(process.cwd(), "public", url);
 
     // Проверяем существование
     if (!existsSync(filePath)) {
