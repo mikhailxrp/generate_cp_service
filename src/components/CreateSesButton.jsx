@@ -378,28 +378,25 @@ export default function CreateSesButton({ id, cpData }) {
   const [localTransportData, setLocalTransportData] = useState(
     transportData || null
   );
-  
-  // Состояние для ручной корректировки стоимости монтажа (null = автоматический расчет)
-  const [manualInstallationCost, setManualInstallationCost] = useState(null);
 
   // Проверяем, есть ли данные из cpData
   const hasCpData = bomData && bomData.length > 0;
 
-  // Сбрасываем ручную корректировку стоимости монтажа при изменении комплекта СЭС
-  React.useEffect(() => {
-    // Сбрасываем только если было ручное значение
-    if (manualInstallationCost !== null) {
-      setManualInstallationCost(null);
-    }
-  }, [localBomData]); // Отслеживаем изменения localBomData
-
   // Синхронизация локального состояния с bomData/servicesData или responseData
   React.useEffect(() => {
-    if (bomData && bomData.length > 0) {
-      // Фильтруем только оборудование (не услуги)
-      const equipment = bomData.filter((item) => item.unit !== "service");
-      setLocalBomData(equipment);
-    }
+    const loadBomData = async () => {
+      if (bomData && bomData.length > 0) {
+        // Фильтруем только оборудование (не услуги)
+        const equipment = bomData.filter((item) => item.unit !== "service");
+        
+        // Обогащаем оборудование стоимостью работ из API
+        const enrichedEquipment = await enrichBomDataWithWorkCost(equipment);
+        
+        setLocalBomData(enrichedEquipment);
+      }
+    };
+
+    loadBomData();
 
     if (servicesData && servicesData.length > 0) {
       setLocalServicesData(servicesData);
@@ -408,74 +405,101 @@ export default function CreateSesButton({ id, cpData }) {
 
   // Синхронизация с responseData
   React.useEffect(() => {
-    // Проверяем сначала fullBom (новая структура), потом bom (старая)
-    const bomSource = responseData?.fullBom || responseData?.bom;
+    const loadResponseData = async () => {
+      // Проверяем сначала fullBom (новая структура), потом bom (старая)
+      const bomSource = responseData?.fullBom || responseData?.bom;
 
-    if (bomSource && !hasCpData) {
-      // Фильтруем только оборудование (не услуги)
-      const equipment = bomSource.filter(
-        (item) =>
-          item.unit !== "service" &&
-          item.componentCode !== "service_installation" &&
-          item.componentCode !== "service_commissioning" &&
-          item.componentCode !== "service_support" &&
-          item.role !== "service_installation" &&
-          item.role !== "service_commissioning" &&
-          item.role !== "service_support"
-      );
+      if (bomSource && !hasCpData) {
+        console.log('=== SERVER RESPONSE DATA ===');
+        console.log('1. Raw bomSource from server:', bomSource);
+        console.log('   Total items:', bomSource.length);
+        
+        // Фильтруем только оборудование (не услуги)
+        const equipment = bomSource.filter(
+          (item) =>
+            item.unit !== "service" &&
+            item.componentCode !== "service_installation" &&
+            item.componentCode !== "service_commissioning" &&
+            item.componentCode !== "service_support" &&
+            item.role !== "service_installation" &&
+            item.role !== "service_commissioning" &&
+            item.role !== "service_support"
+        );
 
-      // Обогащаем оборудование размерами и стоимостью работ из selectedPanel и inverter
-      const enrichedEquipment = equipment.map((item) => {
-        let enrichedItem = { ...item };
+        console.log('\n2. After filtering (equipment only):', equipment.length, 'items');
+        equipment.forEach((item, idx) => {
+          console.log(`   [${idx}] ${item.title || item.name} - workCost1:`, item.workCost1);
+        });
 
-        // Сохраняем workCost1 из responseData.bos.bom если есть
-        if (item.workCost1) {
-          enrichedItem.workCost = parseFloat(item.workCost1 || 0);
-        }
+        // Обогащаем оборудование размерами и стоимостью работ из selectedPanel и inverter
+        const enrichedEquipment = equipment.map((item) => {
+          let enrichedItem = { ...item };
 
-        // Проверяем, это панель?
-        if (responseData?.selectedPanel?.sku === item.sku) {
-          const panelAttrs = responseData.selectedPanel.attrs;
-          // Пробуем разные варианты хранения размеров
-          let dimensions =
-            panelAttrs?.["Размеры_мм(ДxШxВ)"] ||
-            panelAttrs?.["Размеры_мм(Д×Ш×В)"] ||
-            panelAttrs?.["Размеры_мм(Д×Ш×Т)"] ||
-            panelAttrs?.mechanical?.dimensions_mm ||
-            panelAttrs?.dimensions_mm ||
-            null;
+          // Сохраняем workCost1 из responseData.bos.bom если есть
+          if (item.workCost1) {
+            enrichedItem.workCost = parseFloat(item.workCost1 || 0);
+          }
 
-          // Сохраняем стоимость работ
-          const workCost = parseFloat(panelAttrs?.Стоимость_работ_1 || 0);
+          // Проверяем, это панель?
+          if (responseData?.selectedPanel?.sku === item.sku) {
+            const panelAttrs = responseData.selectedPanel.attrs;
+            // Пробуем разные варианты хранения размеров
+            let dimensions =
+              panelAttrs?.["Размеры_мм(ДxШxВ)"] ||
+              panelAttrs?.["Размеры_мм(Д×Ш×В)"] ||
+              panelAttrs?.["Размеры_мм(Д×Ш×Т)"] ||
+              panelAttrs?.mechanical?.dimensions_mm ||
+              panelAttrs?.dimensions_mm ||
+              null;
 
-          enrichedItem.dimensions = dimensions;
-          if (workCost > 0) enrichedItem.workCost = workCost;
-        }
+            // Сохраняем стоимость работ
+            const workCost = parseFloat(panelAttrs?.Стоимость_работ_1 || 0);
 
-        // Проверяем, это инвертор?
-        if (responseData?.inverter?.sku === item.sku) {
-          const inverterAttrs = responseData.inverter.attrs;
-          // Пробуем разные варианты хранения размеров
-          let dimensions =
-            inverterAttrs?.["Размеры_мм(ДxШxГ)"] ||
-            inverterAttrs?.["Размеры_мм(Д×Ш×Г)"] ||
-            inverterAttrs?.["Размеры_мм(Д×Ш×В)"] ||
-            inverterAttrs?.mechanical?.dimensions_mm ||
-            inverterAttrs?.dimensions_mm ||
-            null;
+            enrichedItem.dimensions = dimensions;
+            if (workCost > 0) enrichedItem.workCost = workCost;
+          }
 
-          // Сохраняем стоимость работ
-          const workCost = parseFloat(inverterAttrs?.Стоимость_работ_1 || 0);
+          // Проверяем, это инвертор?
+          if (responseData?.inverter?.sku === item.sku) {
+            const inverterAttrs = responseData.inverter.attrs;
+            // Пробуем разные варианты хранения размеров
+            let dimensions =
+              inverterAttrs?.["Размеры_мм(ДxШxГ)"] ||
+              inverterAttrs?.["Размеры_мм(Д×Ш×Г)"] ||
+              inverterAttrs?.["Размеры_мм(Д×Ш×В)"] ||
+              inverterAttrs?.mechanical?.dimensions_mm ||
+              inverterAttrs?.dimensions_mm ||
+              null;
 
-          enrichedItem.dimensions = dimensions;
-          if (workCost > 0) enrichedItem.workCost = workCost;
-        }
+            // Сохраняем стоимость работ
+            const workCost = parseFloat(inverterAttrs?.Стоимость_работ_1 || 0);
 
-        return enrichedItem;
-      });
+            enrichedItem.dimensions = dimensions;
+            if (workCost > 0) enrichedItem.workCost = workCost;
+          }
 
-      setLocalBomData(enrichedEquipment);
-    }
+          return enrichedItem;
+        });
+
+        console.log('\n3. After enriching from selectedPanel/inverter:', enrichedEquipment.length, 'items');
+        enrichedEquipment.forEach((item, idx) => {
+          console.log(`   [${idx}] ${item.title || item.name} - workCost:`, item.workCost);
+        });
+
+        // Дополнительно обогащаем позиции без workCost из API
+        const fullyEnrichedEquipment = await enrichBomDataWithWorkCost(enrichedEquipment);
+        
+        console.log('\n4. After enriching from API:', fullyEnrichedEquipment.length, 'items');
+        fullyEnrichedEquipment.forEach((item, idx) => {
+          console.log(`   [${idx}] ${item.title || item.name} - workCost:`, item.workCost);
+        });
+        console.log('============================\n');
+        
+        setLocalBomData(fullyEnrichedEquipment);
+      }
+    };
+
+    loadResponseData();
   }, [responseData, hasCpData]);
 
   // Функция удаления позиции из BOM (по SKU для надежности)
@@ -871,8 +895,8 @@ export default function CreateSesButton({ id, cpData }) {
   const getWorkCostForItem = (itemSku) => {
     // Сначала проверяем сам элемент в localBomData (если данные загружены из БД)
     const localItem = localBomData?.find((item) => item.sku === itemSku);
-    if (localItem?.workCost || localItem?.workCost1) {
-      return parseFloat(localItem.workCost || localItem.workCost1 || 0);
+    if (localItem && (localItem.workCost !== undefined || localItem.workCost1 !== undefined)) {
+      return parseFloat(localItem.workCost ?? localItem.workCost1 ?? 0);
     }
 
     // Если не нашли в localBomData, ищем в responseData.bos.bom
@@ -902,26 +926,32 @@ export default function CreateSesButton({ id, cpData }) {
   const enrichBomDataWithWorkCost = async (bomData) => {
     if (!bomData || bomData.length === 0) return bomData;
 
+    console.log('   → enrichBomDataWithWorkCost: processing', bomData.length, 'items');
+
     // Создаем массив промисов для загрузки данных оборудования
     const enrichedItems = await Promise.all(
-      bomData.map(async (item) => {
+      bomData.map(async (item, index) => {
         // Если workCost уже есть, пропускаем
-        if (item.workCost || item.workCost1) {
+        if (item.workCost !== undefined || item.workCost1 !== undefined) {
+          console.log(`   → [${index}] ${item.sku} - SKIP (already has workCost:`, item.workCost || item.workCost1, ')');
           return item;
         }
 
+        console.log(`   → [${index}] ${item.sku} - Loading from API...`);
+        
         try {
           // Загружаем данные оборудования из API по SKU
           const response = await fetch(
             `/api/equipment/by-sku?sku=${encodeURIComponent(item.sku)}`
           );
           if (!response.ok) {
-            console.warn(`Не удалось загрузить данные для SKU: ${item.sku}`);
+            console.warn(`   → [${index}] ${item.sku} - API request failed`);
             return item;
           }
 
           const data = await response.json();
           if (!data.success || !data.item) {
+            console.warn(`   → [${index}] ${item.sku} - No data in API response`);
             return item;
           }
 
@@ -940,6 +970,8 @@ export default function CreateSesButton({ id, cpData }) {
             );
           }
 
+          console.log(`   → [${index}] ${item.sku} - Loaded workCost:`, workCost);
+
           // Возвращаем обогащенный элемент
           return {
             ...item,
@@ -947,7 +979,7 @@ export default function CreateSesButton({ id, cpData }) {
           };
         } catch (error) {
           console.error(
-            `Ошибка при загрузке данных для SKU ${item.sku}:`,
+            `   → [${index}] ${item.sku} - Error:`,
             error
           );
           return item;
@@ -1023,13 +1055,8 @@ export default function CreateSesButton({ id, cpData }) {
 
   // Мемоизируем расчет стоимости монтажа для автоматического пересчета при изменении данных
   const installationCost = React.useMemo(() => {
-    // Если задано ручное значение, используем его
-    if (manualInstallationCost !== null) {
-      return manualInstallationCost;
-    }
-    // Иначе автоматический расчет
     return calculateInstallationCost();
-  }, [localBomData, responseData, hasCpData, manualInstallationCost]);
+  }, [localBomData, responseData, hasCpData]);
 
   // Расчёт окупаемости по новой логике (Excel-таблица "Окупаемость")
   const getPaybackResult = React.useCallback(() => {
@@ -1565,45 +1592,11 @@ export default function CreateSesButton({ id, cpData }) {
                                   <td>
                                     Общая стоимость монтажа комплекта СЭС
                                     мощностью <strong>{sesPower}</strong> кВт
-                                    {manualInstallationCost !== null && (
-                                      <span className="badge bg-warning text-dark ms-2">
-                                        Ручная корректировка
-                                      </span>
-                                    )}
                                   </td>
                                   <td className="text-end">
-                                    {showControls ? (
-                                      <div className="d-flex justify-content-end align-items-center gap-2">
-                                        <input
-                                          type="number"
-                                          className="form-control form-control-sm"
-                                          style={{ width: "150px" }}
-                                          min="0"
-                                          step="0.01"
-                                          value={totalInstallationCost}
-                                          onChange={(e) => {
-                                            const value = parseFloat(e.target.value);
-                                            if (!isNaN(value) && value >= 0) {
-                                              setManualInstallationCost(value);
-                                            }
-                                          }}
-                                          placeholder="Стоимость монтажа"
-                                        />
-                                        {manualInstallationCost !== null && (
-                                          <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => setManualInstallationCost(null)}
-                                            title="Сбросить на автоматический расчет"
-                                          >
-                                            <i className="bi bi-arrow-counterclockwise"></i>
-                                          </button>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <strong>
-                                        {fmtMoney(totalInstallationCost)}
-                                      </strong>
-                                    )}
+                                    <strong>
+                                      {fmtMoney(totalInstallationCost)}
+                                    </strong>
                                   </td>
                                 </tr>
                               </tbody>
