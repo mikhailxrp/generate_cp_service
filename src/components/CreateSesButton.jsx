@@ -378,9 +378,20 @@ export default function CreateSesButton({ id, cpData }) {
   const [localTransportData, setLocalTransportData] = useState(
     transportData || null
   );
+  
+  // Состояние для ручной корректировки стоимости монтажа (null = автоматический расчет)
+  const [manualInstallationCost, setManualInstallationCost] = useState(null);
 
   // Проверяем, есть ли данные из cpData
   const hasCpData = bomData && bomData.length > 0;
+
+  // Сбрасываем ручную корректировку стоимости монтажа при изменении комплекта СЭС
+  React.useEffect(() => {
+    // Сбрасываем только если было ручное значение
+    if (manualInstallationCost !== null) {
+      setManualInstallationCost(null);
+    }
+  }, [localBomData]); // Отслеживаем изменения localBomData
 
   // Синхронизация локального состояния с bomData/servicesData или responseData
   React.useEffect(() => {
@@ -1010,13 +1021,22 @@ export default function CreateSesButton({ id, cpData }) {
     return totalInstallationCost;
   };
 
+  // Мемоизируем расчет стоимости монтажа для автоматического пересчета при изменении данных
+  const installationCost = React.useMemo(() => {
+    // Если задано ручное значение, используем его
+    if (manualInstallationCost !== null) {
+      return manualInstallationCost;
+    }
+    // Иначе автоматический расчет
+    return calculateInstallationCost();
+  }, [localBomData, responseData, hasCpData, manualInstallationCost]);
+
   // Расчёт окупаемости по новой логике (Excel-таблица "Окупаемость")
   const getPaybackResult = React.useCallback(() => {
     if (!cpData) return null;
 
     // Используем localBomData и localServicesData — актуальное состояние
     const equipmentCost = calculateTotal(localBomData || []);
-    const installationCost = calculateInstallationCost();
     const servicesCost = calculateServicesTotal(localServicesData || []);
     const totalCost = equipmentCost + installationCost + servicesCost;
 
@@ -1042,7 +1062,7 @@ export default function CreateSesButton({ id, cpData }) {
     };
 
     return calculatePayback(paybackInput);
-  }, [cpData, localBomData, localServicesData, responseData]);
+  }, [cpData, localBomData, localServicesData, responseData, installationCost]);
 
   const paybackResult = getPaybackResult();
 
@@ -1061,7 +1081,6 @@ export default function CreateSesButton({ id, cpData }) {
 
       // Рассчитываем общую стоимость проекта
       const equipmentCost = calculateTotal(enrichedBomData);
-      const installationCost = calculateInstallationCost();
       const servicesCost = calculateServicesTotal(localServicesData || []);
       const transportCost = calculateTransportCost();
       const totalCost =
@@ -1207,7 +1226,7 @@ export default function CreateSesButton({ id, cpData }) {
                                   item.title !== undefined
                               )
                               .map((item, index) => (
-                                <tr key={item.sku || index}>
+                                <tr key={`${item.sku}-${index}`}>
                                   <td>{safe(item.name || item.title)}</td>
                                   <td>
                                     <small className="text-muted">
@@ -1526,8 +1545,7 @@ export default function CreateSesButton({ id, cpData }) {
                     <h6 className="mb-3">Стоимость монтажа СЭС</h6>
                     {bomToDisplay && bomToDisplay.length > 0 ? (
                       (() => {
-                        const totalInstallationCost =
-                          calculateInstallationCost();
+                        const totalInstallationCost = installationCost;
                         const sesPower = parseFloat(cpData?.sesPower || 0);
 
                         return (
@@ -1547,11 +1565,45 @@ export default function CreateSesButton({ id, cpData }) {
                                   <td>
                                     Общая стоимость монтажа комплекта СЭС
                                     мощностью <strong>{sesPower}</strong> кВт
+                                    {manualInstallationCost !== null && (
+                                      <span className="badge bg-warning text-dark ms-2">
+                                        Ручная корректировка
+                                      </span>
+                                    )}
                                   </td>
                                   <td className="text-end">
-                                    <strong>
-                                      {fmtMoney(totalInstallationCost)}
-                                    </strong>
+                                    {showControls ? (
+                                      <div className="d-flex justify-content-end align-items-center gap-2">
+                                        <input
+                                          type="number"
+                                          className="form-control form-control-sm"
+                                          style={{ width: "150px" }}
+                                          min="0"
+                                          step="0.01"
+                                          value={totalInstallationCost}
+                                          onChange={(e) => {
+                                            const value = parseFloat(e.target.value);
+                                            if (!isNaN(value) && value >= 0) {
+                                              setManualInstallationCost(value);
+                                            }
+                                          }}
+                                          placeholder="Стоимость монтажа"
+                                        />
+                                        {manualInstallationCost !== null && (
+                                          <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => setManualInstallationCost(null)}
+                                            title="Сбросить на автоматический расчет"
+                                          >
+                                            <i className="bi bi-arrow-counterclockwise"></i>
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <strong>
+                                        {fmtMoney(totalInstallationCost)}
+                                      </strong>
+                                    )}
                                   </td>
                                 </tr>
                               </tbody>
@@ -1771,7 +1823,7 @@ export default function CreateSesButton({ id, cpData }) {
                           <h5 className="text-primary">
                             {fmtMoney(
                               calculateTotal(bomToDisplay || []) +
-                                calculateInstallationCost() +
+                                installationCost +
                                 calculateServicesTotal(
                                   localServicesData || []
                                 ) +
@@ -1815,7 +1867,6 @@ export default function CreateSesButton({ id, cpData }) {
 
                           // Рассчитываем общую стоимость проекта
                           const equipmentCost = calculateTotal(enrichedBomData);
-                          const installationCost = calculateInstallationCost();
                           const servicesCost = calculateServicesTotal(
                             localServicesData || []
                           );
