@@ -892,7 +892,7 @@ export default function CreateSesButton({ id, cpData }) {
   };
 
   // Функция получения стоимости работ для элемента
-  const getWorkCostForItem = (itemSku) => {
+  const getWorkCostForItem = React.useCallback((itemSku) => {
     // Сначала проверяем сам элемент в localBomData (если данные загружены из БД)
     const localItem = localBomData?.find((item) => item.sku === itemSku);
     if (localItem && (localItem.workCost !== undefined || localItem.workCost1 !== undefined)) {
@@ -920,7 +920,7 @@ export default function CreateSesButton({ id, cpData }) {
     }
 
     return 0;
-  };
+  }, [localBomData, responseData]);
 
   // Функция для обогащения bomData стоимостью работ из БД
   const enrichBomDataWithWorkCost = async (bomData) => {
@@ -1010,17 +1010,18 @@ export default function CreateSesButton({ id, cpData }) {
   const calculateInstallationCost = () => {
     let totalInstallationCost = 0;
 
-    // Если есть данные из БД (hasCpData), считаем из localBomData
-    if (hasCpData && localBomData && localBomData.length > 0) {
+    // Всегда считаем из localBomData, если там есть данные
+    if (localBomData && localBomData.length > 0) {
       totalInstallationCost = localBomData.reduce((sum, item) => {
-        const workCost = getWorkCostForItem(item.sku);
+        // Берём workCost напрямую из элемента (без замыкания внешней функции)
+        const workCost = parseFloat(item.workCost ?? item.workCost1 ?? 0);
         const qty = parseFloat(item.qty || item.quantity || 1);
         return sum + workCost * qty;
       }, 0);
       return totalInstallationCost;
     }
 
-    // Иначе считаем из responseData (данные с сервера)
+    // Fallback: если localBomData пустой, считаем из responseData (данные с сервера)
 
     // 1. Берем стоимость работ из bos.bom (workCost1)
     if (responseData?.bos?.bom) {
@@ -1056,7 +1057,7 @@ export default function CreateSesButton({ id, cpData }) {
   // Мемоизируем расчет стоимости монтажа для автоматического пересчета при изменении данных
   const installationCost = React.useMemo(() => {
     return calculateInstallationCost();
-  }, [localBomData, responseData, hasCpData]);
+  }, [localBomData, responseData]);
 
   // Расчёт окупаемости по новой логике (Excel-таблица "Окупаемость")
   const getPaybackResult = React.useCallback(() => {
