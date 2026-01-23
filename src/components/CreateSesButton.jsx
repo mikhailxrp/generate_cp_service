@@ -265,11 +265,10 @@ function EquipmentSelectionModal({ onClose, onSelect }) {
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    className={`btn btn-sm ${
-                      selectedCategory === cat.id
-                        ? "btn-primary"
-                        : "btn-outline-primary"
-                    }`}
+                    className={`btn btn-sm ${selectedCategory === cat.id
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                      }`}
                     onClick={() => setSelectedCategory(cat.id)}
                   >
                     {cat.label}
@@ -388,10 +387,10 @@ export default function CreateSesButton({ id, cpData }) {
       if (bomData && bomData.length > 0) {
         // Фильтруем только оборудование (не услуги)
         const equipment = bomData.filter((item) => item.unit !== "service");
-        
+
         // Обогащаем оборудование стоимостью работ из API
         const enrichedEquipment = await enrichBomDataWithWorkCost(equipment);
-        
+
         setLocalBomData(enrichedEquipment);
       }
     };
@@ -413,7 +412,7 @@ export default function CreateSesButton({ id, cpData }) {
         console.log('=== SERVER RESPONSE DATA ===');
         console.log('1. Raw bomSource from server:', bomSource);
         console.log('   Total items:', bomSource.length);
-        
+
         // Фильтруем только оборудование (не услуги)
         const equipment = bomSource.filter(
           (item) =>
@@ -488,13 +487,13 @@ export default function CreateSesButton({ id, cpData }) {
 
         // Дополнительно обогащаем позиции без workCost из API
         const fullyEnrichedEquipment = await enrichBomDataWithWorkCost(enrichedEquipment);
-        
+
         console.log('\n4. After enriching from API:', fullyEnrichedEquipment.length, 'items');
         fullyEnrichedEquipment.forEach((item, idx) => {
           console.log(`   [${idx}] ${item.title || item.name} - workCost:`, item.workCost);
         });
         console.log('============================\n');
-        
+
         setLocalBomData(fullyEnrichedEquipment);
       }
     };
@@ -623,10 +622,10 @@ export default function CreateSesButton({ id, cpData }) {
       const updated = prev.map((item) =>
         item.sku === serviceSku
           ? {
-              ...item,
-              price: price,
-              basePrice: price,
-            }
+            ...item,
+            price: price,
+            basePrice: price,
+          }
           : item
       );
       return updated;
@@ -655,12 +654,12 @@ export default function CreateSesButton({ id, cpData }) {
       const updated = prev.map((item) =>
         item.sku === itemSku
           ? {
-              ...item,
-              priceRub: price,
-              unitPriceRub: price,
-              price: price,
-              basePrice: price,
-            }
+            ...item,
+            priceRub: price,
+            unitPriceRub: price,
+            price: price,
+            basePrice: price,
+          }
           : item
       );
       return updated;
@@ -676,10 +675,10 @@ export default function CreateSesButton({ id, cpData }) {
       const updated = prev.map((item) =>
         item.sku === itemSku
           ? {
-              ...item,
-              workCost: workCost,
-              workCost1: workCost, // Для совместимости с разными форматами
-            }
+            ...item,
+            workCost: workCost,
+            workCost1: workCost, // Для совместимости с разными форматами
+          }
           : item
       );
       return updated;
@@ -938,7 +937,7 @@ export default function CreateSesButton({ id, cpData }) {
         }
 
         console.log(`   → [${index}] ${item.sku} - Loading from API...`);
-        
+
         try {
           // Загружаем данные оборудования из API по SKU
           const response = await fetch(
@@ -1094,6 +1093,92 @@ export default function CreateSesButton({ id, cpData }) {
 
   const paybackResult = getPaybackResult();
 
+  // Функция для генерации и скачивания CSV файла с таблицей BOM
+  const downloadBomAsCSV = (bomData) => {
+    if (!bomData || bomData.length === 0) {
+      return;
+    }
+
+    // Фильтруем данные (убираем элементы без title)
+    const filteredBom = bomData.filter(
+      (item) => item.title !== null && item.title !== undefined
+    );
+
+    if (filteredBom.length === 0) {
+      return;
+    }
+
+    // Формируем заголовки CSV
+    const headers = [
+      "Наименование",
+      "SKU",
+      "Количество",
+      "Ед.изм.",
+      "Цена за единицу",
+      "Сумма",
+      "Стоимость работ",
+      "Итого стоимость работ",
+    ];
+
+    // Формируем строки данных
+    const rows = filteredBom.map((item) => {
+      const price = parseFloat(
+        item.priceRub || item.unitPriceRub || item.price || item.basePrice || 0
+      );
+      const qty = parseFloat(item.qty || item.quantity || 1);
+      const sum = price * qty;
+      const workCost = getWorkCostForItem(item.sku) || 0;
+      const totalWorkCost = workCost * qty;
+
+      return [
+        `"${(item.name || item.title || "").replace(/"/g, '""')}"`, // Экранируем кавычки
+        `"${(item.sku || "").replace(/"/g, '""')}"`,
+        qty,
+        `"${(item.unit || "").replace(/"/g, '""')}"`,
+        price.toFixed(2),
+        sum.toFixed(2),
+        workCost.toFixed(2),
+        totalWorkCost.toFixed(2),
+      ].join(";");
+    });
+
+    // Добавляем итоговую строку
+    const totalEquipment = calculateTotal(filteredBom);
+    const totalRow = [
+      '"Итого по оборудованию:"',
+      '""',
+      '""',
+      '""',
+      '""',
+      totalEquipment.toFixed(2),
+      '""',
+      '""',
+    ].join(";");
+
+    // Собираем CSV контент
+    const csvContent = [
+      "\uFEFF", // BOM для корректного отображения кириллицы в Excel
+      headers.join(";"),
+      ...rows,
+      totalRow,
+    ].join("\n");
+
+    // Создаем Blob и скачиваем файл
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", `BOM_комплект_СЭС_${id || "export"}.csv`);
+    link.style.visibility = "hidden";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
   const handleGenerateKP = async () => {
     if (!responseData || !id) {
       showToast.error("Нет данных для генерации КП");
@@ -1131,6 +1216,9 @@ export default function CreateSesButton({ id, cpData }) {
       if (responseData?.summary) {
         await saveSummaryAction(id, responseData.summary);
       }
+
+      // Скачиваем CSV файл с таблицей BOM
+      downloadBomAsCSV(enrichedBomData);
 
       showToast.success("КП сгенерирован!");
       router.push(`/preview?id=${id}`);
@@ -1311,9 +1399,9 @@ export default function CreateSesButton({ id, cpData }) {
                                     ) : (
                                       fmtMoney(
                                         item.priceRub ||
-                                          item.unitPriceRub ||
-                                          item.price ||
-                                          item.basePrice
+                                        item.unitPriceRub ||
+                                        item.price ||
+                                        item.basePrice
                                       )
                                     )}
                                   </td>
@@ -1321,10 +1409,10 @@ export default function CreateSesButton({ id, cpData }) {
                                     {(() => {
                                       const price = parseFloat(
                                         item.priceRub ||
-                                          item.unitPriceRub ||
-                                          item.price ||
-                                          item.basePrice ||
-                                          0
+                                        item.unitPriceRub ||
+                                        item.price ||
+                                        item.basePrice ||
+                                        0
                                       );
                                       const qty = parseFloat(
                                         item.qty || item.quantity || 1
@@ -1698,7 +1786,7 @@ export default function CreateSesButton({ id, cpData }) {
                                   <strong>Рост тарифа:</strong>{" "}
                                   {formatNumber(
                                     paybackResult.params.tariffInflationRate *
-                                      100
+                                    100
                                   )}
                                   % в год
                                 </li>
@@ -1790,7 +1878,7 @@ export default function CreateSesButton({ id, cpData }) {
                                       {formatNumber(
                                         (paybackResult.netProfit /
                                           paybackResult.systemCost) *
-                                          100
+                                        100
                                       )}
                                       %
                                     </span>
@@ -1817,11 +1905,11 @@ export default function CreateSesButton({ id, cpData }) {
                           <h5 className="text-primary">
                             {fmtMoney(
                               calculateTotal(bomToDisplay || []) +
-                                installationCost +
-                                calculateServicesTotal(
-                                  localServicesData || []
-                                ) +
-                                calculateTransportCost()
+                              installationCost +
+                              calculateServicesTotal(
+                                localServicesData || []
+                              ) +
+                              calculateTransportCost()
                             )}
                           </h5>
                         </div>
