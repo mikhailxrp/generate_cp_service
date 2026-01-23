@@ -33,8 +33,8 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
         <div className="cp-block-details-inner">
           <div className="cp-block-details-column-left">
             {paybackData &&
-            paybackData.yearly &&
-            paybackData.yearly.length > 0 ? (
+              paybackData.yearly &&
+              paybackData.yearly.length > 0 ? (
               <table className="cp-details-table">
                 <thead>
                   <tr>
@@ -189,175 +189,363 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
           <div className="cp-block-details-column-right">
             {paybackData && totalCost
               ? (() => {
-                  // Расчет динамических координат
-                  const yearsHorizon = paybackData.params?.yearsHorizon || 25;
-                  const paybackYear =
-                    paybackData.paybackYearExact ||
-                    paybackData.paybackYear ||
-                    5;
+                // Расчет динамических координат
+                const yearsHorizon = paybackData.params?.yearsHorizon || 25;
+                const paybackYear =
+                  paybackData.paybackYearExact ||
+                  paybackData.paybackYear ||
+                  5;
 
-                  // Координаты графика
-                  const graphWidth = 260; // от 40 до 300
-                  const graphHeight = 200; // от 40 до 240
+                // Координаты графика
+                const graphWidth = 260; // от 40 до 300
+                const graphHeight = 260; // от 40 до 300 (увеличено на 30%)
 
-                  // Позиция точки окупаемости по X (пропорционально сроку)
-                  const paybackX =
-                    40 + (paybackYear / yearsHorizon) * graphWidth;
-                  const paybackY = 140; // середина по Y
+                // Позиция точки окупаемости по X (пропорционально сроку)
+                const paybackX =
+                  40 + (paybackYear / yearsHorizon) * graphWidth;
+                const paybackY = 170; // середина по Y (40 + 260/2)
 
-                  // Координаты для кривой затрат (красная линия)
-                  const costCurveX1 =
-                    40 + (paybackYear / yearsHorizon) * graphWidth * 0.5;
-                  const costCurveY1 = 240 - (240 - paybackY) * 0.5;
+                // Координаты для кривой затрат (красная линия)
+                const costCurveX1 =
+                  40 + (paybackYear / yearsHorizon) * graphWidth * 0.5;
+                const costCurveY1 = 300 - (300 - paybackY) * 0.5;
 
-                  // Координаты для кривой прибыли (зеленая линия)
-                  const profitCurveX1 = paybackX + (300 - paybackX) * 0.4;
-                  const profitCurveY1 = paybackY - (paybackY - 50) * 0.6;
+                // Координаты для кривой прибыли (зеленая линия)
+                const profitCurveX1 = paybackX + (300 - paybackX) * 0.4;
+                const profitCurveY1 = paybackY - (paybackY - 50) * 0.6;
 
-                  return (
-                    <div className="cp-payback-chart">
-                      <h3 className="cp-payback-chart__title">
-                        Реалистичный график окупаемости
-                      </h3>
-                      <div className="cp-payback-chart__content">
-                        {/* Экономия за период */}
-                        <div className="cp-payback-chart__savings">
-                          <div className="cp-payback-chart__savings-amount">
-                            {(paybackData.totalSavings / 1000000).toFixed(1)}{" "}
-                            млн. ₽
-                          </div>
-                          <div className="cp-payback-chart__savings-label">
-                            Экономия за {yearsHorizon} лет
-                          </div>
+                const currentYear = new Date().getFullYear();
+
+                return (
+                  <div className="cp-payback-chart">
+                    <h3 className="cp-payback-chart__title">
+                      Реалистичный график окупаемости
+                    </h3>
+                    <div className="cp-payback-chart__content">
+                      {/* Экономия за период */}
+                      <div className="cp-payback-chart__savings">
+                        <div className="cp-payback-chart__savings-amount">
+                          {(paybackData.totalSavings / 1000000).toFixed(1)}{" "}
+                          млн. ₽
                         </div>
-
-                        {/* График */}
-                        <div className="cp-payback-chart__graph">
-                          <svg
-                            viewBox="0 0 320 280"
-                            className="cp-payback-chart__svg"
-                          >
-                            {/* Левая ось */}
-                            <line
-                              x1="40"
-                              y1="40"
-                              x2="40"
-                              y2="240"
-                              stroke="#999"
-                              strokeWidth="1.5"
-                            />
-
-                            {/* Нижняя ось */}
-                            <line
-                              x1="40"
-                              y1="240"
-                              x2="300"
-                              y2="240"
-                              stroke="#999"
-                              strokeWidth="1.5"
-                            />
-
-                            {/* Метки на оси X */}
-                            <text
-                              x="40"
-                              y="260"
-                              fontSize="11"
-                              fill="#666"
-                              textAnchor="middle"
-                            >
-                              {currentYear}
-                            </text>
-                            <text
-                              x="300"
-                              y="260"
-                              fontSize="11"
-                              fill="#666"
-                              textAnchor="middle"
-                            >
-                              {currentYear + yearsHorizon}
-                            </text>
-
-                            {/* Горизонтальная пунктирная линия окупаемости */}
-                            <line
-                              x1="40"
-                              y1={paybackY}
-                              x2="300"
-                              y2={paybackY}
-                              stroke="#00a04a"
-                              strokeWidth="1"
-                              strokeDasharray="4,4"
-                            />
-
-                            {/* Красная линия (затраты) - от начала до точки окупаемости */}
-                            <path
-                              d={`M 40 240 Q ${costCurveX1} ${costCurveY1}, ${paybackX} ${paybackY}`}
-                              fill="none"
-                              stroke="#e74c3c"
-                              strokeWidth="2.5"
-                            />
-
-                            {/* Зеленая область (прибыль после окупаемости) */}
-                            <path
-                              d={`M ${paybackX} ${paybackY} Q ${profitCurveX1} ${profitCurveY1}, 300 50 L 300 240 L ${paybackX} 240 Z`}
-                              fill="rgba(0, 160, 74, 0.25)"
-                              stroke="none"
-                            />
-
-                            {/* Зеленая линия (накопленная экономия) */}
-                            <path
-                              d={`M ${paybackX} ${paybackY} Q ${profitCurveX1} ${profitCurveY1}, 300 50`}
-                              fill="none"
-                              stroke="#00a04a"
-                              strokeWidth="2.5"
-                            />
-
-                            {/* Точка окупаемости */}
-                            <circle
-                              cx={paybackX}
-                              cy={paybackY}
-                              r="6"
-                              fill="#00a04a"
-                            />
-
-                            {/* Метка окупаемости */}
-                            <text
-                              x={paybackX}
-                              y={paybackY + 25}
-                              fontSize="16"
-                              fontWeight="600"
-                              fill="#000"
-                              textAnchor="middle"
-                            >
-                              {paybackData.paybackYearExact
-                                ? paybackData.paybackYearExact.toFixed(1)
-                                : paybackData.paybackYear}{" "}
-                              лет
-                            </text>
-                            <text
-                              x={paybackX}
-                              y={paybackY + 40}
-                              fontSize="14"
-                              fill="#000"
-                              textAnchor="middle"
-                            >
-                              Окупаемость
-                            </text>
-                          </svg>
-                        </div>
-
-                        {/* Стоимость СНЭ */}
-                        <div className="cp-payback-chart__cost">
-                          <div className="cp-payback-chart__cost-amount">
-                            {(totalCost / 1000000).toFixed(1)} млн. ₽
-                          </div>
-                          {/* <div className="cp-payback-chart__cost-label">
-                            Стоимость СНЭ
-                          </div> */}
+                        <div className="cp-payback-chart__savings-label">
+                          Экономия за {yearsHorizon} лет
                         </div>
                       </div>
+
+                      {/* График */}
+                      <div className="cp-payback-chart__graph">
+                        <svg
+                          viewBox="0 0 320 340"
+                          className="cp-payback-chart__svg"
+                        >
+                          {/* Определение градиентов и фильтров */}
+                          <defs>
+                            {/* Градиент для зеленой области */}
+                            <linearGradient
+                              id="profitGradient"
+                              x1="0%"
+                              y1="0%"
+                              x2="0%"
+                              y2="100%"
+                            >
+                              <stop
+                                offset="0%"
+                                style={{
+                                  stopColor: "#00a04a",
+                                  stopOpacity: 0.4,
+                                }}
+                              />
+                              <stop
+                                offset="100%"
+                                style={{
+                                  stopColor: "#00a04a",
+                                  stopOpacity: 0.05,
+                                }}
+                              />
+                            </linearGradient>
+
+                            {/* Градиент для красной линии */}
+                            <linearGradient
+                              id="costGradient"
+                              x1="0%"
+                              y1="100%"
+                              x2="100%"
+                              y2="0%"
+                            >
+                              <stop
+                                offset="0%"
+                                style={{
+                                  stopColor: "#e74c3c",
+                                  stopOpacity: 1,
+                                }}
+                              />
+                              <stop
+                                offset="100%"
+                                style={{
+                                  stopColor: "#c0392b",
+                                  stopOpacity: 1,
+                                }}
+                              />
+                            </linearGradient>
+
+                            {/* Градиент для зеленой линии */}
+                            <linearGradient
+                              id="savingsGradient"
+                              x1="0%"
+                              y1="0%"
+                              x2="100%"
+                              y2="0%"
+                            >
+                              <stop
+                                offset="0%"
+                                style={{
+                                  stopColor: "#00a04a",
+                                  stopOpacity: 1,
+                                }}
+                              />
+                              <stop
+                                offset="100%"
+                                style={{
+                                  stopColor: "#27ae60",
+                                  stopOpacity: 1,
+                                }}
+                              />
+                            </linearGradient>
+
+                            {/* Тень для линий */}
+                            <filter id="lineShadow" x="-50%" y="-50%" width="200%" height="200%">
+                              <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+                              <feOffset dx="0" dy="2" result="offsetblur" />
+                              <feComponentTransfer>
+                                <feFuncA type="linear" slope="0.3" />
+                              </feComponentTransfer>
+                              <feMerge>
+                                <feMergeNode />
+                                <feMergeNode in="SourceGraphic" />
+                              </feMerge>
+                            </filter>
+
+                            {/* Тень для точки */}
+                            <filter id="dotShadow">
+                              <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+                              <feOffset dx="0" dy="2" result="offsetblur" />
+                              <feComponentTransfer>
+                                <feFuncA type="linear" slope="0.4" />
+                              </feComponentTransfer>
+                              <feMerge>
+                                <feMergeNode />
+                                <feMergeNode in="SourceGraphic" />
+                              </feMerge>
+                            </filter>
+                          </defs>
+
+                          {/* Фоновая сетка */}
+                          <g opacity="0.15">
+                            {[0, 1, 2, 3, 4].map((i) => (
+                              <line
+                                key={`grid-h-${i}`}
+                                x1="40"
+                                y1={40 + (i * 260) / 4}
+                                x2="300"
+                                y2={40 + (i * 260) / 4}
+                                stroke="#999"
+                                strokeWidth="0.5"
+                                strokeDasharray="2,2"
+                              />
+                            ))}
+                          </g>
+
+                          {/* Оси */}
+                          <line
+                            x1="40"
+                            y1="40"
+                            x2="40"
+                            y2="300"
+                            stroke="#333"
+                            strokeWidth="2"
+                          />
+                          <line
+                            x1="40"
+                            y1="300"
+                            x2="300"
+                            y2="300"
+                            stroke="#333"
+                            strokeWidth="2"
+                          />
+
+                          {/* Метки на оси X */}
+                          <text
+                            x="40"
+                            y="320"
+                            fontSize="12"
+                            fontWeight="600"
+                            fill="#333"
+                            textAnchor="middle"
+                          >
+                            {currentYear}
+                          </text>
+                          <text
+                            x="300"
+                            y="320"
+                            fontSize="12"
+                            fontWeight="600"
+                            fill="#333"
+                            textAnchor="middle"
+                          >
+                            {currentYear + yearsHorizon}
+                          </text>
+
+                          {/* Горизонтальная пунктирная линия окупаемости */}
+                          <line
+                            x1="40"
+                            y1={paybackY}
+                            x2="300"
+                            y2={paybackY}
+                            stroke="#00a04a"
+                            strokeWidth="1.5"
+                            strokeDasharray="6,3"
+                            opacity="0.6"
+                          />
+
+                          {/* Зеленая область (прибыль после окупаемости) с градиентом */}
+                          <path
+                            d={`M ${paybackX} ${paybackY} Q ${profitCurveX1} ${profitCurveY1}, 300 50 L 300 300 L ${paybackX} 300 Z`}
+                            fill="url(#profitGradient)"
+                            stroke="none"
+                          />
+
+                          {/* Красная линия (затраты) с градиентом и тенью */}
+                          <path
+                            d={`M 40 300 Q ${costCurveX1} ${costCurveY1}, ${paybackX} ${paybackY}`}
+                            fill="none"
+                            stroke="url(#costGradient)"
+                            strokeWidth="3.5"
+                            filter="url(#lineShadow)"
+                            strokeLinecap="round"
+                          />
+
+                          {/* Зеленая линия (накопленная экономия) с градиентом и тенью */}
+                          <path
+                            d={`M ${paybackX} ${paybackY} Q ${profitCurveX1} ${profitCurveY1}, 300 50`}
+                            fill="none"
+                            stroke="url(#savingsGradient)"
+                            strokeWidth="3.5"
+                            filter="url(#lineShadow)"
+                            strokeLinecap="round"
+                          />
+
+                          {/* Точка окупаемости с внешним кольцом */}
+                          <circle
+                            cx={paybackX}
+                            cy={paybackY}
+                            r="10"
+                            fill="none"
+                            stroke="#00a04a"
+                            strokeWidth="2"
+                            opacity="0.3"
+                          />
+                          <circle
+                            cx={paybackX}
+                            cy={paybackY}
+                            r="7"
+                            fill="#00a04a"
+                            filter="url(#dotShadow)"
+                          />
+                          <circle
+                            cx={paybackX}
+                            cy={paybackY}
+                            r="3"
+                            fill="#fff"
+                            opacity="0.8"
+                          />
+
+                          {/* Вертикальная линия от точки окупаемости */}
+                          <line
+                            x1={paybackX}
+                            y1={paybackY}
+                            x2={paybackX}
+                            y2="300"
+                            stroke="#00a04a"
+                            strokeWidth="1"
+                            strokeDasharray="3,3"
+                            opacity="0.4"
+                          />
+
+                          {/* Белый фон под текстом */}
+                          <rect
+                            x={paybackX - 35}
+                            y={paybackY + 12}
+                            width="70"
+                            height="38"
+                            fill="white"
+                            opacity="0.95"
+                            rx="6"
+                          />
+
+                          {/* Метка окупаемости */}
+                          <text
+                            x={paybackX}
+                            y={paybackY + 28}
+                            fontSize="17"
+                            fontWeight="700"
+                            fill="#00a04a"
+                            textAnchor="middle"
+                          >
+                            {paybackData.paybackYearExact
+                              ? paybackData.paybackYearExact.toFixed(1)
+                              : paybackData.paybackYear}{" "}
+                            лет
+                          </text>
+                          <text
+                            x={paybackX}
+                            y={paybackY + 44}
+                            fontSize="12"
+                            fontWeight="500"
+                            fill="#666"
+                            textAnchor="middle"
+                          >
+                            Окупаемость
+                          </text>
+
+                          {/* Метки на графике - Затраты */}
+                          <text
+                            x="45"
+                            y="290"
+                            fontSize="11"
+                            fontWeight="600"
+                            fill="#e74c3c"
+                          >
+                            Затраты
+                          </text>
+
+                          {/* Метки на графике - Прибыль */}
+                          <text
+                            x="250"
+                            y="60"
+                            fontSize="11"
+                            fontWeight="600"
+                            fill="#00a04a"
+                            textAnchor="end"
+                          >
+                            Экономия
+                          </text>
+                        </svg>
+                      </div>
+
+                      {/* Стоимость СНЭ */}
+                      <div className="cp-payback-chart__cost">
+                        <div className="cp-payback-chart__cost-amount">
+                          {(totalCost / 1000000).toFixed(1)} млн. ₽
+                        </div>
+                        {/* <div className="cp-payback-chart__cost-label">
+                            Стоимость СНЭ
+                          </div> */}
+                      </div>
                     </div>
-                  );
-                })()
+                  </div>
+                );
+              })()
               : null}
           </div>
         </div>

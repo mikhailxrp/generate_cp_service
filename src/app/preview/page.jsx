@@ -294,79 +294,151 @@ function PreviewContent() {
           {cpData && (
             <>
               <div>
-                <CpBlockOne
-                  clientName={extractedData.clientName}
-                  clientType={extractedData.clientType}
-                  sesPower={extractedData.sesPower}
-                  systemType={extractedData.systemType}
-                  clientAddress={extractedData.clientAddress}
-                  bomData={extractedData.bomData}
-                  servicesData={extractedData.servicesData}
-                  engineerName={
-                    userData
-                      ? `${userData.name || ""} ${
-                          userData.surname || ""
-                        }`.trim()
-                      : ""
-                  }
-                  clientLogoUrl={extractedData.clientLogoUrl}
-                />
-                <CpBlockTwo
-                  priceKwh={extractedData.priceKwh}
-                  totalCost={extractedData.totalCost}
-                  paybackData={extractedData.paybackData}
-                />
-                <CpBlockFour
-                  paybackData={extractedData.paybackData}
-                  priceKwh={extractedData.priceKwh}
-                />
-                <CpBlockFive />
-                {extractedData.systemType === "network" && <CpBlockNetwork />}
-                {extractedData.systemType === "hybrid" && <CpBlockHybrid />}
-                {extractedData.typeArea === "flat_south" && <CpBlockSouth />}
+                <div data-pdf-block="cover" data-pdf-type="title" data-pdf-order="1">
+                  <CpBlockOne
+                    clientName={extractedData.clientName}
+                    clientType={extractedData.clientType}
+                    sesPower={extractedData.sesPower}
+                    systemType={extractedData.systemType}
+                    clientAddress={extractedData.clientAddress}
+                    bomData={extractedData.bomData}
+                    servicesData={extractedData.servicesData}
+                    engineerName={
+                      userData
+                        ? `${userData.name || ""} ${
+                            userData.surname || ""
+                          }`.trim()
+                        : ""
+                    }
+                    clientLogoUrl={extractedData.clientLogoUrl}
+                  />
+                </div>
+                <div data-pdf-block="summary" data-pdf-type="chart" data-pdf-order="2">
+                  <CpBlockTwo
+                    priceKwh={extractedData.priceKwh}
+                    totalCost={extractedData.totalCost}
+                    paybackData={extractedData.paybackData}
+                  />
+                </div>
+                <div data-pdf-block="economics" data-pdf-type="chart" data-pdf-order="3">
+                  <CpBlockFour
+                    paybackData={extractedData.paybackData}
+                    priceKwh={extractedData.priceKwh}
+                  />
+                </div>
+                <div data-pdf-block="benefits" data-pdf-type="content" data-pdf-order="4">
+                  <CpBlockFive />
+                </div>
+                {extractedData.systemType === "network" && (
+                  <div data-pdf-block="system-network" data-pdf-type="technical" data-pdf-order="5">
+                    <CpBlockNetwork />
+                  </div>
+                )}
+                {extractedData.systemType === "hybrid" && (
+                  <div data-pdf-block="system-hybrid" data-pdf-type="technical" data-pdf-order="5">
+                    <CpBlockHybrid />
+                  </div>
+                )}
+                {extractedData.typeArea === "flat_south" && (
+                  <div data-pdf-block="installation-south" data-pdf-type="technical" data-pdf-order="6">
+                    <CpBlockSouth />
+                  </div>
+                )}
                 {extractedData.typeArea === "flat_east-west" && (
-                  <CpBlockEastWest />
+                  <div data-pdf-block="installation-eastwest" data-pdf-type="technical" data-pdf-order="6">
+                    <CpBlockEastWest />
+                  </div>
                 )}
                 {(extractedData.typeArea === "carpot_south" ||
                   extractedData.typeArea === "carpot_east-west" ||
-                  extractedData.typeArea === "canopy") && <CpBlockCanopy />}
-                {extractedData.typeArea === "metal" && <CpBlockMetal />}
-                {extractedData.typeArea === "slate" && <CpBlockCarpot />}
-                {extractedData.typeArea === "classic_tiles" && <CpBlockTiles />}
-                {extractedData.typeArea === "ground" && <CpBlockGround />}
-                {extractedData.essBattery && <CpBlockAcc />}
+                  extractedData.typeArea === "canopy") && (
+                  <div data-pdf-block="installation-canopy" data-pdf-type="technical" data-pdf-order="6">
+                    <CpBlockCanopy />
+                  </div>
+                )}
+                {extractedData.typeArea === "metal" && (
+                  <div data-pdf-block="installation-metal" data-pdf-type="technical" data-pdf-order="6">
+                    <CpBlockMetal />
+                  </div>
+                )}
+                {extractedData.typeArea === "slate" && (
+                  <div data-pdf-block="installation-carpot" data-pdf-type="technical" data-pdf-order="6">
+                    <CpBlockCarpot />
+                  </div>
+                )}
+                {extractedData.typeArea === "classic_tiles" && (
+                  <div data-pdf-block="installation-tiles" data-pdf-type="technical" data-pdf-order="6">
+                    <CpBlockTiles />
+                  </div>
+                )}
+                {extractedData.typeArea === "ground" && (
+                  <div data-pdf-block="installation-ground" data-pdf-type="technical" data-pdf-order="6">
+                    <CpBlockGround />
+                  </div>
+                )}
+                {extractedData.essBattery && (
+                  <div data-pdf-block="battery" data-pdf-type="technical" data-pdf-order="7">
+                    <CpBlockAcc />
+                  </div>
+                )}
                 {/* БЛОК МЕТРИКА И ТЕХНИЧЕМСКИЕ ПАРАМЕТРЫ НАЧАЛО */}
-                <CpBlockThree
-                  sesPower={extractedData.sesPower}
-                  typeArea={extractedData.typeArea}
-                  bomData={extractedData.bomData}
-                  combinedData={extractedData.combinedData}
-                  totalAnnualGeneration={extractedData.totalAnnualGeneration}
-                  paybackData={extractedData.paybackData}
-                  solarAngle={extractedData.solarAngle}
-                />
+                <div data-pdf-block="metrics" data-pdf-type="technical" data-pdf-order="8">
+                  <CpBlockThree
+                    sesPower={extractedData.sesPower}
+                    typeArea={extractedData.typeArea}
+                    bomData={extractedData.bomData}
+                    combinedData={extractedData.combinedData}
+                    totalAnnualGeneration={extractedData.totalAnnualGeneration}
+                    paybackData={extractedData.paybackData}
+                    solarAngle={extractedData.solarAngle}
+                  />
+                </div>
                 {/* БЛОК МЕТРИКА И ТЕХНИЧЕМСКИЕ ПАРАМЕТРЫ КОНЕЦ */}
-                {extractedData.dgUnit && <CpBlockMikroGen />}
-                <CpBlockMonitor />
-                <CpBlockPayback paybackData={extractedData.paybackData} />
-                <CpBlockDetails
-                  paybackData={extractedData.paybackData}
-                  totalCost={extractedData.totalCost}
-                />
+                {extractedData.dgUnit && (
+                  <div data-pdf-block="microgeneration" data-pdf-type="technical" data-pdf-order="9">
+                    <CpBlockMikroGen />
+                  </div>
+                )}
+                <div data-pdf-block="monitoring" data-pdf-type="feature" data-pdf-order="10">
+                  <CpBlockMonitor />
+                </div>
+                <div data-pdf-block="payback" data-pdf-type="chart" data-pdf-order="11">
+                  <CpBlockPayback paybackData={extractedData.paybackData} />
+                </div>
+                <div data-pdf-block="details" data-pdf-type="table" data-pdf-order="12">
+                  <CpBlockDetails
+                    paybackData={extractedData.paybackData}
+                    totalCost={extractedData.totalCost}
+                  />
+                </div>
                 {/* <CpBlockLeasing clientName={extractedData.clientName} /> */}
-                <CpBlockRoadMap />
-                <CpBlockEssg paybackData={extractedData.paybackData} />
-                <CpBlockGuarantees />
-                <CpBlockFaq />
-                <CpBlockLogos typeArea={extractedData.typeArea} />
-                <CpBlockPrice
-                  totalCost={extractedData.totalCost}
-                  servicesData={extractedData.servicesData}
-                  bomData={extractedData.bomData}
-                  transportData={extractedData.transportData}
-                  summary={extractedData.summary}
-                />
-                <CpBlockContact userData={userData} />
+                <div data-pdf-block="roadmap" data-pdf-type="timeline" data-pdf-order="13">
+                  <CpBlockRoadMap />
+                </div>
+                <div data-pdf-block="essg" data-pdf-type="content" data-pdf-order="14">
+                  <CpBlockEssg paybackData={extractedData.paybackData} />
+                </div>
+                <div data-pdf-block="guarantees" data-pdf-type="content" data-pdf-order="15">
+                  <CpBlockGuarantees />
+                </div>
+                <div data-pdf-block="faq" data-pdf-type="content" data-pdf-order="16">
+                  <CpBlockFaq />
+                </div>
+                <div data-pdf-block="logos" data-pdf-type="branding" data-pdf-order="17">
+                  <CpBlockLogos typeArea={extractedData.typeArea} />
+                </div>
+                <div data-pdf-block="price" data-pdf-type="table" data-pdf-order="18">
+                  <CpBlockPrice
+                    totalCost={extractedData.totalCost}
+                    servicesData={extractedData.servicesData}
+                    bomData={extractedData.bomData}
+                    transportData={extractedData.transportData}
+                    summary={extractedData.summary}
+                  />
+                </div>
+                <div data-pdf-block="contact" data-pdf-type="footer" data-pdf-order="19">
+                  <CpBlockContact userData={userData} />
+                </div>
               </div>
             </>
           )}
