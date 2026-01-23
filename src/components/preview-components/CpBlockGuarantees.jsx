@@ -124,7 +124,7 @@ export default function CpBlockGuarantees() {
 
               <div className="guarantees-card">
                 <div className="guarantees-card-corner"></div>
-                <div className="guarantees-card-content-img mb-2">
+                <div className="guarantees-card-content-img">
                   <img src="/image/guarantie-icon-4.png" alt="" />
                 </div>
                 <div className="guarantees-card-content">

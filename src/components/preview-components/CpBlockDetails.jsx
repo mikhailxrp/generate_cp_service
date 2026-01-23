@@ -238,10 +238,11 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                         <svg
                           viewBox="0 0 320 340"
                           className="cp-payback-chart__svg"
+                          style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
                         >
                           {/* Определение градиентов и фильтров */}
                           <defs>
-                            {/* Градиент для зеленой области */}
+                            {/* Градиент для зеленой области - более яркий */}
                             <linearGradient
                               id="profitGradient"
                               x1="0%"
@@ -253,19 +254,19 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                                 offset="0%"
                                 style={{
                                   stopColor: "#00a04a",
-                                  stopOpacity: 0.4,
+                                  stopOpacity: 0.5,
                                 }}
                               />
                               <stop
                                 offset="100%"
                                 style={{
                                   stopColor: "#00a04a",
-                                  stopOpacity: 0.05,
+                                  stopOpacity: 0.25,
                                 }}
                               />
                             </linearGradient>
 
-                            {/* Градиент для красной линии */}
+                            {/* Градиент для красной линии - более насыщенный */}
                             <linearGradient
                               id="costGradient"
                               x1="0%"
@@ -276,20 +277,20 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                               <stop
                                 offset="0%"
                                 style={{
-                                  stopColor: "#e74c3c",
+                                  stopColor: "#d32f2f",
                                   stopOpacity: 1,
                                 }}
                               />
                               <stop
                                 offset="100%"
                                 style={{
-                                  stopColor: "#c0392b",
+                                  stopColor: "#e74c3c",
                                   stopOpacity: 1,
                                 }}
                               />
                             </linearGradient>
 
-                            {/* Градиент для зеленой линии */}
+                            {/* Градиент для зеленой линии - более насыщенный */}
                             <linearGradient
                               id="savingsGradient"
                               x1="0%"
@@ -300,23 +301,23 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                               <stop
                                 offset="0%"
                                 style={{
-                                  stopColor: "#00a04a",
+                                  stopColor: "#008a3e",
                                   stopOpacity: 1,
                                 }}
                               />
                               <stop
                                 offset="100%"
                                 style={{
-                                  stopColor: "#27ae60",
+                                  stopColor: "#00a04a",
                                   stopOpacity: 1,
                                 }}
                               />
                             </linearGradient>
 
-                            {/* Тень для линий */}
+                            {/* Тень для линий - убираем для PDF */}
                             <filter id="lineShadow" x="-50%" y="-50%" width="200%" height="200%">
-                              <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                              <feOffset dx="0" dy="2" result="offsetblur" />
+                              <feGaussianBlur in="SourceAlpha" stdDeviation="1" />
+                              <feOffset dx="0" dy="1" result="offsetblur" />
                               <feComponentTransfer>
                                 <feFuncA type="linear" slope="0.3" />
                               </feComponentTransfer>
@@ -326,10 +327,10 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                               </feMerge>
                             </filter>
 
-                            {/* Тень для точки */}
+                            {/* Тень для точки - убираем для PDF */}
                             <filter id="dotShadow">
-                              <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                              <feOffset dx="0" dy="2" result="offsetblur" />
+                              <feGaussianBlur in="SourceAlpha" stdDeviation="1" />
+                              <feOffset dx="0" dy="1" result="offsetblur" />
                               <feComponentTransfer>
                                 <feFuncA type="linear" slope="0.4" />
                               </feComponentTransfer>
@@ -341,7 +342,7 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                           </defs>
 
                           {/* Фоновая сетка */}
-                          <g opacity="0.15">
+                          <g opacity="0.25">
                             {[0, 1, 2, 3, 4].map((i) => (
                               <line
                                 key={`grid-h-${i}`}
@@ -350,7 +351,7 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                                 x2="300"
                                 y2={40 + (i * 260) / 4}
                                 stroke="#999"
-                                strokeWidth="0.5"
+                                strokeWidth="0.8"
                                 strokeDasharray="2,2"
                               />
                             ))}
@@ -362,16 +363,16 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                             y1="40"
                             x2="40"
                             y2="300"
-                            stroke="#333"
-                            strokeWidth="2"
+                            stroke="#222"
+                            strokeWidth="2.5"
                           />
                           <line
                             x1="40"
                             y1="300"
                             x2="300"
                             y2="300"
-                            stroke="#333"
-                            strokeWidth="2"
+                            stroke="#222"
+                            strokeWidth="2.5"
                           />
 
                           {/* Метки на оси X */}
@@ -413,51 +414,50 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                             d={`M ${paybackX} ${paybackY} Q ${profitCurveX1} ${profitCurveY1}, 300 50 L 300 300 L ${paybackX} 300 Z`}
                             fill="url(#profitGradient)"
                             stroke="none"
+                            className="profit-area"
                           />
 
-                          {/* Красная линия (затраты) с градиентом и тенью */}
+                          {/* Красная линия (затраты) без фильтра для PDF */}
                           <path
                             d={`M 40 300 Q ${costCurveX1} ${costCurveY1}, ${paybackX} ${paybackY}`}
                             fill="none"
                             stroke="url(#costGradient)"
-                            strokeWidth="3.5"
-                            filter="url(#lineShadow)"
+                            strokeWidth="5"
                             strokeLinecap="round"
+                            className="cost-line"
                           />
 
-                          {/* Зеленая линия (накопленная экономия) с градиентом и тенью */}
+                          {/* Зеленая линия (накопленная экономия) без фильтра для PDF */}
                           <path
                             d={`M ${paybackX} ${paybackY} Q ${profitCurveX1} ${profitCurveY1}, 300 50`}
                             fill="none"
                             stroke="url(#savingsGradient)"
-                            strokeWidth="3.5"
-                            filter="url(#lineShadow)"
+                            strokeWidth="5"
                             strokeLinecap="round"
+                            className="savings-line"
                           />
 
                           {/* Точка окупаемости с внешним кольцом */}
                           <circle
                             cx={paybackX}
                             cy={paybackY}
-                            r="10"
+                            r="11"
                             fill="none"
                             stroke="#00a04a"
-                            strokeWidth="2"
-                            opacity="0.3"
+                            strokeWidth="3"
+                            opacity="0.4"
                           />
                           <circle
                             cx={paybackX}
                             cy={paybackY}
-                            r="7"
+                            r="8"
                             fill="#00a04a"
-                            filter="url(#dotShadow)"
                           />
                           <circle
                             cx={paybackX}
                             cy={paybackY}
-                            r="3"
+                            r="3.5"
                             fill="#fff"
-                            opacity="0.8"
                           />
 
                           {/* Вертикальная линия от точки окупаемости */}
@@ -467,9 +467,9 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                             x2={paybackX}
                             y2="300"
                             stroke="#00a04a"
-                            strokeWidth="1"
+                            strokeWidth="1.5"
                             strokeDasharray="3,3"
-                            opacity="0.4"
+                            opacity="0.6"
                           />
 
                           {/* Белый фон под текстом */}

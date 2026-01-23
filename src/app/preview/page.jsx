@@ -191,15 +191,22 @@ function PreviewContent() {
       for (let i = 0; i < blocks.length; i++) {
         const block = blocks[i];
 
-        // Рендерим блок в canvas
+        // Получаем реальные размеры блока из computed styles
+        const computedStyle = window.getComputedStyle(block);
+        const blockWidth = parseFloat(computedStyle.width);
+        const blockHeight = parseFloat(computedStyle.height);
+
+        // Рендерим блок в canvas с реальными размерами
         const canvas = await html2canvas(block, {
           scale: 2,
           useCORS: true,
           allowTaint: true,
           logging: false,
           backgroundColor: "#ffffff",
-          windowWidth: block.scrollWidth,
-          windowHeight: block.scrollHeight,
+          width: blockWidth,
+          height: blockHeight,
+          windowWidth: blockWidth,
+          windowHeight: blockHeight,
         });
 
         const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -214,9 +221,8 @@ function PreviewContent() {
       }
 
       // Сохраняем PDF
-      const fileName = `КП_${
-        extractedData.clientName || "клиент"
-      }_${new Date().toLocaleDateString("ru-RU")}.pdf`;
+      const fileName = `КП_${extractedData.clientName || "клиент"
+        }_${new Date().toLocaleDateString("ru-RU")}.pdf`;
       pdf.save(fileName);
 
       // Показываем модальное окно после успешного скачивания
@@ -305,8 +311,7 @@ function PreviewContent() {
                     servicesData={extractedData.servicesData}
                     engineerName={
                       userData
-                        ? `${userData.name || ""} ${
-                            userData.surname || ""
+                        ? `${userData.name || ""} ${userData.surname || ""
                           }`.trim()
                         : ""
                     }
@@ -352,10 +357,10 @@ function PreviewContent() {
                 {(extractedData.typeArea === "carpot_south" ||
                   extractedData.typeArea === "carpot_east-west" ||
                   extractedData.typeArea === "canopy") && (
-                  <div data-pdf-block="installation-canopy" data-pdf-type="technical" data-pdf-order="6">
-                    <CpBlockCanopy />
-                  </div>
-                )}
+                    <div data-pdf-block="installation-canopy" data-pdf-type="technical" data-pdf-order="6">
+                      <CpBlockCanopy />
+                    </div>
+                  )}
                 {extractedData.typeArea === "metal" && (
                   <div data-pdf-block="installation-metal" data-pdf-type="technical" data-pdf-order="6">
                     <CpBlockMetal />

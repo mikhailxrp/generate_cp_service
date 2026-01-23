@@ -263,10 +263,12 @@
   min-height: 150px;
   border-radius: 14px;
   background-color: #ffffff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-fin-cost__cap {
@@ -274,7 +276,7 @@
   color: #8a8a8a;
   padding: 10px 12px;
   background: #efefef;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .cp-fin-cost__value {
@@ -313,13 +315,15 @@
   padding: 8px 10px;
   border-radius: 10px;
   background-color: #ffffff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   font-size: 16px;
   font-weight: 800;
   color: #00a04a;
   display: flex;
   align-items: center;
   justify-content: center;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 /* Right column - Metrics */
@@ -332,7 +336,7 @@
 .cp-fin-metric {
   border-radius: 14px;
   background-color: #ffffff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   padding: 16px 10px;
   min-height: 150px;
   display: flex;
@@ -340,6 +344,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-fin-metric__value {
@@ -368,7 +374,9 @@
   background-image: url("/image/hero-slide-two.jpg");
   background-size: cover;
   background-position: center;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 /* Real cost card */
@@ -401,7 +409,7 @@
 .cp-realcost__value {
   padding: 10px 12px;
   border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   font-size: 20px;
   font-weight: 900;
   color: #333333;
@@ -465,10 +473,12 @@
   max-width: 460px;
   background-color: #ffffff;
   border-radius: 18px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   padding: 14px 14px 16px 14px;
   box-sizing: border-box;
   font-family: inherit;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-params-card__title {
@@ -499,8 +509,10 @@
   padding: 12px;
   border-radius: 10px;
   background-color: #ffffff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-params-row--highlight {
@@ -536,7 +548,7 @@
   flex: 1 1 0;
   background-color: #ffffff;
   border-radius: 14px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   padding: 20px 15px;
   display: flex;
   flex-direction: column;
@@ -546,6 +558,8 @@
   max-width: 250px;
   min-height: 120px;
   box-sizing: border-box;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-metric-card__title {
@@ -799,10 +813,12 @@
   background-color: #00a04a;
   margin-top: 20px;
   border-radius: 0 10px 10px 0;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   overflow: hidden;
   display: flex;
   justify-content: flex-end;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-loss-solution__content {
@@ -876,8 +892,10 @@
   /* height: 340px; */
   border-radius: 18px;
   background-color: #ffffff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-loss-graph__image {
@@ -1049,8 +1067,10 @@
   gap: 25px;
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   background-color: #ffffff;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-block-five-quote__icon {
@@ -1199,7 +1219,7 @@
   padding: 10px;
   border-radius: 12px;
   background-color: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   /* box-shadow: 0 0 0 1px #00a04a; */
   /* border-left: 4px solid #00a04a; */
 }
@@ -1307,26 +1327,31 @@
 
 .cp-roadmap-card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-roadmap-card__icon{
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 145px;
-  height: 165px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d0d0d0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  align-self: center;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-roadmap-card__icon img {
-  width: 142px;
-  height: 163px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
 }
 
@@ -1437,7 +1462,9 @@
   border-collapse: collapse;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-payback-table__header {
@@ -1445,7 +1472,7 @@
   font-size: 14px;
   font-weight: 600;
   text-align: left;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #c0c0c0;
 }
 
 .cp-payback-table__header--param {
@@ -1472,7 +1499,7 @@
   padding: 7px 20px;
   font-size: 13px;
   color: #333333;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #c0c0c0;
   background-color: #ffffff;
 }
 
@@ -1499,7 +1526,7 @@
   padding: 10px 20px;
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #c0c0c0;
 }
 
 .cp-payback-scenario--realistic {
@@ -1540,7 +1567,7 @@
   margin-top: 10px;
   padding: 5px 25px;
   background-color: #ffffff;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #c0c0c0;
   border-radius: 12px;
 }
 
@@ -1644,8 +1671,10 @@
   border-collapse: collapse;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   font-size: 11px;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-details-table__header {
@@ -1662,7 +1691,7 @@
   padding: 6px 8px;
   font-size: 12px;
   color: #333333;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #c0c0c0;
   background-color: #ffffff;
   text-align: left;
 }
@@ -1747,11 +1776,13 @@
   background-color: #ffffff;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid #d0d0d0;
   height: 100%;
   display: flex;
   flex-direction: column;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-payback-chart__title {
@@ -1807,18 +1838,30 @@
   width: 100%;
   height: 100%;
   max-height: 520px;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  color-adjust: exact;
 }
 
 .cp-payback-chart__svg path {
   transition: all 0.3s ease;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  color-adjust: exact;
 }
 
 .cp-payback-chart__svg circle {
   transition: all 0.3s ease;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  color-adjust: exact;
 }
 
 .cp-payback-chart__svg text {
   transition: all 0.3s ease;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  color-adjust: exact;
 }
 
 /* Анимация появления графика */
@@ -1942,8 +1985,10 @@
 }
 
 .col-guarantees-content-icon img {
-  width: 100%;
-  height: 100%;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .col-guarantees-content-title {
@@ -1969,11 +2014,14 @@
 .guarantees-img-wrapper{
   position: absolute;
   top: -35px;
+  width: 100%;
+  height: auto;
 }
 .guarantees-img-wrapper img{
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
+  object-fit: cover;
+  display: block;
 }
 
 /* Guarantees Bottom Section */
@@ -1997,13 +2045,13 @@
 }
 
 .guarantees-inner-bottom-bullits-icon{
-  width: 35px;
-  height: 35px;
+  width: 25px;
+  height: 25px;
 }
 
 .guarantees-inner-bottom-bullits-icon img{
-  max-width: 100%;
-  height: 100%;
+  width: 25px;
+  height: 25px;
   object-fit: contain;
 }
 
@@ -2023,7 +2071,9 @@
 
 .guarantees-bottom-item {
   padding: 20px 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 
@@ -2038,14 +2088,14 @@
 /* Guarantees Cards */
 .guarantees-bottom-card-inner {
   display: flex;
-  gap: 16px;
+  gap: 7px;
   align-items: stretch;
 }
 
 .guarantees-card {
   position: relative;
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 12px;
   padding: 30px 10px;
   display: flex;
@@ -2056,17 +2106,27 @@
   overflow: hidden;
   flex: 1;
   height: 300px;
+  min-width: 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .guarantees-card-content-img{
   width: 150px;
-  height: 150px;
+  height: 180px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .guarantees-card-content-img img{
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  display: block;
 }
 
 
@@ -2331,20 +2391,12 @@
   width: 600px;
 }
 
-.cp-contact-header {
-  /* margin-bottom: 10px; */
-}
-
 .cp-contact-header-green {
   font-size: 18px;
   font-weight: 700;
   color: #00a04a;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-}
-
-.cp-contact-format {
-  /* margin-bottom: 20px; */
 }
 
 .cp-contact-format-text {
@@ -2438,14 +2490,16 @@
 .cp-faq-card {
   flex: 1;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   border-radius: 14px;
   padding: 18px 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .cp-faq-card__question,
