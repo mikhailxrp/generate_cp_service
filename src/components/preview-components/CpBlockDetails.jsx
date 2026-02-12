@@ -55,43 +55,13 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                 </thead>
                 <tbody>
                   {(() => {
-                    // Показываем годы: 1-6, затем 10, 15, 20, 25
-                    const yearsToShow = [1, 2, 3, 4, 5, 6, 10, 15, 20, 25];
+                    // Показываем все годы до 15 включительно
                     const rows = [];
-                    let lastShownYear = 0;
+                    const yearsUpTo15 = paybackData.yearly
+                      .filter((y) => y.year <= 15)
+                      .sort((a, b) => a.year - b.year);
 
-                    yearsToShow.forEach((yearNum) => {
-                      const yearData = paybackData.yearly.find(
-                        (y) => y.year === yearNum
-                      );
-                      if (!yearData) return;
-
-                      // Добавляем строку с "..." если пропущены годы
-                      if (yearNum - lastShownYear > 1 && lastShownYear > 0) {
-                        rows.push(
-                          <tr
-                            key={`gap-${yearNum}`}
-                            className="cp-details-table__row--gap"
-                          >
-                            <td className="cp-details-table__cell cp-details-table__cell--gap">
-                              ...
-                            </td>
-                            <td className="cp-details-table__cell cp-details-table__cell--gap">
-                              ...
-                            </td>
-                            <td className="cp-details-table__cell cp-details-table__cell--gap">
-                              ...
-                            </td>
-                            <td className="cp-details-table__cell cp-details-table__cell--gap">
-                              ...
-                            </td>
-                            <td className="cp-details-table__cell cp-details-table__cell--gap">
-                              ...
-                            </td>
-                          </tr>
-                        );
-                      }
-
+                    yearsUpTo15.forEach((yearData) => {
                       const isPaybackYear =
                         paybackData.paybackYear &&
                         yearData.year === paybackData.paybackYear;
@@ -145,8 +115,6 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                           </td>
                         </tr>
                       );
-
-                      lastShownYear = yearNum;
                     });
 
                     return rows;
