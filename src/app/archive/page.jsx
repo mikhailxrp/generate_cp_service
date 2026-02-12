@@ -11,6 +11,7 @@ export default function ArchivePage() {
   const [activeTab, setActiveTab] = useState("all");
   const [visibleCount, setVisibleCount] = useState(12);
   const [projectSearch, setProjectSearch] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   const ITEMS_PER_PAGE = 12;
 
@@ -113,6 +114,34 @@ export default function ArchivePage() {
 
   const loadMore = () => {
     setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
+  };
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm(
+      "Вы уверены, что хотите удалить это КП? Действие необратимо."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(id);
+      const response = await fetch(`/api/main-information/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        console.error("Ошибка при удалении КП:", await response.text());
+        alert("Не удалось удалить КП. Попробуйте еще раз.");
+        return;
+      }
+
+      setArchiveData((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Ошибка при удалении КП:", error);
+      alert("Произошла ошибка при удалении КП. Проверьте консоль.");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (loading) {
@@ -342,6 +371,17 @@ export default function ArchivePage() {
                         minute: "2-digit",
                       })}
                     </p>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger mt-3"
+                      disabled={deletingId === item.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(item.id);
+                      }}
+                    >
+                      {deletingId === item.id ? "Удаление..." : "Удалить КП"}
+                    </button>
                   </div>
                 </div>
               </div>
