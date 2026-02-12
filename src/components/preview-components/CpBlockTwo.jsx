@@ -43,6 +43,17 @@ export default function CpBlockTwo({ priceKwh, totalCost, paybackData }) {
     return annualGenerationYear1 * tariffYear1;
   };
 
+  // Склонение "год" для русского: 1 год, 2-4 года, 5-20 лет, 21 год, 22-24 года...
+  const yearWord = (n) => {
+    if (n == null || n === "" || Number.isNaN(Number(n))) return "";
+    const num = Math.floor(Number(n));
+    const mod10 = num % 10;
+    const mod100 = num % 100;
+    if (mod10 === 1 && mod100 !== 11) return "год";
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "года";
+    return "лет";
+  };
+
   // Расчет ROI (Return on Investment) за 30 лет
   const getROI = () => {
     if (!paybackData || !paybackData.netProfit || !paybackData.systemCost) {
@@ -120,7 +131,9 @@ export default function CpBlockTwo({ priceKwh, totalCost, paybackData }) {
               </div>
               <div className="cp-fin-metric">
                 <div className="cp-fin-metric__value">
-                  {paybackData?.paybackYear || "—"} лет
+                  {paybackData?.paybackYear != null && paybackData.paybackYear !== ""
+                    ? `${paybackData.paybackYear} ${yearWord(paybackData.paybackYear)}`
+                    : "—"}
                 </div>
                 <div className="cp-fin-metric__caption">Срок окупаемости</div>
               </div>
