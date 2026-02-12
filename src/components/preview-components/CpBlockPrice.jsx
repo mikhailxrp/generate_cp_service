@@ -42,6 +42,11 @@ export default function CpBlockPrice({
     return items.join(", ");
   };
 
+  const getNormalizedSummary = () => {
+    if (!summary) return "";
+    return summary.replace("BOS-комплект", "комплект оборудования");
+  };
+
   return (
     <div className="cp-block cp-block-six">
       <div className="cp-line-header">
@@ -71,7 +76,7 @@ export default function CpBlockPrice({
               Солнечная электростанция "под ключ" в составе:
             </div>
             <div className="cp-price-description__text">
-              {summary}, {getDescriptionItems()}
+              {getNormalizedSummary()}, {getDescriptionItems()}
             </div>
           </div>
           <div className="cp-price-description__sum">
