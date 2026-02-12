@@ -217,7 +217,7 @@ export default function CpBlockPayback({ paybackData }) {
                 }}
               >
                 <div className="cp-payback-timeline__marker-label">
-                  {scenarios.optimistic || "{{Payback_Opt}}"} лет
+                  {scenarios.optimistic || "{{Payback_Opt}}"}
                 </div>
                 <div className="cp-payback-timeline__marker-dot"></div>
               </div>
@@ -228,7 +228,7 @@ export default function CpBlockPayback({ paybackData }) {
                 }}
               >
                 <div className="cp-payback-timeline__marker-label">
-                  {scenarios.realistic || "{{Payback_Real}}"} лет
+                  {scenarios.realistic || "{{Payback_Real}}"}
                 </div>
                 <div className="cp-payback-timeline__marker-dot"></div>
               </div>
@@ -239,7 +239,7 @@ export default function CpBlockPayback({ paybackData }) {
                 }}
               >
                 <div className="cp-payback-timeline__marker-label">
-                  {scenarios.pessimistic || "{{Payback_Pess}}"} лет
+                  {scenarios.pessimistic || "{{Payback_Pess}}"}
                 </div>
                 <div className="cp-payback-timeline__marker-dot"></div>
               </div>
