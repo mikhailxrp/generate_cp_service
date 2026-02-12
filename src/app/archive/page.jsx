@@ -10,6 +10,7 @@ export default function ArchivePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [visibleCount, setVisibleCount] = useState(12);
+  const [projectSearch, setProjectSearch] = useState("");
 
   const ITEMS_PER_PAGE = 12;
 
@@ -97,9 +98,16 @@ export default function ArchivePage() {
   // Сброс счетчика при смене вкладки
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [activeTab]);
+  }, [activeTab, projectSearch]);
 
-  const filteredData = getFilteredData();
+  const dateFilteredData = getFilteredData();
+  const filteredData = dateFilteredData.filter((item) => {
+    if (!projectSearch.trim()) return true;
+    if (!item.projectNumber) return false;
+    return String(item.projectNumber)
+      .toLowerCase()
+      .includes(projectSearch.trim().toLowerCase());
+  });
   const visibleData = filteredData.slice(0, visibleCount);
   const hasMore = filteredData.length > visibleCount;
 
@@ -141,6 +149,19 @@ export default function ArchivePage() {
       <div className="container my-5" style={{ flex: 1 }}>
         <h2 className="text-center mb-4">Архив коммерческих предложений</h2>
 
+        {/* Поиск по номеру проекта */}
+        <div className="row mb-4">
+          <div className="col-md-6 col-lg-4 mx-auto">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Поиск по номеру проекта..."
+              value={projectSearch}
+              onChange={(e) => setProjectSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
         {/* Вкладки фильтрации */}
         <div className="mb-4">
           <ul className="nav nav-pills justify-content-center flex-wrap gap-2">
@@ -155,9 +176,8 @@ export default function ArchivePage() {
             {groupedData.today.length > 0 && (
               <li className="nav-item">
                 <button
-                  className={`nav-link ${
-                    activeTab === "today" ? "active" : ""
-                  }`}
+                  className={`nav-link ${activeTab === "today" ? "active" : ""
+                    }`}
                   onClick={() => setActiveTab("today")}
                 >
                   Сегодня ({groupedData.today.length})
@@ -167,9 +187,8 @@ export default function ArchivePage() {
             {groupedData.yesterday.length > 0 && (
               <li className="nav-item">
                 <button
-                  className={`nav-link ${
-                    activeTab === "yesterday" ? "active" : ""
-                  }`}
+                  className={`nav-link ${activeTab === "yesterday" ? "active" : ""
+                    }`}
                   onClick={() => setActiveTab("yesterday")}
                 >
                   Вчера ({groupedData.yesterday.length})
@@ -189,9 +208,8 @@ export default function ArchivePage() {
             {groupedData.month.length > 0 && (
               <li className="nav-item">
                 <button
-                  className={`nav-link ${
-                    activeTab === "month" ? "active" : ""
-                  }`}
+                  className={`nav-link ${activeTab === "month" ? "active" : ""
+                    }`}
                   onClick={() => setActiveTab("month")}
                 >
                   Месяц ({groupedData.month.length})
@@ -201,9 +219,8 @@ export default function ArchivePage() {
             {groupedData.older.length > 0 && (
               <li className="nav-item">
                 <button
-                  className={`nav-link ${
-                    activeTab === "older" ? "active" : ""
-                  }`}
+                  className={`nav-link ${activeTab === "older" ? "active" : ""
+                    }`}
                   onClick={() => setActiveTab("older")}
                 >
                   Старые ({groupedData.older.length})
