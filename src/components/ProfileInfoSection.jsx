@@ -52,7 +52,7 @@ export default function ProfileInfoSection({ user }) {
           <div className="profile-info-item">
             <label className="profile-info-label">
               <i className="bi bi-whatsapp"></i>
-              WhatsApp
+              WhatsApp || Max
             </label>
             <span className="profile-info-value">
               {user.whatsapp || "Не указан"}
