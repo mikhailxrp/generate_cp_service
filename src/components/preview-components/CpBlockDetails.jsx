@@ -4,6 +4,17 @@ import "./preview-components.css";
 export default function CpBlockDetails({ paybackData, totalCost }) {
   const currentYear = new Date().getFullYear();
 
+  const yearsWord = (n) => {
+    const num = typeof n === "number" ? n : parseInt(n, 10);
+    if (Number.isNaN(num)) return "лет";
+    const mod10 = num % 10;
+    const mod100 = num % 100;
+    if (mod100 >= 11 && mod100 <= 14) return "лет";
+    if (mod10 === 1) return "год";
+    if (mod10 >= 2 && mod10 <= 4) return "года";
+    return "лет";
+  };
+
   return (
     <div className="cp-block cp-block-two">
       <div className="cp-line-header">
@@ -484,7 +495,10 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                             {paybackData.paybackYearExact
                               ? paybackData.paybackYearExact.toFixed(1)
                               : paybackData.paybackYear}{" "}
-                            лет
+                            {yearsWord(
+                              paybackData.paybackYearExact ??
+                              paybackData.paybackYear
+                            )}
                           </text>
                           <text
                             x={paybackX}

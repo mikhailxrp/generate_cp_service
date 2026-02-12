@@ -54,6 +54,17 @@ export default function CpBlockPayback({ paybackData }) {
 
   const scenarios = calculateScenarios();
 
+  const yearsWord = (n) => {
+    const num = typeof n === "number" ? n : parseInt(n, 10);
+    if (Number.isNaN(num)) return "лет";
+    const mod10 = num % 10;
+    const mod100 = num % 100;
+    if (mod100 >= 11 && mod100 <= 14) return "лет";
+    if (mod10 === 1) return "год";
+    if (mod10 >= 2 && mod10 <= 4) return "года";
+    return "лет";
+  };
+
   return (
     <div className="cp-block cp-block-two">
       <div className="cp-line-header">
@@ -137,13 +148,16 @@ export default function CpBlockPayback({ paybackData }) {
                 Срок окупаемости
               </td>
               <td className="cp-payback-table__cell">
-                {scenarios.pessimistic || "—"} лет
+                {scenarios.pessimistic ?? "—"}{" "}
+                {yearsWord(scenarios.pessimistic)}
               </td>
               <td className="cp-payback-table__cell cp-payback-table__cell--realistic">
-                {scenarios.realistic || "—"} лет
+                {scenarios.realistic ?? "—"}{" "}
+                {yearsWord(scenarios.realistic)}
               </td>
               <td className="cp-payback-table__cell">
-                {scenarios.optimistic || "—"} лет
+                {scenarios.optimistic ?? "—"}{" "}
+                {yearsWord(scenarios.optimistic)}
               </td>
             </tr>
             <tr>
@@ -171,7 +185,8 @@ export default function CpBlockPayback({ paybackData }) {
               <p className="cp-payback-scenario__description">
                 Даже если тарифы почти перестанут расти, а год будет
                 экстремально пасмурным, станция окупится за{" "}
-                {scenarios.pessimistic || "{{Payback_Pess}}"} лет и сохранит
+                {scenarios.pessimistic ?? "{{Payback_Pess}}"}{" "}
+                {yearsWord(scenarios.pessimistic)} и сохранит
                 вашу инвестиция лучше депозита
               </p>
             </div>
@@ -184,7 +199,8 @@ export default function CpBlockPayback({ paybackData }) {
               <p className="cp-payback-scenario__description">
                 Сценарий, основанный на статистике погоды за 10 лет и текущей
                 динамике цен на электроэнергию. Окупаемость:{" "}
-                {scenarios.realistic || "{{Payback_Real}}"} года
+                {scenarios.realistic ?? "{{Payback_Real}}"}{" "}
+                {yearsWord(scenarios.realistic)}
               </p>
             </div>
           </div>
@@ -196,7 +212,8 @@ export default function CpBlockPayback({ paybackData }) {
               <p className="cp-payback-scenario__description">
                 При сохранении текущих темпов роста тарифов (10%+ в год)
                 инвестиции окупятся быстрее и вернутся уже через{" "}
-                {scenarios.optimistic || "{{Payback_Opt}}"} лет
+                {scenarios.optimistic ?? "{{Payback_Opt}}"}{" "}
+                {yearsWord(scenarios.optimistic)}
               </p>
             </div>
           </div>

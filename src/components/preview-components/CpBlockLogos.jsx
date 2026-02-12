@@ -10,7 +10,7 @@ export default function CpBlockLogos({ typeArea }) {
     bgImg = "/image/flat-bg.png";
   }
   if (typeArea === "metal") {
-    headerLabel = "МЕТАЛИЧЕСКАЯ КРОВЛЯ";
+    headerLabel = "МЕТАЛЛИЧЕСКАЯ КРОВЛЯ";
     bgImg = "/image/metal-bg.png";
   }
   if (
@@ -19,7 +19,7 @@ export default function CpBlockLogos({ typeArea }) {
     typeArea === "canopy" ||
     typeArea === "ground"
   ) {
-    headerLabel = "КАРПОТ";
+    headerLabel = "КАРПОРТ";
     bgImg = "/image/carpot-bg.png";
   }
   if (typeArea === "classic_tiles" || typeArea === "slate") {
