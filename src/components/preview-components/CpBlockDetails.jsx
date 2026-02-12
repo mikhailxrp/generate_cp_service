@@ -55,13 +55,14 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                 </thead>
                 <tbody>
                   {(() => {
-                    // Показываем все годы до 15 включительно
+                    // Показываем годы 1–12 и 25; скрываем 13–24
                     const rows = [];
-                    const yearsUpTo15 = paybackData.yearly
-                      .filter((y) => y.year <= 15)
+                    const visibleYears = paybackData.yearly
+                      .filter((y) => y.year <= 12 || y.year === 25)
                       .sort((a, b) => a.year - b.year);
+                    let ellipsisInserted = false;
 
-                    yearsUpTo15.forEach((yearData) => {
+                    visibleYears.forEach((yearData) => {
                       const isPaybackYear =
                         paybackData.paybackYear &&
                         yearData.year === paybackData.paybackYear;
@@ -70,6 +71,26 @@ export default function CpBlockDetails({ paybackData, totalCost }) {
                       const netCashflow =
                         yearData.cumulativeSavings - paybackData.systemCost;
                       const isPositiveCashflow = netCashflow >= 0;
+
+                      if (!ellipsisInserted && yearData.year === 25) {
+                        rows.push(
+                          <tr
+                            key="ellipsis"
+                            className="cp-details-table__row cp-details-table__row--ellipsis"
+                          >
+                            <td className="cp-details-table__cell cp-details-table__cell--year">
+                              ...
+                            </td>
+                            <td className="cp-details-table__cell">...</td>
+                            <td className="cp-details-table__cell">...</td>
+                            <td className="cp-details-table__cell">...</td>
+                            <td className="cp-details-table__cell cp-details-table__cell--cumulative">
+                              ...
+                            </td>
+                          </tr>
+                        );
+                        ellipsisInserted = true;
+                      }
 
                       rows.push(
                         <tr

@@ -25,6 +25,8 @@ export default function CpBlockThree({
     facade: "Фасадная",
   };
 
+  console.log('BOM DATA', bomData);
+
   const getTypeAreaText = () => {
     if (!typeArea) return "";
     return (
@@ -32,19 +34,26 @@ export default function CpBlockThree({
     );
   };
 
+  const isPanel = (item) => item.role === "panel" || item.typeCode === "panel";
+
+  const getPanelItem = () => {
+    if (!bomData || !Array.isArray(bomData)) return null;
+    return bomData.find(isPanel);
+  };
+
   const getPanelCount = () => {
-    if (!bomData || !Array.isArray(bomData)) return 0;
-    const panel = bomData.find((item) => item.role === "panel");
-    return panel ? panel.qty : 0;
+    const panel = getPanelItem();
+    return panel ? (panel.qty ?? panel.quantity ?? 0) : 0;
   };
 
   const getTotalPanelArea = () => {
-    if (!bomData || !Array.isArray(bomData)) return 0;
-    const panel = bomData.find((item) => item.role === "panel");
-    if (!panel || !panel.dimensions || !panel.qty) return 0;
+    const panel = getPanelItem();
+    if (!panel) return 0;
+    const qty = panel.qty ?? panel.quantity ?? 0;
+    if (!panel.dimensions || !qty) return 0;
 
-    // Парсим размеры формата "2382х1134х30" (мм)
-    const dimensionsMatch = panel.dimensions.match(/(\d+)х(\d+)/i);
+    // Парсим размеры формата "2382х1134х30" или "1722×1134×30" (мм)
+    const dimensionsMatch = String(panel.dimensions).match(/(\d+)[х×x](\d+)/i);
     if (!dimensionsMatch) return 0;
 
     const width = parseInt(dimensionsMatch[1]);
@@ -54,27 +63,26 @@ export default function CpBlockThree({
     const areaOnePanel = (width * height) / 1000000;
 
     // Общая площадь всех панелей
-    const totalArea = areaOnePanel * panel.qty;
+    const totalArea = areaOnePanel * qty;
 
     // Форматируем с пробелами как разделитель тысяч
     return Math.round(totalArea).toLocaleString("ru-RU");
   };
 
   const getPanelPower = () => {
-    if (!bomData || !Array.isArray(bomData)) return "590";
-    const panel = bomData.find((item) => item.role === "panel");
-    if (!panel || !panel.title) return "590";
+    const panel = getPanelItem();
+    if (!panel || !(panel.title || panel.name)) return "590";
 
     // Ищем цифру перед "Вт" в названии
-    const powerMatch = panel.title.match(/(\d+)\s*Вт/i);
+    const title = panel.title || panel.name || "";
+    const powerMatch = title.match(/(\d+)\s*Вт/i);
     if (!powerMatch) return "590";
 
     return powerMatch[1];
   };
 
   const getPanelVoltage = () => {
-    if (!bomData || !Array.isArray(bomData)) return "0,4";
-    const panel = bomData.find((item) => item.role === "panel");
+    const panel = getPanelItem();
     if (!panel || !panel.panelVocV) return "0,4";
 
     // Переводим Вольты в киловольты
