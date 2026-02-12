@@ -84,7 +84,6 @@ export default function CpBlockContact({ userData }) {
                 <span className="cp-contact-name-first">
                   {userData?.name || "Имя"}
                 </span>
-                <span className="cp-contact-name-patronymic"> Отчество</span>
               </div>
 
               <div className="cp-contact-position">
