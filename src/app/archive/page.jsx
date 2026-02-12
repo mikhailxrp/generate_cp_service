@@ -363,12 +363,13 @@ export default function ArchivePage() {
                     )}
                     <p className="text-muted small mb-0 mt-auto">
                       🕐{" "}
-                      {new Date(item.createdAt).toLocaleDateString("ru-RU", {
+                      {new Date(item.createdAt).toLocaleString("ru-RU", {
                         day: "2-digit",
                         month: "long",
                         year: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
+                        timeZone: "UTC",
                       })}
                     </p>
                     <button
